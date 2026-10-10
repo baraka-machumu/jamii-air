@@ -1,0 +1,25 @@
+# Dependencies and build output (all apps)
+node_modules/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Expo / React Native (mobile/)
+.expo/
+web-build/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Logs and OS files
+*.log
+.DS_Store
+Thumbs.db

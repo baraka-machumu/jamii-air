@@ -4,6 +4,7 @@
 |---|---|
 | **Document** | 03 — App Flow |
 | **Version** | 1.1 (decisions D-1…D-6 applied) |
+| **Status** | **Approved** — 2026-10-11 |
 | **Date** | 2026-10-09 |
 | **Scope** | Release 1 mobile app (Android & iOS) and admin portal (web, §15). R2 Reels flow sketched in §14. |
 | **Related** | [01 BRS](01-business-requirements-specification.md) · [02 TRD](02-technical-requirements-document.md) · [04 Design Brief](04-design-brief.md) |

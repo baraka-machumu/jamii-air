@@ -4,6 +4,7 @@
 |---|---|
 | **Document** | 06 — Implementation Plan |
 | **Version** | 1.7 (local dev ready; Expo account exists; Android-only testing until production) |
+| **Status** | **Approved** — 2026-10-11 |
 | **Date** | 2026-10-10 |
 | **Team** | 1 engineer building with Claude Code; Product (stakeholder) as product owner |
 | **Related** | All documents 00–05 |
@@ -40,7 +41,7 @@ flowchart LR
 
 Visual design (Design Brief, doc 04) is produced by the engineer with Claude Code: the mobile designs as the first increment of Phase 3, the admin wireframes as the first increment of Phase 4.
 
-**Status:** repo set up as one repository `jamii-air` with `backend/`, `mobile/`, `admin/`, `docs/`; branch renamed to `main`; backend scaffold cleaned (2.1); Expo app scaffolded (3.1, partly). No commit yet.
+**Status:** repo set up as one repository `jamii-air` with `backend/`, `mobile/`, `admin/`, `docs/`; branch renamed to `main`; backend scaffold cleaned (2.1); Expo app scaffolded (3.1, partly). On GitHub: [`baraka-machumu/jamii-air`](https://github.com/baraka-machumu/jamii-air) — docs committed; app code (`backend/`, `mobile/`, `admin/`) not yet committed. Phase 0 complete; Phase 1 backlog ready.
 
 ## 2. Agile delivery model
 
@@ -83,7 +84,7 @@ Epics come from the BRS (doc 01 §8). Each layer delivers the epics **in the sam
 
 | Item | Agreement |
 |---|---|
-| Tool | GitHub Projects board on the `jamii-air` repo: **Backlog → Ready → In progress → Review → Done**. |
+| Tool | GitHub Projects board **Jamii Air** linked to the repo; stories are drafted in [`docs/backlog/`](backlog/) and turned into issues with `create-github-issues.mjs`: **Backlog → Ready → In progress → Review → Done**. |
 | Stories | Written as *"As a ⟨persona⟩, I want ⟨goal⟩ so that ⟨benefit⟩"*, linked to a BRS ID (e.g. BR-AC-01) and an epic; labels `db`, `api`, `mobile`, `admin`. Technical work (e.g. the drift check) is written as a team story. |
 | Priority | MoSCoW from the BRS (M / S / C). **Must** stories first; Should and Could stories are pulled in only after the Musts of that increment are Done. The scope-cut order (§8) is the bottom of the backlog. |
 | Refinement | Before each iteration: split the next increment into stories, add acceptance criteria, check the Definition of Ready. |
@@ -141,15 +142,15 @@ Progress is tracked by **flow**, not deadlines: stories Done per iteration, cycl
 
 | # | Task | Owner |
 |---|---|---|
-| 0.1 | ✅ BRS signed off (2026-10-10); ✅ open questions answered (D-7…D-12, [00 §3a](00-README.md)); approve docs 00, 02–06 | Product + Engineer |
-| 0.2 | ✅ GitHub account (barakabryson@gmail.com): create repo `jamii-air`; Container Registry. Other accounts are **not needed now** — see 5.0 | Engineer |
+| 0.1 | ✅ BRS signed off (2026-10-10); ✅ open questions answered (D-7…D-12, [00 §3a](00-README.md)); ✅ docs 00, 02–06 approved (2026-10-11) | Product + Engineer |
+| 0.2 | ✅ GitHub account (barakabryson@gmail.com); ✅ repo [`baraka-machumu/jamii-air`](https://github.com/baraka-machumu/jamii-air); Container Registry when 2.16 needs it. Other accounts are **not needed now** — see 5.0 | Engineer |
 | 0.3 | App identifiers (bundle ID / package name). Domain and DNS move to 5.0 — UAT is reached by IP | Product |
 | 0.4 | Terms of Service (incl. **18+ requirement**), Privacy Policy, Community Guidelines — legal review | Product |
 | 0.5 | Product reviews doc 04 (Design Brief); designs are produced by the engineer with Claude Code in Phases 3–4 | Product |
 | 0.6 | Reference device: 1 mid-range Android (testing is **Android-only** for now; an iPhone is added in 5.0) | Engineer |
 | 0.7 | ✅ Local development environment ready (Docker 29 + Compose v5, Node 24, Git). UAT server access: address provided through the environment variable `UAT_SERVER_IP`; confirm SSH key access before the first UAT deploy (2.16). Production servers move to 5.0 | Engineer |
 
-**Exit:** docs approved; GitHub repo `jamii-air` exists; local Docker works ✅.
+**Exit:** ✅ docs approved; ✅ GitHub repo exists; ✅ local Docker works. **Phase 0 complete (2026-10-11).**
 
 ### Phase 1 — Database design
 
@@ -319,8 +320,6 @@ If priorities change, these stories are dropped first, in this order: 1) Caption
 
 ## 9. Immediate next steps
 
-1. ✅ BRS signed off; ✅ open questions answered (D-7…D-12); ✅ first commit on `main` (docs only).
-2. Create the GitHub repo `jamii-air` and push `main`.
-3. Set up the GitHub Projects board (§2.3) and write the E0 and E1 stories.
-4. ✅ Local Docker works. SSH access to the UAT server at `$UAT_SERVER_IP` is needed only from 2.16.
-5. First iteration: **Phase 1 · E0 Foundation** (1.1–1.3): Docker Compose, Prisma, stored-procedure framework — run and tested locally. Then one iteration per epic: E1 → E2 → … → E8.
+1. ✅ Phase 0 complete: BRS signed off, all documents approved, decisions D-7…D-12 recorded, repo on GitHub.
+2. Create the board and the E0 + E1 issues from [`docs/backlog/phase-1-database-E0-E1.md`](backlog/phase-1-database-E0-E1.md) (§2.3).
+3. First iteration: **Phase 1 · E0 Foundation** (stories E0-01 … E0-07), run and tested locally. Then E1 (E1-01 … E1-07), then one iteration per epic: E2 → … → E8.

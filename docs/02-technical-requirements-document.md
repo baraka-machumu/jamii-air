@@ -4,6 +4,7 @@
 |---|---|
 | **Document** | 02 — Technical Requirements Document |
 | **Version** | 1.3 (stakeholder decisions D-1…D-12 applied — see [00 §3](00-README.md)) |
+| **Status** | **Approved** — 2026-10-11 |
 | **Date** | 2026-10-10 |
 | **Scope** | Release 1 (MVP) in detail; R1.1–R4 as forward-compatibility requirements |
 | **Related** | [01 BRS](01-business-requirements-specification.md) · [05 Schema](05-backend-schema-document.md) · [06 Plan](06-implementation-plan.md) |

@@ -4,6 +4,7 @@
 |---|---|
 | **Document** | 05 — Backend Schema |
 | **Version** | 1.1 (decisions D-1…D-6 applied — stored procedures, admin portal, 18+, no ML) |
+| **Status** | **Approved** — 2026-10-11 |
 | **Date** | 2026-10-09 |
 | **Scope** | PostgreSQL schema (Prisma), stored procedures, grants, object storage layout, Redis, retention |
 | **Related** | [02 TRD §6 data-access strategy](02-technical-requirements-document.md) · [00 Review](00-README.md) |

@@ -4,6 +4,7 @@
 |---|---|
 | **Document** | 04 — Design Brief |
 | **Version** | 1.1 (decisions D-1…D-6 applied) |
+| **Status** | **Approved** — 2026-10-11 |
 | **Date** | 2026-10-09 |
 | **For** | Whoever produces the designs (the engineer with Claude Code until a designer joins — D-11), mobile and web engineers |
 | **Related** | [01 BRS](01-business-requirements-specification.md) · [03 App Flow](03-app-flow-document.md) |

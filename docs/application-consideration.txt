@@ -1,0 +1,2028 @@
+# React Native Instagram-Like App
+
+## Design, Performance, Scalability & Engineering Guidelines
+
+### 1. Objective
+
+The application should start as a small MVP supporting approximately 10 users but be architected so that it can grow toward approximately 10,000 active users without requiring a complete rewrite.
+
+The primary engineering principle is:
+
+> Build simple infrastructure, but make the important boundaries scalable.
+
+The application should avoid premature complexity such as microservices, Kubernetes, Kafka, Elasticsearch, or distributed feed systems while still making good decisions around database design, media handling, API contracts, mobile rendering, caching, and observability.
+
+---
+
+# 2. Recommended Technology Stack
+
+## Mobile
+
+* React Native
+* Expo
+* TypeScript
+* React Navigation
+* TanStack Query for server state
+* Zustand or another lightweight state solution where appropriate
+* FlashList/FlatList for large lists
+* Native image caching/loading solution
+* React Native Reanimated for animations
+* React Native Gesture Handler where required
+
+## Backend
+
+* Node.js
+* NestJS
+* TypeScript
+* REST API
+* Prisma
+* PostgreSQL
+* Redis when required
+* BullMQ for background jobs when required
+
+## Infrastructure
+
+* S3-compatible object storage
+* CDN for media delivery
+* HTTPS
+* Managed PostgreSQL when moving beyond local development
+* Docker for consistent development/deployment environments
+
+---
+
+# 3. Core Architectural Principle
+
+Use a modular monolith initially.
+
+```text
+React Native
+      │
+      │ HTTPS
+      ▼
+   NestJS API
+      │
+ ┌────┼───────────────┐
+ │    │               │
+ ▼    ▼               ▼
+Postgres Redis      Object Storage
+ │      │               │
+ │      │               ▼
+ │      │              CDN
+ │      │
+ │      ▼
+ │    Background Jobs
+ │
+ ▼
+Application Data
+```
+
+Do not start with:
+
+* Microservices
+* Kubernetes
+* Kafka
+* Multiple databases
+* Elasticsearch
+* Dedicated feed service
+* Dedicated notification service
+* Complex recommendation engine
+
+These can be introduced later when actual traffic justifies them.
+
+---
+
+# 4. Performance Must Be Designed Across the Entire System
+
+Performance is not only a React Native concern.
+
+Consider the complete request path:
+
+```text
+User
+ ↓
+Mobile UI
+ ↓
+Network
+ ↓
+API
+ ↓
+Database/cache
+ ↓
+Object storage/CDN
+ ↓
+Response
+ ↓
+Mobile rendering
+```
+
+A slow experience can originate at any layer.
+
+Therefore measure:
+
+* Mobile rendering time
+* API response time
+* Database query time
+* Image download time
+* Image decoding time
+* Memory usage
+* Network payload size
+* Startup time
+* Crash rate
+* Battery consumption
+
+---
+
+# 5. Mobile UI Architecture
+
+The mobile application should be divided into clear feature modules.
+
+Example:
+
+```text
+src/
+├── app/
+├── auth/
+├── profile/
+├── feed/
+├── posts/
+├── comments/
+├── notifications/
+├── search/
+├── follows/
+├── media/
+├── settings/
+├── navigation/
+├── components/
+├── hooks/
+├── services/
+├── store/
+└── utils/
+```
+
+Avoid putting the entire application into one giant component hierarchy.
+
+Feature boundaries should remain clear as the application grows.
+
+---
+
+# 6. Avoid Excessive Global State
+
+Not every piece of data belongs in global state.
+
+Separate:
+
+### Server state
+
+Examples:
+
+* Feed
+* User profile
+* Posts
+* Comments
+* Notifications
+* Followers
+
+Use a server-state solution such as TanStack Query.
+
+### Local UI state
+
+Examples:
+
+* Modal open/closed
+* Selected tab
+* Temporary form values
+* Image currently being edited
+
+Use component state where possible.
+
+### Persistent application state
+
+Examples:
+
+* Authentication session
+* User preferences
+* Theme
+* Small pieces of local configuration
+
+Use a lightweight state solution only where necessary.
+
+Avoid putting the entire application into one global store.
+
+---
+
+# 7. Feed Performance
+
+The feed will probably become one of the most performance-sensitive parts of the application.
+
+Never render thousands of posts simultaneously.
+
+Use a virtualized list:
+
+```text
+FlatList
+```
+
+or:
+
+```text
+FlashList
+```
+
+The list should render only the items currently needed on screen.
+
+Use pagination.
+
+Example:
+
+```text
+GET /feed?limit=20
+```
+
+Then:
+
+```text
+User scrolls
+      ↓
+Fetch next 20
+      ↓
+Append
+      ↓
+Render only visible items
+```
+
+Do not return the entire feed.
+
+---
+
+# 8. Cursor Pagination
+
+Prefer cursor pagination over traditional offset pagination for the feed.
+
+Example:
+
+```text
+GET /feed?limit=20
+```
+
+Response:
+
+```json
+{
+  "items": [],
+  "nextCursor": "..."
+}
+```
+
+Next request:
+
+```text
+GET /feed?limit=20&cursor=...
+```
+
+This performs better for continuously changing feeds.
+
+---
+
+# 9. Stable Feed Ordering
+
+Use deterministic ordering.
+
+For example:
+
+```sql
+ORDER BY created_at DESC, id DESC
+```
+
+The second ordering key prevents ambiguity when multiple posts have the same timestamp.
+
+---
+
+# 10. Database Indexing
+
+Indexes should be designed according to actual query patterns.
+
+For example:
+
+```text
+posts
+(user_id, created_at, id)
+
+follows
+(follower_id, following_id)
+(following_id)
+
+comments
+(post_id, created_at)
+
+notifications
+(user_id, created_at)
+```
+
+Do not blindly index every column.
+
+Indexes improve reads but increase:
+
+* Storage
+* Write cost
+* Maintenance cost
+
+---
+
+# 11. Database Query Discipline
+
+Never use:
+
+```text
+SELECT *
+```
+
+for important production endpoints.
+
+Request only the fields required.
+
+Bad:
+
+```sql
+SELECT *
+FROM posts;
+```
+
+Better:
+
+```sql
+SELECT
+    id,
+    user_id,
+    caption,
+    created_at
+FROM posts;
+```
+
+For large datasets, unnecessary columns can significantly increase network and database workload.
+
+---
+
+# 12. Avoid N+1 Queries
+
+Do not do this:
+
+```text
+Get 20 posts
+
+Then:
+Get user for post 1
+Get user for post 2
+Get user for post 3
+...
+```
+
+Instead, fetch the necessary related information efficiently.
+
+The API should return an appropriately shaped response for the mobile screen.
+
+---
+
+# 13. API Response Design
+
+Avoid sending unnecessary data.
+
+For example, the feed doesn't need:
+
+* User's complete settings
+* Full follower list
+* All comments
+* Original image metadata
+* Private account information
+
+A feed response might contain:
+
+```json
+{
+  "id": "post-id",
+  "caption": "...",
+  "createdAt": "...",
+  "author": {
+    "id": "...",
+    "username": "...",
+    "avatarUrl": "..."
+  },
+  "media": {
+    "url": "...",
+    "width": 1080,
+    "height": 1350
+  },
+  "likeCount": 12,
+  "commentCount": 4,
+  "likedByMe": true
+}
+```
+
+Keep the response purpose-specific.
+
+---
+
+# 14. Image Performance
+
+Images are one of the biggest performance risks in a social media application.
+
+Never use the original uploaded image directly in the feed.
+
+Recommended pipeline:
+
+```text
+User uploads original
+        ↓
+Object Storage
+        ↓
+Image processing
+        ↓
+ ┌──────┼───────────┐
+ ▼      ▼           ▼
+thumb  feed       original
+```
+
+Example:
+
+```text
+thumb.jpg
+feed.jpg
+original.jpg
+```
+
+The feed should use the feed-sized version.
+
+---
+
+# 15. Image Dimensions
+
+Images should be resized according to their intended use.
+
+For example:
+
+```text
+Avatar
+→ small square
+
+Feed thumbnail
+→ small/medium
+
+Feed image
+→ screen-appropriate resolution
+
+Original
+→ private/object-storage version
+```
+
+Do not download a 4000×6000 image when the phone only displays a 400×600 region.
+
+---
+
+# 16. Image Compression
+
+Images should be compressed before delivery.
+
+Consider modern formats such as:
+
+* WebP
+* AVIF where supported
+
+The system should balance:
+
+```text
+Quality
++
+File size
++
+Decode performance
+```
+
+Do not optimize purely for maximum compression.
+
+Visual quality still matters.
+
+---
+
+# 17. CDN
+
+Media should eventually be served through a CDN.
+
+Architecture:
+
+```text
+React Native
+      │
+      ▼
+     CDN
+      │
+      ▼
+Object Storage
+```
+
+The API should not proxy every image.
+
+Bad:
+
+```text
+Mobile
+ ↓
+API
+ ↓
+API downloads image
+ ↓
+API sends image
+ ↓
+Mobile
+```
+
+Better:
+
+```text
+Mobile
+ ↓
+CDN
+ ↓
+Object Storage
+```
+
+This reduces API bandwidth and server workload.
+
+---
+
+# 18. Direct Uploads
+
+Large media should not normally travel through the API server.
+
+Use presigned upload URLs.
+
+Flow:
+
+```text
+Mobile
+  │
+  │ request upload URL
+  ▼
+API
+  │
+  │ presigned URL
+  ▼
+Mobile
+  │
+  │ upload directly
+  ▼
+Object Storage
+```
+
+Then:
+
+```text
+Mobile
+ ↓
+POST /posts
+ ↓
+API records media
+```
+
+This becomes increasingly important as usage grows.
+
+---
+
+# 19. Image Loading on Mobile
+
+The feed should:
+
+* Show placeholders while loading
+* Cache previously loaded images
+* Avoid loading images outside the required viewport
+* Avoid unnecessarily reloading the same image
+* Use correct dimensions/aspect ratio before image loading
+* Avoid layout jumps
+
+The UI should know the image dimensions before rendering where possible.
+
+---
+
+# 20. Avoid Layout Shift
+
+Do not allow the feed to repeatedly change height as images load.
+
+Bad:
+
+```text
+Post appears
+↓
+Image loads
+↓
+Post becomes taller
+↓
+Everything moves
+```
+
+Better:
+
+```text
+Known image dimensions
+↓
+Reserve space
+↓
+Image loads into reserved area
+```
+
+This makes scrolling substantially smoother.
+
+---
+
+# 21. List Item Optimization
+
+Feed post components should be lightweight.
+
+Avoid doing expensive operations inside:
+
+```text
+render()
+```
+
+Avoid unnecessary:
+
+* Array transformations
+* Sorting
+* Filtering
+* Date formatting
+* Complex calculations
+* Large object creation
+
+on every render.
+
+Precompute where appropriate.
+
+---
+
+# 22. Component Re-rendering
+
+A feed containing 20 posts should not re-render every post when the user likes one post.
+
+Use:
+
+* Component memoization
+* Stable props
+* Stable callbacks
+* Proper query/cache updates
+
+The goal is:
+
+```text
+Like post #7
+
+→ Update post #7
+
+NOT
+
+→ Re-render all 20 posts
+```
+
+---
+
+# 23. Animations
+
+Animations should remain smooth at approximately 60 FPS where appropriate.
+
+Avoid running heavy JavaScript work during animations.
+
+Use appropriate native/UI-thread animation mechanisms such as Reanimated.
+
+Animations should never block:
+
+* Scrolling
+* Touch handling
+* Image loading
+* Navigation
+
+---
+
+# 24. Navigation Performance
+
+Avoid unnecessarily mounting every screen.
+
+Use navigation patterns that allow screens to be created and destroyed appropriately.
+
+Keep navigation transitions lightweight.
+
+Do not perform large API/database operations synchronously during navigation.
+
+Instead:
+
+```text
+Navigate
+ ↓
+Render screen
+ ↓
+Load data
+ ↓
+Show loading/skeleton
+ ↓
+Display content
+```
+
+---
+
+# 25. App Startup
+
+Startup time matters.
+
+Do not load everything during startup.
+
+Avoid:
+
+```text
+App starts
+ ↓
+Load 20 modules
+ ↓
+Check 10 APIs
+ ↓
+Load entire profile
+ ↓
+Load feed
+ ↓
+Initialize everything
+ ↓
+Finally show UI
+```
+
+Prefer:
+
+```text
+App starts
+ ↓
+Render shell
+ ↓
+Restore authentication
+ ↓
+Navigate
+ ↓
+Load required screen data
+```
+
+Lazy-load features where practical.
+
+---
+
+# 26. API Calls
+
+Avoid duplicate requests.
+
+For example:
+
+```text
+Screen A
+Screen B
+Screen C
+```
+
+should not independently request the same user profile three times.
+
+Use server-state caching.
+
+Requests should also have:
+
+* Timeouts
+* Retry policies
+* Error handling
+* Cancellation where appropriate
+
+Do not retry every failed request indefinitely.
+
+---
+
+# 27. Network Failure
+
+Mobile networks are unreliable.
+
+The application must handle:
+
+* Slow network
+* Offline state
+* Request timeout
+* Server errors
+* Connection interruption
+* Upload interruption
+* App backgrounding during upload
+
+The user should receive meaningful feedback.
+
+Do not simply display:
+
+```text
+Error 500
+```
+
+---
+
+# 28. Optimistic UI
+
+Certain actions can use optimistic updates.
+
+For example:
+
+```text
+User taps Like
+       ↓
+UI immediately shows liked
+       ↓
+API request
+       ↓
+Success → keep state
+Failure → revert state
+```
+
+This makes the application feel much faster.
+
+Use optimistic updates carefully for actions such as:
+
+* Like
+* Follow
+* Read notification
+
+Be more conservative with destructive operations.
+
+---
+
+# 29. API Rate Limiting
+
+Protect the backend from abuse.
+
+Rate-limit:
+
+* Login
+* Registration
+* Password reset
+* Upload URL generation
+* Comments
+* Likes
+* Follow/unfollow
+* Reports
+
+Different endpoints can have different limits.
+
+---
+
+# 30. Authentication
+
+Use:
+
+```text
+Short-lived access token
++
+Refresh token
+```
+
+Refresh tokens should be revocable.
+
+Never store:
+
+* Passwords
+* Raw refresh tokens
+* Secrets
+
+in plaintext.
+
+Passwords should use a modern password hashing algorithm such as Argon2id.
+
+---
+
+# 31. Authorization
+
+Never rely solely on the mobile application for permissions.
+
+The backend must verify:
+
+```text
+Can this user edit this post?
+Can this user delete this comment?
+Can this user access this resource?
+Can this user upload to this object key?
+```
+
+The client is not trusted.
+
+---
+
+# 32. Object Storage Security
+
+Users should not be able to arbitrarily write to:
+
+```text
+any/path/in/storage
+```
+
+The API should generate controlled object keys.
+
+Example:
+
+```text
+users/{userId}/posts/{postId}/original.jpg
+```
+
+Verify that the uploaded object belongs to the authenticated user.
+
+---
+
+# 33. Post Creation Flow
+
+Recommended:
+
+```text
+1. User selects image
+2. Mobile validates image
+3. API requests upload authorization
+4. API generates object key
+5. Mobile uploads directly to storage
+6. Mobile sends POST /posts
+7. Backend validates media ownership
+8. Backend creates post
+9. Background processing creates variants
+10. Post becomes available
+```
+
+This prevents the API server from becoming a media bottleneck.
+
+---
+
+# 34. Background Jobs
+
+Do not make the API wait for expensive work.
+
+For example:
+
+```text
+Post creation
+     │
+     ├── Save post
+     │
+     └── Queue image processing
+               │
+               ▼
+             Worker
+               │
+               ▼
+        Generate variants
+```
+
+Potential background jobs:
+
+* Image processing
+* Notifications
+* Email
+* Cleanup
+* Moderation
+* Analytics aggregation
+
+BullMQ + Redis is sufficient for the initial stage.
+
+---
+
+# 35. Feed Architecture
+
+For the initial application, use:
+
+**Fan-out-on-read.**
+
+The feed can query posts from users the current user follows.
+
+This is simple and appropriate for the initial scale.
+
+Do not immediately create:
+
+```text
+Feed Service
+Feed Database
+Kafka
+Recommendation Engine
+Ranking Service
+```
+
+You don't need them initially.
+
+---
+
+# 36. Feed Scaling Path
+
+As usage increases:
+
+```text
+Stage 1
+SQL query
+     ↓
+Stage 2
+Redis/cache where useful
+     ↓
+Stage 3
+Feed optimization
+     ↓
+Stage 4
+Fan-out strategies
+     ↓
+Stage 5
+Dedicated feed infrastructure
+```
+
+Only move to the next stage when measurements justify it.
+
+---
+
+# 37. Caching
+
+Use caching selectively.
+
+Good candidates:
+
+* Frequently requested public profiles
+* Configuration
+* Rate limiting
+* Session-related data
+* Expensive repeated queries
+
+Don't cache everything.
+
+Incorrect caching can create:
+
+* Stale data
+* Invalidations problems
+* Memory pressure
+* Debugging complexity
+
+---
+
+# 38. Redis
+
+Redis should initially be optional.
+
+Introduce it for concrete use cases such as:
+
+* Rate limiting
+* Background job queues
+* Temporary caching
+* Distributed locks where genuinely required
+
+Do not introduce Redis merely because "large applications use Redis."
+
+---
+
+# 39. PostgreSQL Scaling
+
+Start with one PostgreSQL database.
+
+As usage increases:
+
+```text
+Single PostgreSQL
+      ↓
+Better indexes
+      ↓
+Query optimization
+      ↓
+Connection pooling
+      ↓
+Vertical scaling
+      ↓
+Read replicas
+```
+
+Do not immediately introduce database sharding.
+
+---
+
+# 40. Connection Pooling
+
+The API should not open unlimited database connections.
+
+Use connection pooling.
+
+This becomes particularly important when running multiple backend instances.
+
+---
+
+# 41. Transactions
+
+Use database transactions where multiple operations must succeed or fail together.
+
+Example:
+
+```text
+Create post
++
+Create media record
+```
+
+If both are required for consistency, handle them appropriately.
+
+Avoid unnecessarily large transactions because they hold database resources longer.
+
+---
+
+# 42. Data Integrity
+
+Use database constraints.
+
+Examples:
+
+```text
+unique username
+unique email
+unique user + post like
+unique follower + following
+foreign keys
+check constraints
+```
+
+Do not rely entirely on application code to enforce data integrity.
+
+---
+
+# 43. Soft Delete vs Hard Delete
+
+For important user-generated content, consider soft deletion where appropriate.
+
+Example:
+
+```text
+deleted_at
+```
+
+This can help with:
+
+* Moderation
+* Recovery
+* Auditing
+* Referential integrity
+
+But don't soft-delete everything indefinitely.
+
+Define retention policies.
+
+---
+
+# 44. Notifications
+
+Notifications should not block the main API request unnecessarily.
+
+For example:
+
+```text
+User likes post
+      ↓
+Record like
+      ↓
+Queue notification
+      ↓
+Return response
+      ↓
+Worker processes notification
+```
+
+This keeps the user-facing operation fast.
+
+---
+
+# 45. Push Notifications
+
+Use push notifications rather than keeping a permanent socket connection just to notify users.
+
+For the MVP:
+
+```text
+Backend
+ ↓
+Push notification provider
+ ↓
+iOS / Android
+```
+
+Real-time sockets can be introduced later if actual requirements arise.
+
+---
+
+# 46. Comments
+
+Comments can grow very quickly.
+
+Never load all comments at once.
+
+Use:
+
+```text
+GET /posts/:id/comments?limit=20
+```
+
+with pagination.
+
+Consider loading the first few comments initially and allowing the user to open the full comment view.
+
+---
+
+# 47. Likes
+
+Use a unique constraint:
+
+```text
+(user_id, post_id)
+```
+
+This prevents duplicate likes.
+
+Avoid repeatedly counting millions of rows synchronously for every feed request.
+
+Maintain appropriate counters where justified.
+
+---
+
+# 48. Counters
+
+Fields such as:
+
+```text
+like_count
+comment_count
+follower_count
+following_count
+```
+
+can eventually be maintained as denormalized counters.
+
+However, make sure updates remain consistent.
+
+Do not introduce denormalized counters everywhere on day one unless required.
+
+---
+
+# 49. Search
+
+Initially, PostgreSQL can handle basic search.
+
+For example:
+
+```text
+username search
+```
+
+Do not immediately introduce Elasticsearch/OpenSearch.
+
+If search volume and requirements become significant:
+
+```text
+PostgreSQL
+      ↓
+Dedicated search engine
+```
+
+can be introduced later.
+
+---
+
+# 50. Media Upload Limits
+
+Define explicit limits.
+
+For example:
+
+```text
+Maximum image size
+Maximum dimensions
+Allowed MIME types
+Maximum number of images
+```
+
+Never trust:
+
+```text
+Content-Type
+```
+
+alone.
+
+Validate the actual file.
+
+---
+
+# 51. Security Validation
+
+Validate:
+
+* File type
+* File size
+* Dimensions
+* Filename
+* MIME type
+* Request body
+* Query parameters
+* Path parameters
+
+Protect against:
+
+* SQL injection
+* XSS
+* CSRF where applicable
+* malicious uploads
+* path traversal
+* unauthorized object access
+* brute-force attacks
+
+Use framework/library protections rather than implementing cryptography yourself.
+
+---
+
+# 52. Moderation
+
+The initial MVP should include at least:
+
+```text
+Block
+Report
+Delete own post
+Delete own comment
+Admin moderation
+```
+
+Do not wait until thousands of users before thinking about abuse.
+
+---
+
+# 53. Logging
+
+Logs should contain useful operational information.
+
+Examples:
+
+```text
+request ID
+user ID where appropriate
+endpoint
+status code
+latency
+error type
+```
+
+Never log:
+
+* Passwords
+* Access tokens
+* Refresh tokens
+* Sensitive personal data
+
+---
+
+# 54. Monitoring
+
+Track at minimum:
+
+### Backend
+
+* Request count
+* Error rate
+* P50 latency
+* P95 latency
+* P99 latency
+* Database latency
+* Queue latency
+* CPU
+* Memory
+
+### Mobile
+
+* Crash rate
+* App startup time
+* Screen load time
+* API failures
+* Memory usage
+* Frame drops
+
+---
+
+# 55. Performance Budgets
+
+Define performance targets rather than saying "the app should be fast."
+
+Example initial targets:
+
+```text
+API P95:
+< 300–500 ms for common endpoints
+
+Feed:
+20 posts per page
+
+Images:
+optimized delivery
+
+Scrolling:
+smooth 60 FPS target
+
+App startup:
+as fast as practical, measured on real devices
+
+Crash-free sessions:
+> 99% target
+```
+
+Exact targets should be validated against real devices and network conditions.
+
+---
+
+# 56. Development Environment
+
+Use:
+
+```text
+Docker
+PostgreSQL
+Redis when needed
+Environment variables
+Database migrations
+Seed data
+```
+
+Maintain separate:
+
+```text
+development
+staging
+production
+```
+
+environments.
+
+Never use production data casually in development.
+
+---
+
+# 57. Database Migrations
+
+Every schema change should be version controlled.
+
+Example:
+
+```text
+prisma/
+└── migrations/
+    ├── 001_initial
+    ├── 002_add_notifications
+    ├── 003_add_blocks
+    └── ...
+```
+
+Never manually modify production tables without a controlled migration process.
+
+---
+
+# 58. Testing Strategy
+
+Use multiple layers.
+
+### Unit tests
+
+Business logic.
+
+### Integration tests
+
+API + database.
+
+### End-to-end tests
+
+Important user journeys.
+
+Example:
+
+```text
+Register
+ ↓
+Login
+ ↓
+Follow user
+ ↓
+Upload image
+ ↓
+Create post
+ ↓
+Open feed
+ ↓
+Like
+ ↓
+Comment
+```
+
+---
+
+# 59. Load Testing
+
+Before moving from MVP toward 10,000 active users, test realistic traffic.
+
+Test:
+
+```text
+Concurrent users
+Requests/sec
+Feed requests
+Image uploads
+Likes
+Comments
+Database load
+```
+
+Do not assume:
+
+> "It works with 10 users, therefore it will work with 10,000."
+
+Measure it.
+
+---
+
+# 60. Realistic Load Model
+
+10,000 registered users does not necessarily mean 10,000 simultaneous users.
+
+These are different:
+
+```text
+10,000 registered users
+10,000 monthly active users
+10,000 daily active users
+10,000 concurrent users
+```
+
+Infrastructure requirements can differ dramatically.
+
+Design around actual usage patterns.
+
+---
+
+# 61. Offline & Poor Network Experience
+
+Especially for mobile users, design for imperfect connectivity.
+
+Handle:
+
+```text
+Wi-Fi
+4G
+3G
+slow connections
+intermittent connections
+temporary offline state
+```
+
+Don't assume permanent high-speed connectivity.
+
+Uploads should have clear progress and failure handling.
+
+---
+
+# 62. Memory Management
+
+Avoid keeping large images in JavaScript memory.
+
+Avoid:
+
+```text
+Huge image
+ ↓
+Decode full resolution
+ ↓
+Keep many images in memory
+```
+
+Use appropriately sized images and virtualization.
+
+Watch for memory leaks caused by:
+
+* Event listeners
+* Timers
+* Subscriptions
+* Navigation screens
+* Image resources
+
+---
+
+# 63. Battery Usage
+
+Avoid unnecessary:
+
+* Polling
+* Background processing
+* GPS usage
+* Animations
+* Network requests
+
+For notifications, use push services rather than constant polling.
+
+---
+
+# 64. Analytics
+
+Track meaningful events such as:
+
+```text
+app_open
+login
+signup
+post_created
+post_viewed
+like
+comment
+follow
+profile_view
+```
+
+Do not collect unnecessary personal information.
+
+Analytics should help answer:
+
+```text
+Where are users dropping off?
+Which features are used?
+Where are performance problems?
+```
+
+---
+
+# 65. Feature Flags
+
+As the app grows, feature flags can help release functionality safely.
+
+Example:
+
+```text
+new_feed_enabled
+new_profile_enabled
+video_enabled
+```
+
+Initially, keep this simple.
+
+---
+
+# 66. API Versioning
+
+Plan for API evolution.
+
+For example:
+
+```text
+/api/v1/...
+```
+
+You don't necessarily need multiple API versions immediately, but avoid designing APIs that cannot evolve.
+
+---
+
+# 67. Backward Compatibility
+
+Mobile applications don't all update simultaneously.
+
+This is important.
+
+A user may have:
+
+```text
+App version 1.2
+```
+
+while the backend is already running:
+
+```text
+API version 1.5
+```
+
+The backend should avoid breaking older supported clients unexpectedly.
+
+---
+
+# 68. Database Backups
+
+Production PostgreSQL must have:
+
+* Automated backups
+* Retention policy
+* Restore testing
+* Monitoring
+
+A backup that has never been restored successfully should not be treated as fully reliable.
+
+---
+
+# 69. Object Storage Backups
+
+Determine:
+
+```text
+What media must be retained?
+How long?
+Can deleted media be restored?
+What happens if an object is accidentally deleted?
+```
+
+Object storage lifecycle policies can help control costs.
+
+---
+
+# 70. Cost Control
+
+Don't optimize only for performance.
+
+Optimize:
+
+```text
+Performance
++
+Reliability
++
+Security
++
+Operational simplicity
++
+Cost
+```
+
+For a 10-user MVP, paying for a huge distributed infrastructure is counterproductive.
+
+---
+
+# 71. Scaling Strategy
+
+### Stage 1 — MVP
+
+Approximately 10 users.
+
+```text
+React Native
+NestJS
+PostgreSQL
+Object Storage
+```
+
+One backend instance is sufficient.
+
+---
+
+### Stage 2 — Early Growth
+
+Approximately 100–1,000 users.
+
+Add where needed:
+
+```text
+CDN
+Redis
+Background workers
+Managed PostgreSQL
+Monitoring
+```
+
+---
+
+### Stage 3 — Larger Usage
+
+Approximately 1,000–10,000+ active users.
+
+Potentially introduce:
+
+```text
+Multiple API instances
+Load balancer
+Database connection pooling
+Redis caching
+Dedicated workers
+Advanced monitoring
+Database optimization
+Read replicas where justified
+```
+
+---
+
+### Stage 4 — Large Scale
+
+Only if actual traffic requires it:
+
+```text
+Feed infrastructure
+Dedicated search
+Advanced queues
+Read replicas
+Service extraction
+Advanced caching
+Data partitioning
+```
+
+Do not build Stage 4 infrastructure during Stage 1.
+
+---
+
+# 72. What NOT to Optimize Prematurely
+
+Do not start by implementing:
+
+* Kubernetes
+* Microservices
+* Kafka
+* Elasticsearch
+* Complex recommendation algorithms
+* Distributed feed generation
+* Multi-region databases
+* Database sharding
+* Complex event-driven architecture
+
+These increase engineering complexity substantially.
+
+---
+
+# 73. React Native Performance Rules
+
+The mobile team should follow these rules:
+
+### Rule 1
+
+Use virtualized lists.
+
+### Rule 2
+
+Never load original images into the feed.
+
+### Rule 3
+
+Paginate everything that can become large.
+
+### Rule 4
+
+Avoid unnecessary component re-renders.
+
+### Rule 5
+
+Keep feed item components lightweight.
+
+### Rule 6
+
+Avoid expensive JavaScript work during scrolling.
+
+### Rule 7
+
+Use efficient image caching.
+
+### Rule 8
+
+Measure performance on physical low/mid-range devices.
+
+### Rule 9
+
+Avoid unnecessary global state.
+
+### Rule 10
+
+Profile before optimizing.
+
+---
+
+# 74. Backend Performance Rules
+
+### Rule 1
+
+Index real query patterns.
+
+### Rule 2
+
+Avoid N+1 queries.
+
+### Rule 3
+
+Paginate large datasets.
+
+### Rule 4
+
+Return only required fields.
+
+### Rule 5
+
+Use database connection pooling.
+
+### Rule 6
+
+Move expensive operations to workers.
+
+### Rule 7
+
+Use CDN for media.
+
+### Rule 8
+
+Don't send large media through the API.
+
+### Rule 9
+
+Use caching only where measurement supports it.
+
+### Rule 10
+
+Monitor P95/P99 latency.
+
+---
+
+# 75. Architecture Decision for This Project
+
+The recommended initial architecture is:
+
+```text
+                 ┌─────────────────────┐
+                 │    React Native     │
+                 │   Expo + TypeScript │
+                 └──────────┬──────────┘
+                            │
+                         HTTPS
+                            │
+                            ▼
+                 ┌─────────────────────┐
+                 │       NestJS        │
+                 │    Modular Monolith │
+                 └──────────┬──────────┘
+                            │
+               ┌────────────┼────────────┐
+               │            │            │
+               ▼            ▼            ▼
+          PostgreSQL      Redis       Object Storage
+                            │            │
+                            ▼            ▼
+                       BullMQ Jobs      CDN
+```
+
+---
+
+# 76. Recommended MVP Boundaries
+
+Build first:
+
+```text
+Authentication
+Profiles
+Follow / unfollow
+Image upload
+Create post
+Feed
+Likes
+Comments
+Notifications
+Block
+Report
+Basic admin moderation
+```
+
+Do not build initially:
+
+```text
+Stories
+Reels
+Live streaming
+Direct messages
+Advanced recommendations
+Ads
+Monetization
+Complex search
+Multi-region infrastructure
+```
+
+---
+
+# 77. Final Engineering Principle
+
+The most important principle for this project is:
+
+> Keep the architecture simple, but never make the data flow, media flow, or API contracts fundamentally hard to scale.
+
+The application should be designed so that:
+
+```text
+10 users
+   ↓
+same architecture
+   ↓
+100 users
+   ↓
+same architecture + optimization
+   ↓
+1,000 users
+   ↓
+caching/workers/CDN
+   ↓
+10,000 users
+   ↓
+horizontal scaling + database optimization
+```
+
+rather than:
+
+```text
+10 users
+   ↓
+build massive infrastructure
+   ↓
+months of unnecessary engineering
+```
+
+The goal is not to make the MVP "infinitely scalable."
+
+The goal is to make the **next scaling step cheap and predictable**.

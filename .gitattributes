@@ -1,0 +1,6 @@
+# Keep LF in files that run inside Linux containers or are compared byte-for-byte
+# (stored-procedure sources vs pg_get_functiondef in the drift check).
+*.sh   text eol=lf
+*.sql  text eol=lf
+*.yml  text eol=lf
+*.yaml text eol=lf

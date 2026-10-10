@@ -113,10 +113,10 @@ All components run as one **Docker Compose** stack per environment on our own se
 ```text
 jamii-air/
 ├── backend/                 # NestJS API + worker + Prisma + stored procedures
+│   └── docker-compose.yml   # local stack: Postgres, Redis, MinIO, Mailpit
 ├── mobile/                  # Expo React Native app (Plan Phase 3)
 ├── admin/                   # Admin portal web app (Plan Phase 4)
 ├── docs/                    # These documents
-├── docker-compose.yml
 └── .github/workflows/
 ```
 

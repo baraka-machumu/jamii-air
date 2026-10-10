@@ -19,7 +19,10 @@
     "test:watch": "vitest",
     "test:cov": "vitest run --coverage",
     "test:debug": "vitest --inspect-brk --no-file-parallelism",
-    "test:e2e": "vitest run --config ./vitest.config.e2e.ts"
+    "test:e2e": "vitest run --config ./vitest.config.e2e.ts",
+    "infra:up": "docker compose up -d --wait postgres redis minio mailpit && docker compose up minio-init",
+    "infra:down": "docker compose down",
+    "infra:reset": "docker compose down -v && npm run infra:up"
   },
   "dependencies": {
     "@nestjs/common": "^12.0.1",

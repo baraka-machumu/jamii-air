@@ -977,7 +977,7 @@ Consequence for code: Prisma reads must always use an explicit `select` (a `find
 
 ## 10. Object storage layout
 
-Bucket `jamii-air-media-{env}` (private). CDN serves only variant keys.
+Bucket `jamii-air-media-{env}` in MinIO (private). The nginx media cache ("CDN") serves only variant keys.
 
 ```text
 users/{userId}/media/{mediaId}/original          ← private; client PUT target; versioning on
@@ -1036,7 +1036,7 @@ Prisma prefixes migration folders with timestamps; names below are descriptive. 
 1.11  metrics_maintenance     daily_metrics + fn_maint_* procedures, final grants
 ```
 
-## 14. Seed data (development & staging only)
+## 14. Seed data (development & UAT only)
 
 1 super-admin + 1 moderator (TOTP pre-enrolled with a known dev secret), 12 users (all 18+), random follow graph, 60 posts with sample images in MinIO, likes/comments/notifications, 2 open reports, 5 invite codes. Seed inserts **through the stored procedures** (also exercising them). Refuses to run when `NODE_ENV=production`.
 

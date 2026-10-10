@@ -3,8 +3,8 @@
 | | |
 |---|---|
 | **Document** | 02 — Technical Requirements Document |
-| **Version** | 1.1 (stakeholder decisions D-1…D-6 applied — see [00 §3](00-README.md)) |
-| **Date** | 2026-10-09 |
+| **Version** | 1.3 (stakeholder decisions D-1…D-12 applied — see [00 §3](00-README.md)) |
+| **Date** | 2026-10-10 |
 | **Scope** | Release 1 (MVP) in detail; R1.1–R4 as forward-compatibility requirements |
 | **Related** | [01 BRS](01-business-requirements-specification.md) · [05 Schema](05-backend-schema-document.md) · [06 Plan](06-implementation-plan.md) |
 
@@ -26,9 +26,10 @@ flowchart TB
         APP[Jamii Air mobile app<br/>React Native + Expo]
         ADM[Admin portal<br/>React web app<br/>admin.domain]
     end
-    subgraph Edge
-        CDN[CDN — Cloudflare]
-        ZT[Cloudflare Access<br/>admin allow-list]
+    subgraph Edge["Edge — nginx on our servers (Tanzania)"]
+        NGX[nginx<br/>TLS, reverse proxy]
+        CDN[Media cache<br/>variant images only]
+        ZT[IP allowlist<br/>admin portal + admin API]
     end
     subgraph Backend["Backend (single deployable, modular monolith)"]
         API[NestJS API<br/>/api/v1 + /api/v1/admin]
@@ -36,12 +37,13 @@ flowchart TB
     end
     PG[(PostgreSQL<br/>tables + stored procedures)]
     RD[(Redis<br/>queues, rate limits)]
-    OBJ[(S3-compatible storage<br/>Cloudflare R2 / MinIO)]
+    OBJ[(MinIO<br/>S3-compatible, self-hosted)]
     PUSH[Expo Push Service → FCM / APNs]
     MAIL[Transactional email]
 
-    APP -- HTTPS JSON --> API
-    APP -- presigned PUT --> OBJ
+    APP -- HTTPS JSON --> NGX --> API
+    APP -- presigned PUT --> NGX
+    NGX --> OBJ
     APP -- GET images --> CDN --> OBJ
     ADM --> ZT --> API
     ADM -- GET images --> CDN
@@ -55,6 +57,8 @@ flowchart TB
     WRK --> MAIL
 ```
 
+All components run as one **Docker Compose** stack per environment on our own servers in a Tanzanian data centre (decision D-9). In this document, **"CDN" means the nginx media cache** in front of MinIO; a third-party CDN can be put in front of it later without code changes.
+
 ### 2.2 Key architectural rules
 
 | ID | Rule |
@@ -62,7 +66,7 @@ flowchart TB
 | AR-01 | One backend codebase, deployed as two process types: `api` (HTTP) and `worker` (queue consumers). Same image, different entrypoint. |
 | AR-02 | Modules communicate through exported service interfaces, never by reaching into another module's repository directly. |
 | AR-03 | PostgreSQL is the only source of truth. Redis holds only reconstructable data (queues, rate-limit counters, caches). |
-| AR-04 | Media bytes never pass through the API: upload = presigned PUT direct to storage; download = CDN. |
+| AR-04 | Media bytes never pass through the API: upload = presigned PUT direct to storage; download = CDN (nginx media cache). |
 | AR-05 | Anything the user doesn't need to wait for (image processing, push, email, cleanup) runs in the worker. |
 | AR-06 | All list endpoints are cursor-paginated from day one. |
 | AR-07 | The client is never trusted: every authorization decision is made on the server (NestJS guards + checks inside stored procedures). |
@@ -84,7 +88,7 @@ flowchart TB
 | Media capture | `expo-image-picker`, `expo-image-manipulator` | Client-side downscale to ≤ 2048 px before upload. |
 | Push | `expo-notifications` | |
 | i18n | `i18next` + `expo-localization` | `en`, `sw`. |
-| **Admin portal** | **React + Vite + TypeScript**, React Router, TanStack Query + TanStack Table, Tailwind CSS + shadcn/ui, react-hook-form + zod | Static build hosted on Cloudflare Pages; English only. |
+| **Admin portal** | **React + Vite + TypeScript**, React Router, TanStack Query + TanStack Table, Tailwind CSS + shadcn/ui, react-hook-form + zod | Static build served by nginx on our servers; English only. |
 | Backend framework | **NestJS 12**, Node.js 24 LTS, TypeScript, ESM | Existing scaffold in `backend/`. |
 | ORM / migrations | **Prisma** (schema, migrations, simple reads) | **TypedSQL** (`prisma/sql/*.sql` + `$queryRawTyped`) for typed calls to stored procedures. |
 | Business logic in DB | **PostgreSQL stored procedures** — PL/pgSQL / SQL functions: `fn_*` (activities), `fn_admin_*`, `fn_maint_*` (batch maintenance) | §6. |
@@ -95,7 +99,7 @@ flowchart TB
 | Auth | `@nestjs/jwt`, opaque refresh tokens, `argon2` (Argon2id), `otplib` (admin TOTP) | Hashing happens in Node; stored procedures receive hashes only. |
 | Rate limiting | `@nestjs/throttler` (in-memory → Redis storage from Plan task 2.7) | |
 | Image processing | `sharp` | WebP output, EXIF strip, blurhash. |
-| Object storage SDK | `@aws-sdk/client-s3` + `s3-request-presigner` | R2, S3, MinIO compatible. |
+| Object storage SDK | `@aws-sdk/client-s3` + `s3-request-presigner` | MinIO (self-hosted); any S3-compatible store works unchanged. |
 | Logging | `pino` via `nestjs-pino` (JSON) | Secret redaction. |
 | Errors / APM | Sentry (API, worker, mobile, admin) | |
 | Product analytics | PostHog | KPI events only (§12). |
@@ -328,11 +332,11 @@ Each module has a thin typed wrapper; services never write SQL strings inline.
 
 | ID | Requirement |
 |---|---|
-| AP-01 | Separate React web app at `admin.<domain>`, static hosting (Cloudflare Pages). Desktop-first (≥ 1280 px), usable on tablet. |
+| AP-01 | Separate React web app at `admin.<domain>`, static files served by nginx on our servers. Desktop-first (≥ 1280 px), usable on tablet. |
 | AP-02 | **Separate admin accounts** in `admin_users` — admins are not app users and cannot log into the mobile app with admin credentials. |
 | AP-03 | Roles: `SUPER_ADMIN` (everything + manage admins) and `MODERATOR` (reports, content, users, invites, audit log read). |
 | AP-04 | **TOTP two-factor authentication is mandatory**; enrollment enforced on first login. Super-admin can reset another admin's 2FA (audited). |
-| AP-05 | Defence in depth: portal and `/api/v1/admin/*` sit behind **Cloudflare Access** (email allow-list) in staging and production. |
+| AP-05 | Defence in depth: nginx serves the portal and `/api/v1/admin/*` only to an **IP allowlist** (office network) in UAT and production; all other addresses get `403`. The allowlist is kept in the deployment config, and changes are reviewed like code. |
 | AP-06 | Every admin mutation requires a reason note and is written to `moderation_actions` (content/user actions) or `admin_audit_log` (logins, admin management, invite changes) inside the same stored procedure. |
 | AP-07 | Admin sessions: idle timeout 30 min, absolute 12 h; failed logins rate-limited (5 / 15 min) and locked after 10 consecutive failures. |
 | AP-08 | Admins see hidden content and reporter identities; users never see who reported them. |
@@ -426,7 +430,7 @@ sequenceDiagram
 | SE-07 | Logs redact `password`, `token`, `refreshToken`, `authorization`, `cookie`, `email`, `dateOfBirth`, `totp`. |
 | SE-08 | Storage bucket private; only variant prefixes exposed via CDN; presigned URLs ≤ 15 min. |
 | SE-09 | Dependency scanning in CI; no known critical CVEs at release. |
-| SE-10 | Admin portal: §8 (separate accounts, 2FA, Cloudflare Access, audited actions, session limits). |
+| SE-10 | Admin portal: §8 (separate accounts, 2FA, IP allowlist, audited actions, session limits). |
 
 ### 13.1 Security responsibilities: backend vs stored procedures
 
@@ -452,7 +456,7 @@ Security is **layered**. NestJS is the first gate; stored procedures and databas
 | SR-02 | Migrations run as `jamii_owner`; the runtime never connects as the owner or a superuser. | Config review; separate connection strings (Plan task 2.2). |
 | SR-03 | Every `SECURITY DEFINER` function sets `SET search_path = public, pg_temp`. | CI query over `pg_proc` fails the build if any `fn_*` lacks it. |
 | SR-04 | No dynamic SQL built from input inside procedures; `EXECUTE format()` only with `%I`/`%L` and allow-listed identifiers. | Code review checklist; CI grep for `EXECUTE` in `prisma/functions/`. |
-| SR-05 | Plaintext passwords, raw tokens, reset codes and TOTP codes **never** reach SQL, so database logs (slow-query, `auto_explain`, errors) can't leak them. | Code review; log sampling in staging. |
+| SR-05 | Plaintext passwords, raw tokens, reset codes and TOTP codes **never** reach SQL, so database logs (slow-query, `auto_explain`, errors) can't leak them. | Code review; log sampling in UAT. |
 | SR-06 | Every procedure has integration tests for each authorization case: owner, other user, blocked user, suspended user, wrong admin role. | Definition of Done (Plan §2). |
 | SR-07 | Database errors other than `JA*` business errors return a generic `500 INTERNAL_ERROR`; SQL text, constraint names and stack traces are logged, never returned. | API e2e tests. |
 
@@ -486,16 +490,18 @@ Capacity model (10k DAU): ≈ 500k feed requests/day ≈ 6 req/s average, ~60 re
 | Env | Infra |
 |---|---|
 | `local` | Docker Compose (Postgres, Redis, MinIO, Mailpit); API, worker and admin dev server run locally. |
-| `staging` | Production-shaped, smallest sizes, fake seed data; admin portal on `admin-staging.<domain>` behind Cloudflare Access. |
-| `production` | 1 API + 1 worker container, managed PostgreSQL (daily backups + PITR), managed Redis, R2 + CDN, admin portal on Cloudflare Pages + Access. |
+| `uat` | User acceptance testing. Same Docker Compose stack as production on the UAT server, whose address comes from the environment variable **`UAT_SERVER_IP`** (deploy scripts, CI secrets and app config read it; it is never hard-coded or committed). Fake seed data. Reached by IP until a domain exists; admin portal behind the IP allowlist. |
+| `production` | *Later stage (D-12).* Docker Compose on our servers in a Tanzanian data centre: 1 API + 1 worker container, **PostgreSQL 18** (self-managed; daily backups + WAL archiving for PITR), Redis, **MinIO**, **nginx** (TLS via Let's Encrypt, reverse proxy, media cache, admin portal static files + IP allowlist). |
 
 | ID | Requirement |
 |---|---|
 | DP-01 | One Docker image for API and worker (`node dist/main`, `node dist/worker`). |
 | DP-02 | `prisma migrate deploy` (tables **and** stored procedures) runs before new code takes traffic; migrations backward compatible (SV-04). |
 | DP-03 | CI on every PR: lint, typecheck, unit, integration (Testcontainers), **SP drift check**, build (backend, mobile typecheck, admin build). |
-| DP-04 | Mobile via EAS Build/Update; admin portal auto-deployed to Pages per environment. |
-| DP-05 | Daily backups + PITR; **restore drill before pilot**, quarterly after. |
+| DP-04 | Mobile via EAS Build/Update; admin portal built in CI and deployed to nginx per environment. |
+| DP-05 | PostgreSQL: daily backups + WAL archiving for PITR (pgBackRest), with a copy kept off the database server; MinIO: bucket mirrored to a second disk or server. **Restore drill before pilot**, quarterly after. |
+| DP-06 | Deploy = CI builds the image and pushes it to GitHub Container Registry; the server pulls it, runs migrations, then restarts API and worker with `docker compose up -d`. |
+| DP-07 | Servers: firewall (only 80/443 public, SSH by key from allowlisted IPs), automatic security updates, disk-space and container-health alerts. |
 
 | Test layer | Scope | Tooling |
 |---|---|---|
@@ -511,9 +517,9 @@ Capacity model (10k DAU): ≈ 500k feed requests/day ≈ 6 req/s average, ~60 re
 
 | Stage | Users | Add | Trigger |
 |---|---|---|---|
-| 1 | ~10 | 1 API, 1 worker, Postgres, Redis, R2 + CDN | — |
+| 1 | ~10 | 1 API, 1 worker, Postgres, Redis, MinIO + nginx (one Docker Compose stack) | — |
 | 2 | 100–1,000 | PgBouncer (transaction mode — compatible with stored-procedure calls), Redis HA | DB connections > 60 % |
-| 3 | 1,000–10,000 | 2+ API instances, read replica for read-only procedures, Redis cache for profiles/unread counts | API CPU > 60 %; feed P95 > 300 ms |
+| 3 | 1,000–10,000 | 2+ API instances, read replica for read-only procedures, Redis cache for profiles/unread counts, third-party CDN in front of nginx if bandwidth requires | API CPU > 60 %; feed P95 > 300 ms |
 | 4 | 10,000+ | Fan-out-on-write for large accounts, dedicated search, service extraction | Feed SP P95 > 100 ms after tuning |
 
 ## 18. Architecture decision records

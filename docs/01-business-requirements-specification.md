@@ -5,7 +5,7 @@
 | **Document** | 01 — Business Requirements Specification |
 | **Version** | 1.1 (stakeholder decisions applied — see [00 §3](00-README.md)) |
 | **Date** | 2026-10-09 |
-| **Status** | Draft — awaiting stakeholder sign-off |
+| **Status** | **Signed off** — 2026-10-10 |
 | **Related** | [00 Index & Review](00-README.md) · [02 TRD](02-technical-requirements-document.md) · [06 Implementation Plan](06-implementation-plan.md) |
 
 ---
@@ -41,14 +41,14 @@ The product follows a familiar pattern (Instagram-style), so the business risk i
 |---|---|---|
 | Founder / Product owner | Product direction, priorities, sign-off | Approves BRS, releases |
 | Engineering (backend, mobile) | Build, operate, scale | Owns TRD, schema, implementation |
-| Designer | Brand, UX, UI | Owns Design Brief deliverables |
+| Designer | Brand, UX, UI | Owns Design Brief deliverables (the engineer with Claude Code until a designer joins — D-11) |
 | Pilot users (10) | A useful, pleasant, safe app | Feedback, usage data |
 | Moderator / Admin | Handle reports, enforce rules, manage pilot invites | Uses the **admin portal** (web) |
 | Legal / compliance advisor | Data protection, app store rules | Reviews privacy policy, ToS |
 
 ## 5. Target users & personas
 
-**Assumed primary market:** East Africa (Tanzania, Kenya), urban and peri-urban, aged 18–35 (**the platform is 18+ only**), Android-first (iOS supported), English and Swahili speakers, frequently on prepaid mobile data where **data cost matters**. *(Assumption — to be confirmed, see 00-README Q-2.)*
+**Assumed primary market:** East Africa (Tanzania, Kenya), urban and peri-urban, aged 18–35 (**the platform is 18+ only**), Android-first (iOS supported), English and Swahili speakers, frequently on prepaid mobile data where **data cost matters**. *(Confirmed — decision D-7.)*
 
 | Persona | Description | Needs |
 |---|---|---|
@@ -203,7 +203,7 @@ Priority: **M** = Must (release blocked without it) · **S** = Should (strongly 
 2. Pilot users are invited, known to the team, and give feedback directly.
 3. All accounts are public in R1.
 4. One admin (from the team) moderates during the pilot, using the admin portal from a laptop.
-5. A team of ~2 engineers and a part-time designer.
+5. A team of 1 engineer building with Claude Code (decision D-11).
 6. Apple and Google developer accounts will be available for TestFlight / internal testing distribution.
 
 ## 12. Constraints
@@ -241,5 +241,5 @@ Priority: **M** = Must (release blocked without it) · **S** = Should (strongly 
 
 | Role | Name | Decision | Date |
 |---|---|---|---|
-| Product owner | | | |
+| Product owner | | Approved | 2026-10-10 |
 | Engineering lead | | | |

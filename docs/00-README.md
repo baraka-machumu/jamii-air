@@ -4,7 +4,7 @@
 |---|---|
 | **Project** | Jamii Air — photo & short-video social platform |
 | **Phase** | Pre-development (documentation & review) |
-| **Doc version** | 1.1 — 2026-10-09 (stakeholder decisions applied) |
+| **Doc version** | 1.3 — 2026-10-10 (open questions answered: D-7…D-11; BRS signed off; environments D-12) |
 | **Prepared by** | Senior Software Engineer |
 | **Source guidelines** | `instagram_mvp_technical_specification_10_users.pdf` (the "Spec"), `application-consideration.txt` (the "Guidelines") |
 
@@ -19,7 +19,7 @@ Read in this order. Every later document builds on the decisions in the earlier 
 | 01 | [Business Requirements Specification (BRS)](01-business-requirements-specification.md) | *Why* are we building this, for whom, and what must it achieve? | Founders, product, stakeholders |
 | 02 | [Technical Requirements Document (TRD)](02-technical-requirements-document.md) | *How* will the system be built, and to what technical standard? | Engineering |
 | 03 | [App Flow Document](03-app-flow-document.md) | *What* does the user (and admin) see and do, screen by screen? | Product, design, engineering, QA |
-| 04 | [Design Brief](04-design-brief.md) | What should Jamii Air (and the admin portal) look and feel like? | Designer(s), engineering |
+| 04 | [Design Brief](04-design-brief.md) | What should Jamii Air (and the admin portal) look and feel like? | Whoever produces the designs (engineer + Claude Code), engineering |
 | 05 | [Backend Schema Document](05-backend-schema-document.md) | What is stored, where, and which stored procedures operate on it? | Backend engineering |
 | 06 | [Implementation Plan](06-implementation-plan.md) | In what order do we build it, and how do we know each step is done? | Whole team |
 
@@ -43,6 +43,17 @@ Read in this order. Every later document builds on the decisions in the earlier 
 | D-4 | **AI/ML is out of the MVP.** | All ML requirements, impression logging (`user_events`, `POST /events`) and the ML roadmap removed. Plain product analytics (KPIs) remain. AI/ML will be planned in its own document later. |
 | D-5 | **Admin uses a separate website (admin portal).** | New `admin/` web app; separate `admin_users` table with 2FA; admin API under `/api/v1/admin`; admin portal flows (App Flow §15) and design (Design Brief §13); admin portal built in Phase 4 of the plan. |
 | D-6 | **Minimum age is 18.** | Date of birth collected at sign-up and checked server-side (inside `fn_register_user`); app-store age ratings set accordingly. |
+
+## 3a. Stakeholder decisions (2026-10-10)
+
+| # | Decision | Effect on the documents |
+|---|---|---|
+| D-7 | **Market: Tanzania and Kenya; app in English + Swahili** (answers Q-2). | Confirms the BRS persona and the `en` / `sw` i18n requirement. |
+| D-8 | **Pilot registration is invite-code only** (answers Q-3). | Confirms invite codes (`invite_codes`, admin portal Invite codes page); open sign-up stays an R1.1 feature flag. |
+| D-9 | **Self-hosted on our own servers in a data centre in Tanzania, using Docker Compose. No Cloudflare for now** (answers Q-4). | UAT and production run as Docker Compose stacks: API, worker, **PostgreSQL 18 (self-managed)**, Redis, **MinIO** for photos, and **nginx** for TLS, reverse proxy, the media cache (the "CDN" in these documents) and the admin portal's static files. TRD §2, §8, §16, §17; Plan Phases 0, 2, 4, 5. |
+| D-10 | **Admin portal protected by an IP allowlist** (replaces Cloudflare Access). | nginx only serves `admin.<domain>` and `/api/v1/admin/*` to allowlisted IP addresses (office network), on top of admin login + mandatory 2FA. TRD §8, App Flow §15. |
+| D-11 | **Team: 1 engineer building with Claude Code.** | Plan roles, reviews and ceremonies adjusted (Plan §2–§3). Design deliverables (doc 04) are produced by the engineer with Claude Code unless a designer joins. |
+| D-12 | **Environments for now: local + UAT. Production servers come at a later stage.** The UAT server's address is supplied through the environment variable **`UAT_SERVER_IP`** (never hard-coded). Only the GitHub and Expo (`bmachumu`) accounts are needed now. **Testing is on Android only** until production; iOS is verified in Plan 5.1a. Apple, Google Play, Sentry, PostHog and email accounts are created when production (or a phase that needs them) arrives. The BRS is **signed off**. | "Staging" is renamed **UAT** in all documents. TRD §16; Plan Phases 0, 2, 3, 5. |
 
 ## 4. Review of the source guidelines
 
@@ -85,9 +96,11 @@ Both source documents agree on the baseline used throughout: **modular monolith,
 
 ## 5. Still open
 
-| # | Question | Recommended default (used in the documents until answered) |
+No open questions. All were answered on 2026-10-10:
+
+| # | Question | Answer |
 |---|---|---|
-| Q-2 | Target market and languages? | East Africa (Tanzania/Kenya); **English + Swahili** UI. |
-| Q-3 | Pilot registration: open or invite-only? | **Invite-code only** for the 10-user pilot (feature flag). |
-| Q-4 | Hosting provider? | Container host (Fly.io / Render / DigitalOcean) + managed PostgreSQL + Cloudflare R2/CDN/Pages. |
-| Q-7 | Team size? | 2 engineers + part-time designer. |
+| Q-2 | Target market and languages? | Tanzania + Kenya; English + Swahili — **D-7** |
+| Q-3 | Pilot registration: open or invite-only? | Invite-code only — **D-8** |
+| Q-4 | Hosting provider? | Our own servers in a Tanzanian data centre, Docker Compose, MinIO, no Cloudflare for now — **D-9**, **D-10** |
+| Q-7 | Team size? | 1 engineer + Claude Code — **D-11** |

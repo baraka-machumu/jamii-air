@@ -298,7 +298,7 @@ The admin portal is a desktop web app at `admin.<domain>` (TRD §8). Admins have
 
 ```mermaid
 flowchart LR
-    CFA[Cloudflare Access<br/>email allow-list] --> LOGIN[Login<br/>email + password]
+    CFA[IP allowlist<br/>office network] --> LOGIN[Login<br/>email + password]
     LOGIN --> ENR{2FA enrolled?}
     ENR -- no --> SETUP[Set up authenticator<br/>scan QR, confirm code]
     ENR -- yes --> TOTP[Enter 6-digit code]
@@ -318,7 +318,7 @@ Layout: left sidebar (Dashboard · Reports *(open count badge)* · Users · Invi
 
 ### 15.2 Sign in
 
-1. Opening the portal first passes Cloudflare Access (company email allow-list).
+1. The portal only opens from allowlisted IP addresses (office network); other addresses get an access-denied page.
 2. **Login:** email + password → `POST /admin/auth/login`. Wrong credentials → generic "Incorrect email or password"; 10 consecutive failures lock the account (super-admin unlocks).
 3. **First login:** forced 2FA enrollment — QR code + manual key → enter code to confirm → session starts.
 4. **Later logins:** enter 6-digit TOTP code → session starts.

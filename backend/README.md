@@ -68,6 +68,16 @@ Two cases need a hand-written migration:
 - **Changing a function's signature or return type.** `CREATE OR REPLACE` cannot do this; add a `DROP FUNCTION` before the new definition.
 - **Removing a function.** The generator warns about migrated functions whose source file is gone.
 
+## API structure (Phase 2)
+
+- `src/config/`: typed, validated environment (`AppConfig`). Boot fails on a bad value. It also refuses a `DATABASE_URL` that logs in as `jamii_owner` or `postgres` (SR-02).
+- `src/infrastructure/prisma/`: Prisma Client on the `pg` adapter, connected as `jamii_app`.
+- `src/infrastructure/db-procedures/`: typed wrappers, one per TypedSQL call file in `prisma/sql/`. Services call these, never SQL strings. After adding a call file, run `npm run db:generate` (`prisma generate --sql`). It needs the local database to be migrated.
+- `src/common/errors/`: a global filter that wraps every error in `{ error: { code, message, details }, requestId }`. A procedure's `JA<status>` error becomes that status and code. Any other error becomes `500 INTERNAL_ERROR`, which is logged and never returned.
+- `src/common/logging/`: pino JSON logs, a request id per request (`X-Request-Id`, the caller's or a new one), and redaction of secrets and personal data (SE-07).
+- `src/common/pagination/`: opaque keyset cursors (`nextCursor`) and `limit` clamping.
+- Routes live under `/api/v1`. Health checks are at `/api/v1/health/live` and `/api/v1/health/ready`. OpenAPI is at `/api/v1/docs` and `/api/v1/openapi.json` everywhere except production.
+
 ## Run
 
 ```bash

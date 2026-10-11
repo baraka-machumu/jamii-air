@@ -13,6 +13,8 @@ import { PrismaModule } from './infrastructure/prisma/prisma.module.js';
 import { QueueModule, REDIS } from './infrastructure/queue/queue.module.js';
 import { StorageModule } from './infrastructure/storage/storage.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
+import { EngagementModule } from './modules/engagement/engagement.module.js';
+import { LinksModule } from './modules/links/links.module.js';
 import { MediaModule } from './modules/media/media.module.js';
 import { PostsModule } from './modules/posts/posts.module.js';
 import { UsersModule } from './modules/users/users.module.js';
@@ -41,6 +43,8 @@ import { UsersModule } from './modules/users/users.module.js';
     UsersModule,
     MediaModule,
     PostsModule,
+    EngagementModule,
+    LinksModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],

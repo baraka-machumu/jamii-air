@@ -57,6 +57,7 @@ export class Post {
   @ApiProperty() isMine!: boolean;
   @ApiProperty({ type: PostAuthor }) author!: PostAuthor;
   @ApiProperty({ type: [PostMedia] }) media!: PostMedia[];
+  @ApiProperty({ description: 'Opens the post in the app, else a landing page with store links' }) shareUrl!: string;
   @ApiProperty() createdAt!: string;
 }
 

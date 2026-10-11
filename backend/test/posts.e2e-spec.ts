@@ -3,47 +3,25 @@
 // The processor is called directly (no queue timing).
 import { randomUUID } from 'node:crypto';
 import type { INestApplication } from '@nestjs/common';
-import sharp from 'sharp';
 import type { App } from 'supertest/types.js';
-import { MediaProcedures } from '../src/infrastructure/db-procedures/media.procedures.js';
-import { PrismaService } from '../src/infrastructure/prisma/prisma.service.js';
-import { StorageService } from '../src/infrastructure/storage/storage.service.js';
-import { MediaProcessor } from '../src/workers/media/media.processor.js';
-import { as, createApp, registerUser, type TestUser } from './support.js';
-
-const photo = () => sharp({ create: { width: 1200, height: 900, channels: 3, background: '#c73' } }).jpeg().toBuffer();
+import type { MediaProcessor } from '../src/workers/media/media.processor.js';
+import { as, block, createApp, mediaProcessor, publishPost, registerUser, type TestUser, uploadPhoto } from './support.js';
 
 describe('posts (e2e)', () => {
   let app: INestApplication<App>;
   let processor: MediaProcessor;
-  let prisma: PrismaService;
 
   beforeAll(async () => {
     app = await createApp();
-    prisma = app.get(PrismaService);
-    processor = new MediaProcessor(prisma, app.get(StorageService), app.get(MediaProcedures));
+    processor = await mediaProcessor(app);
   });
 
   afterAll(async () => {
     await app.close();
   });
 
-  async function upload(user: TestUser): Promise<string> {
-    const bytes = await photo();
-    const intent = (await as(app, user).post('/api/v1/media/uploads')
-      .send({ kind: 'IMAGE', purpose: 'POST', mimeType: 'image/jpeg', byteSize: bytes.length }).expect(201)).body;
-    const put = await fetch(intent.uploadUrl, { method: 'PUT', headers: intent.headers, body: new Uint8Array(bytes) });
-    expect(put.status).toBe(200);
-    return intent.mediaId as string;
-  }
-
-  /** Create and publish a post; returns its id. */
-  async function publish(user: TestUser, caption?: string): Promise<string> {
-    const mediaId = await upload(user);
-    const post = (await as(app, user).post('/api/v1/posts').send({ mediaIds: [mediaId], caption }).expect(201)).body;
-    expect(await processor.process(mediaId)).toBe('READY');
-    return post.id as string;
-  }
+  const upload = (user: TestUser) => uploadPhoto(app, user);
+  const publish = (user: TestUser, caption?: string) => publishPost(app, user, caption);
 
   it('creates a post that is PROCESSING for its author only, then PUBLISHED with media URLs', async () => {
     const [author, fan] = [await registerUser(app, 'author'), await registerUser(app, 'fan')];
@@ -69,6 +47,7 @@ describe('posts (e2e)', () => {
 
     const detail = (await as(app, fan).get(`/api/v1/posts/${postId}`).expect(200)).body;
     expect(detail).toMatchObject({ id: postId, status: 'PUBLISHED', isMine: false, author: { id: author.id } });
+    expect(detail.shareUrl).toMatch(new RegExp(`^https?://[^/]+/p/${postId}$`));
     expect(detail.media[0]).toMatchObject({ url: expect.stringMatching(/\/feed\.webp$/), thumbUrl: expect.stringMatching(/\/thumb\.webp$/), width: 1080, height: 810 });
     expect(detail.media[0].blurhash).toEqual(expect.any(String));
     expect(JSON.stringify(detail)).not.toMatch(/original|Key"/); // no object keys or originals (API-09)
@@ -145,8 +124,7 @@ describe('posts (e2e)', () => {
     const postId = await publish(author);
     expect((await as(app, blocker).get('/api/v1/feed').expect(200)).body.items).toHaveLength(1);
 
-    // Block endpoints arrive with task 2.11; call the procedure directly.
-    await prisma.$queryRaw`SELECT * FROM fn_block_user(${blocker.id}::uuid, ${author.id}::uuid)`;
+    await block(app, blocker, author);
 
     expect((await as(app, blocker).get('/api/v1/feed').expect(200)).body.items).toEqual([]);
     expect((await as(app, blocker).get(`/api/v1/posts/${postId}`).expect(404)).body.error.code).toBe('POST_NOT_FOUND');

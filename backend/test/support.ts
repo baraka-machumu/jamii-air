@@ -49,3 +49,38 @@ export function as(app: INestApplication<App>, user: TestUser) {
     delete: (url: string) => auth(request(server).delete(url)),
   };
 }
+
+/** A real JPEG (1200 × 900) uploaded with a presigned PUT; returns its mediaId. */
+export async function uploadPhoto(app: INestApplication<App>, user: TestUser, purpose: 'POST' | 'AVATAR' = 'POST'): Promise<string> {
+  const sharp = (await import('sharp')).default;
+  const bytes = await sharp({ create: { width: 1200, height: 900, channels: 3, background: '#c73' } }).jpeg().toBuffer();
+  const intent = (await as(app, user).post('/api/v1/media/uploads')
+    .send({ kind: 'IMAGE', purpose, mimeType: 'image/jpeg', byteSize: bytes.length }).expect(201)).body;
+  const put = await fetch(intent.uploadUrl, { method: 'PUT', headers: intent.headers, body: new Uint8Array(bytes) });
+  if (put.status !== 200) throw new Error(`upload PUT failed: ${put.status}`);
+  return intent.mediaId as string;
+}
+
+/** The media worker's processor, called directly (no queue timing). */
+export async function mediaProcessor(app: INestApplication<App>) {
+  const { MediaProcessor } = await import('../src/workers/media/media.processor.js');
+  const { PrismaService } = await import('../src/infrastructure/prisma/prisma.service.js');
+  const { StorageService } = await import('../src/infrastructure/storage/storage.service.js');
+  const { MediaProcedures } = await import('../src/infrastructure/db-procedures/media.procedures.js');
+  return new MediaProcessor(app.get(PrismaService), app.get(StorageService), app.get(MediaProcedures));
+}
+
+/** Create a post and run its media through the worker: returns the PUBLISHED post's id. */
+export async function publishPost(app: INestApplication<App>, user: TestUser, caption?: string): Promise<string> {
+  const mediaId = await uploadPhoto(app, user);
+  const post = (await as(app, user).post('/api/v1/posts').send({ mediaIds: [mediaId], caption }).expect(201)).body;
+  const result = await (await mediaProcessor(app)).process(mediaId);
+  if (result !== 'READY') throw new Error(`media processing: ${result}`);
+  return post.id as string;
+}
+
+/** Block endpoints arrive with task 2.11: call the procedure directly. */
+export async function block(app: INestApplication<App>, blocker: TestUser, target: TestUser): Promise<void> {
+  const { PrismaService } = await import('../src/infrastructure/prisma/prisma.service.js');
+  await app.get(PrismaService).$queryRaw`SELECT * FROM fn_block_user(${blocker.id}::uuid, ${target.id}::uuid)`;
+}

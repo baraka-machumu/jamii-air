@@ -200,7 +200,7 @@ NestJS API and workers on top of the finished procedures. The API layer validate
 | 2.6 | ✅ Users module: profile, edit profile, follow/unfollow, followers/following, search |
 | 2.7 | ✅ Media (local: MinIO serves variant keys publicly as the stand-in for the nginx media cache, which comes with the server setup; HEIC is converted on the phone because prebuilt sharp has no HEVC decoder): `StorageService` (presigned PUT with signed type/length, HEAD, delete) for MinIO; **Redis + BullMQ**; throttler → Redis storage; media worker (sharp): decode-validate, auto-orient, **strip EXIF/GPS**, variants, blurhash, retries; nginx media cache for variant paths only + `mediaUrl()` helper |
 | 2.8 | ✅ Posts and feed modules (create with `Idempotency-Key`, get, delete, caption edit, home feed, profile grid; media URLs, `nextCursor`) |
-| 2.9 | Engagement: likes, comments; `shareUrl`; landing page for `/p/*`, `/u/*`; `assetlinks.json`, `apple-app-site-association` |
+| 2.9 | ✅ Engagement: likes, comments; `shareUrl`; landing page for `/p/*`, `/u/*`; `assetlinks.json`, `apple-app-site-association` (identities from env: empty until 0.3 app identifiers exist) |
 | 2.10 | Notifications module + push worker (Expo Push API, batching, receipts, invalid-token cleanup, localised text) |
 | 2.11 | Safety: block/unblock, blocked list, reports, account deletion endpoints |
 | 2.12 | **Admin API** (`/api/v1/admin`): admin login + **mandatory TOTP** (enroll/verify, encrypted secret), cookie-based refresh, `AdminJwtGuard`, `AdminRolesGuard`, CORS for the admin origin only; dashboard, reports, users, content, invites, audit log, admins endpoints |

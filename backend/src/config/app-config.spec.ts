@@ -52,4 +52,15 @@ describe('loadConfig', () => {
       'S3_SECRET_ACCESS_KEY is required',
     ]);
   });
+
+  it('builds share links on the API by default and validates app-link identities (SH-01)', () => {
+    expect(loadConfig(valid).links).toEqual({
+      webBaseUrl: 'http://localhost:3000', androidPackage: null, androidCertSha256: [], iosAppId: null, iosStoreUrl: null,
+    });
+    const fingerprint = Array(32).fill('ab').join(':');
+    expect(loadConfig({ ...valid, PUBLIC_WEB_URL: 'https://jamii.example/', ANDROID_CERT_SHA256: ` ${fingerprint} ` }).links)
+      .toMatchObject({ webBaseUrl: 'https://jamii.example', androidCertSha256: [fingerprint.toUpperCase()] });
+    expect(problems({ ...valid, PUBLIC_WEB_URL: 'jamii.example', ANDROID_PACKAGE: 'app', ANDROID_CERT_SHA256: 'AB:CD', IOS_APP_ID: 'tz.app', IOS_STORE_URL: 'http://x' }))
+      .toHaveLength(5);
+  });
 });

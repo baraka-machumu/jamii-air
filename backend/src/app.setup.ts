@@ -7,6 +7,7 @@ import helmet from 'helmet';
 import { Logger } from 'nestjs-pino';
 import { AllExceptionsFilter } from './common/errors/all-exceptions.filter.js';
 import { AppConfig } from './config/app-config.js';
+import { LINK_ROUTES } from './modules/links/links.controller.js';
 
 export const API_PREFIX = 'api/v1';
 
@@ -18,7 +19,7 @@ export function configureApp(app: INestApplication): void {
   app.use(helmet()); // SE-02
   express.useBodyParser('json', { limit: '100kb' }); // SE-05
   express.disable('x-powered-by');
-  app.setGlobalPrefix(API_PREFIX); // API-01
+  app.setGlobalPrefix(API_PREFIX, { exclude: LINK_ROUTES }); // API-01; share-link targets at the root (SH-01)
   app.useGlobalPipes(
     new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }), // SE-05
   );

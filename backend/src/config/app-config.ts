@@ -31,6 +31,8 @@ export class AppConfig {
   /** BullMQ queues, rate-limit counters (TRD §12 Redis). */
   readonly redisUrl: string;
   readonly s3: S3Config;
+  /** Share links and app links (TRD SH-01/02). */
+  readonly links: LinksConfig;
 
   constructor(values: Omit<AppConfig, 'isProduction' | 'swaggerEnabled'>) {
     this.nodeEnv = values.nodeEnv;
@@ -44,6 +46,7 @@ export class AppConfig {
     this.mediaBaseUrl = values.mediaBaseUrl;
     this.redisUrl = values.redisUrl;
     this.s3 = values.s3;
+    this.links = values.links;
   }
 
   get isProduction(): boolean {
@@ -65,6 +68,19 @@ export interface S3Config {
   bucket: string;
   accessKeyId: string;
   secretAccessKey: string;
+}
+
+export interface LinksConfig {
+  /** Public site that serves /p/:id, /u/:username and /.well-known (shareUrl base). No trailing slash. */
+  webBaseUrl: string;
+  /** Android App Links (assetlinks.json); unset until the app identifiers exist (Plan 0.3). */
+  androidPackage: string | null;
+  /** SHA-256 fingerprints of the app signing certificates (EAS / Play), AA:BB:… form. */
+  androidCertSha256: string[];
+  /** iOS Universal Links (apple-app-site-association): `<TeamID>.<bundleId>`. */
+  iosAppId: string | null;
+  /** App Store page, shown on the landing page once the app is listed. */
+  iosStoreUrl: string | null;
 }
 
 export class ConfigError extends Error {
@@ -126,9 +142,22 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     if (!value) problems.push(`${name} is required`);
   }
 
+  const links: LinksConfig = {
+    webBaseUrl: (env.PUBLIC_WEB_URL || `http://localhost:${port}`).replace(/\/+$/, ''),
+    androidPackage: env.ANDROID_PACKAGE || null,
+    androidCertSha256: (env.ANDROID_CERT_SHA256 ?? '').split(',').map((v) => v.trim().toUpperCase()).filter(Boolean),
+    iosAppId: env.IOS_APP_ID || null,
+    iosStoreUrl: env.IOS_STORE_URL || null,
+  };
+  if (!/^https?:\/\/.+/.test(links.webBaseUrl)) problems.push('PUBLIC_WEB_URL must be an http(s) URL');
+  if (links.androidPackage && !/^[a-zA-Z][\w]*(\.[a-zA-Z][\w]*)+$/.test(links.androidPackage)) problems.push('ANDROID_PACKAGE must be a Java package name, e.g. com.example.app');
+  if (links.androidCertSha256.some((f) => !/^([0-9A-F]{2}:){31}[0-9A-F]{2}$/.test(f))) problems.push('ANDROID_CERT_SHA256 must be comma-separated SHA-256 fingerprints (AA:BB:…, 32 bytes)');
+  if (links.iosAppId && !/^[A-Z0-9]{10}\.[\w.-]+$/.test(links.iosAppId)) problems.push('IOS_APP_ID must be <TeamID>.<bundleId>');
+  if (links.iosStoreUrl && !/^https:\/\/.+/.test(links.iosStoreUrl)) problems.push('IOS_STORE_URL must be an https URL');
+
   if (problems.length > 0) throw new ConfigError(problems);
   return new AppConfig({
-    nodeEnv, port, databaseUrl, logLevel, requireInvite: requireInvite!, jwtAccessSecret, authCodeSecret, smtp, mediaBaseUrl, redisUrl, s3,
+    nodeEnv, port, databaseUrl, logLevel, requireInvite: requireInvite!, jwtAccessSecret, authCodeSecret, smtp, mediaBaseUrl, redisUrl, s3, links,
   });
 }
 

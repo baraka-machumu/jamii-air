@@ -2,17 +2,14 @@
 // exist (MD-02), shapes responses (camelCase, media URLs, pages) and enqueues media processing
 // after the create call commits (SP-09).
 import { Injectable } from '@nestjs/common';
-import { ApiError } from '../../common/errors/api-error.js';
+import { idempotency } from '../../common/idempotency/idempotency-key.js';
 import { clampLimit, decodeCursor, type Page, toPage } from '../../common/pagination/cursor.js';
-import { sha256Hex } from '../../infrastructure/crypto/tokens.js';
 import { type FeedRow, type PostRow, PostsProcedures } from '../../infrastructure/db-procedures/posts.procedures.js';
 import { MediaJobs } from '../../infrastructure/queue/queue.module.js';
 import { MediaUrls } from '../../infrastructure/storage/media-urls.js';
+import { ShareLinks } from '../links/share-links.js';
 import { MediaService } from '../media/media.service.js';
 import type { CreatePostDto, GridItem, Post, PostMedia } from './posts.dto.js';
-
-/** Idempotency-Key header (API-08): a client-made UUID in practice; stored as varchar(64). */
-const IDEMPOTENCY_KEY = /^[A-Za-z0-9_.:-]{8,64}$/;
 
 /** One element of the `media` jsonb array the post and feed procedures build. */
 interface MediaJson {
@@ -32,17 +29,15 @@ export class PostsService {
     private readonly urls: MediaUrls,
     private readonly media: MediaService,
     private readonly mediaJobs: MediaJobs,
+    private readonly links: ShareLinks,
   ) {}
 
   async create(viewerId: string, dto: CreatePostDto, idempotencyKey: string | undefined): Promise<Post> {
-    if (idempotencyKey !== undefined && !IDEMPOTENCY_KEY.test(idempotencyKey)) {
-      throw new ApiError(400, 'INVALID_IDEMPOTENCY_KEY');
-    }
+    const caption = dto.caption ?? null;
+    const { key, requestHash } = idempotency(idempotencyKey, { mediaIds: dto.mediaIds, caption });
     for (const mediaId of dto.mediaIds) await this.media.assertUploaded(viewerId, mediaId);
 
-    const caption = dto.caption ?? null;
-    const requestHash = idempotencyKey ? sha256Hex(JSON.stringify({ mediaIds: dto.mediaIds, caption })) : null;
-    const created = await this.procedures.createPost(viewerId, dto.mediaIds, caption, idempotencyKey ?? null, requestHash);
+    const created = await this.procedures.createPost(viewerId, dto.mediaIds, caption, key, requestHash);
     // After commit (SP-09). A replay enqueues nothing; a lost job is requeued by maintenance (2.13).
     for (const mediaId of created.mediaToProcess) await this.mediaJobs.process(mediaId);
     return this.get(viewerId, created.postId);
@@ -95,6 +90,7 @@ export class PostsService {
         id: m.id, kind: m.kind, blurhash: m.blurhash, url: this.urls.of(m.feedKey), thumbUrl: this.urls.of(m.thumbKey),
         width: m.width, height: m.height,
       })),
+      shareUrl: this.links.post(r.post_id!),
       createdAt: r.created_at!.toISOString(),
     };
   }

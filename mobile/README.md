@@ -22,7 +22,9 @@ npm run build:dev                   # Android development build in the cloud; op
 npx expo start                      # the dev build on the phone connects to this server
 ```
 
-`npm run build:preview` makes a standalone APK. It has no dev server to find the API, so it needs `EXPO_PUBLIC_API_URL` (set as an EAS environment variable) pointing at a reachable HTTPS API, which arrives with UAT.
+`npm run build:preview` makes a standalone APK for demos. It has no dev server to find the API, so `eas.json` bakes in `EXPO_PUBLIC_API_URL=http://192.168.0.65:3000` (the dev machine on Wi-Fi). If that address changes, edit it in `eas.json` and rebuild. The phone must be on the same Wi-Fi, and Windows Firewall must allow inbound TCP 3000 to the API.
+
+Plain HTTP is allowed in `development` and `preview` builds only: `app.config.ts` reads `APP_VARIANT` (set per profile in `eas.json`) and turns Android cleartext traffic off for `production`.
 
 ## Check
 

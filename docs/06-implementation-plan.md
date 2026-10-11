@@ -349,5 +349,5 @@ If priorities change, these stories are dropped first, in this order: 1) Caption
    - create the board: `winget install GitHub.cli`, `gh auth login`, `gh auth refresh -s project`, then `node docs/backlog/create-github-issues.mjs <backlog file>`. Until then the backlog files are the tracker.
 5. ✅ **Phase 3 started:** designs approved ([design canvas](https://claude.ai/artifact/U9EUjyBSEbuL8as26BwFtw)); 3.1 foundation built.
 6. ✅ 3.2 typed API client built.
-7. **3.3 in progress:** `eas.json` profiles and `expo-dev-client` added. Owner steps: `eas login`, `eas init`, `npm run build:dev`, install on the reference device, FCM credentials. Then 3.4 (auth screens). Tracker: [`docs/backlog/phase-3-mobile.md`](backlog/phase-3-mobile.md).
+7. **3.3 in progress:** `eas.json` profiles and `expo-dev-client` added; development and preview builds reach the local API over plain HTTP (purely development, no HTTPS for now). Owner steps: `eas login`, `eas init`, `npm run build:dev`, install on the reference device, FCM credentials. Then 3.4 (auth screens). Tracker: [`docs/backlog/phase-3-mobile.md`](backlog/phase-3-mobile.md).
 

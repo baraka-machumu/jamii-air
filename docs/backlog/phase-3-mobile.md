@@ -24,6 +24,66 @@ The GitHub board does not exist yet (the `gh` CLI is not installed), so this tab
 | 3.11 Safety | Backlog | | |
 | 3.12 Quality | Backlog | | `MIN_APP_VERSION` / `426` is ready in the API |
 
+## To-do checklist
+
+The Phase 3 tasks broken into trackable items. Tick an item (☐ → ✅) in the same commit that builds it. When every item of a task is ticked and its checks are green, move the task to **Review** in the Status table above.
+
+| ID | Task | Item | State |
+|---|---|---|---|
+| 3.1.a | 3.1 Foundation | Reviewed PR, green CI on GitHub, demo on the reference Android (`preview` build) → Done | ☐ |
+| 3.1.b | 3.1 Foundation | Sentry, once a DSN exists | ☐ (deferred) |
+| 3.2.a | 3.2 API client | Reviewed PR, green CI on GitHub, demo on the reference Android → Done | ☐ |
+| 3.3.a | 3.3 EAS builds | Expo account `bmachumu` | ✅ |
+| 3.3.b | 3.3 EAS builds | EAS build profiles (`development`, `preview`, `production`), project owner `bmachumu` | ☐ |
+| 3.3.c | 3.3 EAS builds | Android dev build installed and running on the reference device | ☐ |
+| 3.3.d | 3.3 EAS builds | Android push credentials (FCM via EAS) | ☐ |
+| 3.3.e | 3.3 EAS builds | iOS builds and APNs | ☐ (waits for the Apple account, 5.0) |
+| 3.4.a | 3.4 Auth | Welcome screen | ☐ |
+| 3.4.b | 3.4 Auth | Sign up: date-of-birth picker, under-18 message, invite code | ☐ |
+| 3.4.c | 3.4 Auth | Log in | ☐ |
+| 3.4.d | 3.4 Auth | Forgot password | ☐ |
+| 3.4.e | 3.4 Auth | Secure token storage | ☐ |
+| 3.4.f | 3.4 Auth | Single-flight silent refresh | ☐ |
+| 3.4.g | 3.4 Auth | Session restore on launch | ☐ |
+| 3.5.a | 3.5 Profile | My profile | ☐ |
+| 3.5.b | 3.5 Profile | Edit profile | ☐ |
+| 3.5.c | 3.5 Profile | Avatar upload | ☐ |
+| 3.5.d | 3.5 Profile | Settings | ☐ |
+| 3.5.e | 3.5 Profile | Language and theme, persisted on the device | ☐ |
+| 3.6.a | 3.6 People | Search: debounce, cancel, recent searches | ☐ |
+| 3.6.b | 3.6 People | User profile with optimistic Follow | ☐ |
+| 3.6.c | 3.6 People | Follower and following lists | ☐ |
+| 3.6.d | 3.6 People | Onboarding "Find people" | ☐ |
+| 3.7.a | 3.7 Create flow | Permissions, picker and camera | ☐ |
+| 3.7.b | 3.7 Create flow | Crop | ☐ |
+| 3.7.c | 3.7 Create flow | Downscale and HEIC → JPEG on the phone | ☐ |
+| 3.7.d | 3.7 Create flow | Caption | ☐ |
+| 3.7.e | 3.7 Create flow | Upload with progress and retry | ☐ |
+| 3.7.f | 3.7 Create flow | Draft persistence | ☐ |
+| 3.7.g | 3.7 Create flow | Posting / processing / failed card | ☐ |
+| 3.8.a | 3.8 Feed | Home feed: FlashList, reserved aspect ratio, blurhash, memoised card | ☐ |
+| 3.8.b | 3.8 Feed | Infinite scroll, pull-to-refresh, all states (loading, empty, error, offline) | ☐ |
+| 3.8.c | 3.8 Feed | Profile grid | ☐ |
+| 3.8.d | 3.8 Feed | Post detail | ☐ |
+| 3.8.e | 3.8 Feed | Performance pass on the reference Android | ☐ |
+| 3.9.a | 3.9 Engagement | Like button and double-tap animation (debounced optimistic toggle) | ☐ |
+| 3.9.b | 3.9 Engagement | Comments screen | ☐ |
+| 3.9.c | 3.9 Engagement | Share sheet and copy link | ☐ |
+| 3.9.d | 3.9 Engagement | Deep links `/p/:id`, `/u/:username` via Expo Router | ☐ |
+| 3.10.a | 3.10 Notifications | Activity screen | ☐ |
+| 3.10.b | 3.10 Notifications | Tab badge (unread count on foreground and after push) | ☐ |
+| 3.10.c | 3.10 Notifications | Permission onboarding | ☐ |
+| 3.10.d | 3.10 Notifications | Push handling in every app state; Android channel `default` | ☐ |
+| 3.11.a | 3.11 Safety | Block / unblock | ☐ |
+| 3.11.b | 3.11 Safety | Blocked accounts screen | ☐ |
+| 3.11.c | 3.11 Safety | Report sheet | ☐ |
+| 3.11.d | 3.11 Safety | Delete account flow | ☐ |
+| 3.12.a | 3.12 Quality | Maestro E2E of the core loop in CI | ☐ |
+| 3.12.b | 3.12 Quality | PostHog KPI events (optional until production) | ☐ |
+| 3.12.c | 3.12 Quality | Accessibility pass | ☐ |
+| 3.12.d | 3.12 Quality | Min-version (`426`) wiring | ☐ |
+| 3.12.e | 3.12 Quality | EAS Update channel | ☐ |
+
 ## Decisions taken during Phase 3
 
 | Topic | Decision | Why |

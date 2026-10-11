@@ -4,6 +4,23 @@ Stories for the first two iterations of the [Implementation Plan](../06-implemen
 
 Format: user story, BRS link, plan task, acceptance criteria (Given / When / Then). Every story also follows the Definition of Done (Plan §3).
 
+## Status
+
+Board columns as in Plan §2.3. **Review** = built, all acceptance criteria verified locally, committed; not yet Done. Done also needs a reviewed PR and green CI, and the database CI arrives with E0-07.
+
+The GitHub board does not exist yet, so this table is the tracker until the issues are created.
+
+| Story | Column | Commit | Notes |
+|---|---|---|---|
+| E0-01 Local infrastructure | Review | `30dcd61` | MinIO image is the `pgsty/minio` community build: upstream images are no longer published |
+| E0-02 Prisma + `init` | Review | `3f5f877` | Prisma 7.10.0. Grants revoke only on our `fn_*`, not on all functions; Schema §9 to be aligned |
+| E0-03 Procedure layout + generator | Review | `8031eff` | Grants are added by appending `prisma/grants.sql`, which is idempotent and covers every `fn_*` |
+| E0-04 Drift check | Ready | — | Reuses `scripts/db/functions.ts` |
+| E0-05 Test harness + `fn_ping` | Ready | — | |
+| E0-06 Security checks | Ready | — | |
+| E0-07 Database CI | Ready | — | Needs branch protection on `main` |
+| E1-01 … E1-07 | Backlog | — | After E0 |
+
 ---
 
 ## E0 — Foundation
@@ -15,11 +32,11 @@ Format: user story, BRS link, plan task, acceptance criteria (Given / When / The
 As the engineer, I want one command that starts PostgreSQL 18, Redis 7, MinIO and Mailpit locally, so that every database and API story runs against the same stack as UAT.
 
 **Acceptance criteria**
-- [ ] Given a fresh clone, when I run `docker compose up -d` in `backend/`, then PostgreSQL 18, Redis 7, MinIO and Mailpit start and report healthy.
-- [ ] Given the stack is up, then roles `jamii_owner` (owns schema, runs migrations) and `jamii_app` (runtime, no table write privileges) exist.
-- [ ] Given the stack is up, then MinIO has a private bucket `jamii-air-media-local`.
-- [ ] All passwords and ports come from `backend/.env` (git-ignored); `backend/.env.example` documents every variable.
-- [ ] Data survives `docker compose down` / `up` (named volumes).
+- [x] Given a fresh clone, when I run `docker compose up -d` in `backend/`, then PostgreSQL 18, Redis 7, MinIO and Mailpit start and report healthy.
+- [x] Given the stack is up, then roles `jamii_owner` (owns schema, runs migrations) and `jamii_app` (runtime, no table write privileges) exist.
+- [x] Given the stack is up, then MinIO has a private bucket `jamii-air-media-local`.
+- [x] All passwords and ports come from `backend/.env` (git-ignored); `backend/.env.example` documents every variable.
+- [x] Data survives `docker compose down` / `up` (named volumes).
 
 ### E0-02 — Prisma setup and `init` migration
 
@@ -28,10 +45,10 @@ As the engineer, I want one command that starts PostgreSQL 18, Redis 7, MinIO an
 As the engineer, I want Prisma (ESM client, TypedSQL enabled) with an `init` migration, so that the schema is version-controlled and every later migration builds on it.
 
 **Acceptance criteria**
-- [ ] Given an empty database, when I run `npx prisma migrate deploy` as `jamii_owner`, then the `init` migration applies without errors.
-- [ ] `init` creates extensions `citext` and `pg_trgm`, all enums from Schema §4, `fn__touch_updated_at()`, and the internal helpers `fn__assert_active_user` / `fn__assert_admin` (Schema §7.1).
-- [ ] `init` runs the grants script (Schema §9): `jamii_app` gets `USAGE` on the schema and nothing else yet.
-- [ ] Prisma connects with `MIGRATION_DATABASE_URL` (owner) for migrations; nothing at runtime uses the owner role.
+- [x] Given an empty database, when I run `npx prisma migrate deploy` as `jamii_owner`, then the `init` migration applies without errors.
+- [x] `init` creates extensions `citext` and `pg_trgm`, all enums from Schema §4, `fn__touch_updated_at()`, and the internal helpers `fn__assert_active_user` / `fn__assert_admin` (Schema §7.1).
+- [x] `init` runs the grants script (Schema §9): `jamii_app` gets `USAGE` on the schema and nothing else yet.
+- [x] Prisma connects with `MIGRATION_DATABASE_URL` (owner) for migrations; nothing at runtime uses the owner role.
 
 ### E0-03 — Stored-procedure source layout and migration generator
 
@@ -40,9 +57,9 @@ As the engineer, I want Prisma (ESM client, TypedSQL enabled) with an `init` mig
 As the engineer, I want every procedure kept as one source file under `backend/prisma/functions/` and a script that turns changed files into a migration, so that procedures are readable, reviewable and always deployed through migrations.
 
 **Acceptance criteria**
-- [ ] Layout `prisma/functions/<module>/<fn_name>.sql`, one `CREATE OR REPLACE FUNCTION` per file, following the conventions in Schema §6 (`SECURITY DEFINER`, `SET search_path`, `JA<status>` errors).
-- [ ] Given I edit a function file, when I run `npm run db:fn-migration -- <name>`, then a new Prisma migration is generated containing the changed functions and their `GRANT EXECUTE … TO jamii_app`.
-- [ ] Running the script with no changes generates nothing.
+- [x] Layout `prisma/functions/<module>/<fn_name>.sql`, one `CREATE OR REPLACE FUNCTION` per file, following the conventions in Schema §6 (`SECURITY DEFINER`, `SET search_path`, `JA<status>` errors).
+- [x] Given I edit a function file, when I run `npm run db:fn-migration -- <name>`, then a new Prisma migration is generated containing the changed functions and their `GRANT EXECUTE … TO jamii_app`.
+- [x] Running the script with no changes generates nothing.
 
 ### E0-04 — Procedure drift check
 

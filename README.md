@@ -29,7 +29,7 @@ Details, tests and scripts are in [backend/README.md](backend/README.md).
 ```bash
 cd mobile
 npm install
-npx expo start
+npx expo start              # details in mobile/README.md
 ```
 
-See [docs/00-README.md](docs/00-README.md) for the document set and [docs/06-implementation-plan.md](docs/06-implementation-plan.md) for the roadmap and current status (Phases 1–2 built; next: mobile). Story tracking is in [docs/backlog/](docs/backlog/).
+See [docs/00-README.md](docs/00-README.md) for the document set and [docs/06-implementation-plan.md](docs/06-implementation-plan.md) for the roadmap and current status (Phases 1–2 built; Phase 3 mobile in progress). Story tracking is in [docs/backlog/](docs/backlog/).

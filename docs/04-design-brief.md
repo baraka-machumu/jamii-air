@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Document** | 04 — Design Brief |
-| **Version** | 1.1 (decisions D-1…D-6 applied) |
+| **Version** | 1.2 (designs delivered and approved on a Claude design canvas, §12) |
 | **Status** | **Approved** — 2026-10-11 |
 | **Date** | 2026-10-09 |
 | **For** | Whoever produces the designs (the engineer with Claude Code until a designer joins — D-11), mobile and web engineers |
@@ -190,6 +190,8 @@ Sign-up includes a **date-of-birth** field (native date picker) with an inline u
 | Copy deck EN/SW | Spreadsheet keyed by string ID | Plan task 3.4 (grows with each screen; final review in 5.6) |
 
 Design tokens must be exportable (Figma variables → JSON) so engineering consumes them directly in `mobile/src/theme/`.
+
+**As delivered (2026-10-11):** the brand, components, all R1 mobile screens (clickable), the share landing page and the admin portal wireframes were produced on a Claude design canvas instead of Figma and approved ([Phase 3 tracker](backlog/phase-3-mobile.md)). The tokens are code in `mobile/src/theme/tokens.ts`, with a test that every text colour pair meets WCAG AA.
 
 ## 13. Admin portal (web)
 

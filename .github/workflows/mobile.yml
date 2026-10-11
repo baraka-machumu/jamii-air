@@ -1,0 +1,53 @@
+# Mobile app checks (Plan task 3.1): type-check, lint, unit and routing tests, Expo doctor.
+# EAS builds (3.3) and the Maestro E2E run (3.12) come later.
+name: Mobile
+
+on:
+  pull_request:
+    paths:
+      - mobile/**
+      - .github/workflows/mobile.yml
+  push:
+    branches: [main]
+    paths:
+      - mobile/**
+      - .github/workflows/mobile.yml
+
+concurrency:
+  group: mobile-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  mobile:
+    name: Mobile
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Type-check
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Tests
+        run: npm test -- --ci
+
+      - name: Expo doctor
+        run: npx expo-doctor

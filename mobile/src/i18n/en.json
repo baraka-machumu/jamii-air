@@ -1,0 +1,46 @@
+{
+  "brand": {
+    "name": "jamii air",
+    "line": "Your people, on air."
+  },
+  "welcome": {
+    "title": "Your people, on air.",
+    "body": "Share photos with friends, family and your community across Tanzania and Kenya.",
+    "createAccount": "Create account",
+    "logIn": "Log in",
+    "pilotNote": "Jamii Air is invite-only during the pilot and for adults 18+."
+  },
+  "auth": {
+    "logInTitle": "Karibu tena",
+    "signUpTitle": "Create account",
+    "comingSoon": "This screen is built in the next step (task 3.4).",
+    "devContinue": "Continue without an account (development preview)"
+  },
+  "tabs": {
+    "home": "Home",
+    "search": "Search",
+    "create": "Create a post",
+    "activity": "Activity",
+    "profile": "Your profile"
+  },
+  "placeholder": {
+    "home": "Your feed arrives in task 3.8.",
+    "search": "Search arrives in task 3.6.",
+    "create": "Posting a photo arrives in task 3.7.",
+    "activity": "Activity arrives in task 3.10.",
+    "profile": "Your profile arrives in task 3.5."
+  },
+  "settings": {
+    "language": "Language",
+    "theme": "Theme",
+    "system": "System",
+    "english": "English",
+    "swahili": "Kiswahili",
+    "light": "Light",
+    "dark": "Dark",
+    "logOut": "Log out"
+  },
+  "common": {
+    "back": "Back"
+  }
+}

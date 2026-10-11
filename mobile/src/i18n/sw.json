@@ -1,0 +1,46 @@
+{
+  "brand": {
+    "name": "jamii air",
+    "line": "Jamii yako, hewani."
+  },
+  "welcome": {
+    "title": "Jamii yako, hewani.",
+    "body": "Shiriki picha na marafiki, familia na jamii yako kote Tanzania na Kenya.",
+    "createAccount": "Fungua akaunti",
+    "logIn": "Ingia",
+    "pilotNote": "Jamii Air ni kwa mwaliko tu wakati wa majaribio, na kwa watu wazima wenye miaka 18 au zaidi."
+  },
+  "auth": {
+    "logInTitle": "Karibu tena",
+    "signUpTitle": "Fungua akaunti",
+    "comingSoon": "Skrini hii inajengwa katika hatua inayofuata (kazi 3.4).",
+    "devContinue": "Endelea bila akaunti (majaribio ya uundaji)"
+  },
+  "tabs": {
+    "home": "Nyumbani",
+    "search": "Tafuta",
+    "create": "Chapisha picha",
+    "activity": "Shughuli",
+    "profile": "Wasifu wako"
+  },
+  "placeholder": {
+    "home": "Habari zako zinakuja katika kazi 3.8.",
+    "search": "Kutafuta kunakuja katika kazi 3.6.",
+    "create": "Kuchapisha picha kunakuja katika kazi 3.7.",
+    "activity": "Shughuli zinakuja katika kazi 3.10.",
+    "profile": "Wasifu wako unakuja katika kazi 3.5."
+  },
+  "settings": {
+    "language": "Lugha",
+    "theme": "Mandhari",
+    "system": "Mfumo",
+    "english": "English",
+    "swahili": "Kiswahili",
+    "light": "Mwanga",
+    "dark": "Giza",
+    "logOut": "Toka"
+  },
+  "common": {
+    "back": "Rudi"
+  }
+}

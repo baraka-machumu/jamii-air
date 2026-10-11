@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Document** | 02 — Technical Requirements Document |
-| **Version** | 1.4 (Phase 2 implementation: admin sign-in details §8.2, new endpoints from the API review; see [07](07-api-review.md)) |
+| **Version** | 1.5 (Phase 3: Expo Router for navigation, §3; Phase 2: admin sign-in §8.2 and API review endpoints, see [07](07-api-review.md)) |
 | **Status** | **Approved** — 2026-10-11 |
 | **Date** | 2026-10-10 |
 | **Scope** | Release 1 (MVP) in detail; R1.1–R4 as forward-compatibility requirements |
@@ -79,7 +79,7 @@ All components run as one **Docker Compose** stack per environment on our own se
 | Layer | Choice | Notes |
 |---|---|---|
 | Mobile framework | **React Native + Expo** (current SDK), **TypeScript** strict | EAS Build for binaries; EAS Update for OTA JS updates. |
-| Navigation | React Navigation (native stack + bottom tabs) | |
+| Navigation | Expo Router (file-based routes, built on React Navigation: native stack + bottom tabs) | Chosen in Phase 3: Expo's default for SDK 57; gives deep links and typed routes ([Phase 3 decisions](backlog/phase-3-mobile.md#decisions-taken-during-phase-3)) |
 | Server state | TanStack Query | Caching, dedupe, infinite queries, optimistic updates. |
 | Client state | Zustand (auth session, preferences only) | No server data in Zustand. |
 | Lists | `@shopify/flash-list` | All feeds, grids, comment lists. |

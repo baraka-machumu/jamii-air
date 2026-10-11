@@ -1,0 +1,11 @@
+node_modules
+dist
+coverage
+.env
+.env.*
+!.env.example
+*.log
+*.tsbuildinfo
+test
+.git
+# src/generated/ is NOT ignored: the image needs the generated Prisma Client (npm run db:generate)

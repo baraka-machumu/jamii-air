@@ -105,6 +105,46 @@ services:
       timeout: 5s
       retries: 20
 
+  # ── The app in containers (optional): `docker compose --profile app up -d --build` ──
+  # Same image as UAT / production (Dockerfile). Run `npm run db:generate` first.
+  migrate:
+    profiles: [app]
+    build: { context: ., target: migrator }
+    environment:
+      MIGRATION_DATABASE_URL: postgresql://jamii_owner:${JAMII_OWNER_PASSWORD}@postgres:5432/${POSTGRES_DB:-jamii_air}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    profiles: [app]
+    build: { context: ., target: runtime }
+    image: jamii-air-api:local
+    init: true # tini as PID 1: SIGTERM reaches Node, graceful shutdown
+    environment: &app-env
+      NODE_ENV: development
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      REQUIRE_INVITE: ${REQUIRE_INVITE:-true}
+      DATABASE_URL: postgresql://jamii_app:${JAMII_APP_PASSWORD}@postgres:5432/${POSTGRES_DB:-jamii_air}
+    ports:
+      - "127.0.0.1:${API_PORT:-3000}:3000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  worker:
+    profiles: [app]
+    image: jamii-air-api:local
+    command: ["node", "dist/worker.js"]
+    init: true
+    environment: *app-env
+    healthcheck:
+      disable: true
+    depends_on:
+      api:
+        condition: service_started
+
 volumes:
   postgres-data:
   redis-data:

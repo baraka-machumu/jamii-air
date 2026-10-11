@@ -207,7 +207,7 @@ NestJS API and workers on top of the finished procedures. The API layer validate
 | 2.13 | Maintenance worker loops calling the `fn_maint_*` procedures on schedule |
 | 2.14 | OpenAPI spec published as a build artifact for mobile and admin type generation; reviewed against App Flow (doc 03) so every screen has the endpoints it needs |
 | 2.15 | Tests: API e2e for every endpoint; upload security tests (oversized, wrong type, renamed non-image, another user's `mediaId`, expired intent, replayed idempotency key); **authorization sweep** — every endpoint × (owner, other user, blocked, suspended, user token on admin route, moderator on super-admin route) |
-| 2.16 | Dockerfile (multi-stage), `worker.ts`; CI (lint, typecheck, tests, build); UAT deploy to `$UAT_SERVER_IP` (Docker Compose: pull image from GHCR, run migrations, restart); Sentry (enabled once its DSN is set — optional until production) and per-route / per-procedure latency (`pg_stat_statements`, `track_functions`), queue metrics, alerts |
+| 2.16 | ✅ Dockerfile (multi-stage), `worker.ts`; ✅ CI (lint, typecheck, tests, build — `.github/workflows/backend.yml`); **deferred (local dev only until development is finished):** UAT deploy to `$UAT_SERVER_IP` (Docker Compose: pull image from GHCR, run migrations, restart); Sentry (enabled once its DSN is set — optional until production) and per-route / per-procedure latency (`pg_stat_statements`, `track_functions`), queue metrics, alerts |
 
 **Exit:** the full API runs on UAT and is documented in OpenAPI; all e2e, security and authorization tests pass; a test script uploads a phone photo and gets WebP variants in MinIO with **no GPS metadata**, and the original is not reachable via the nginx media cache; user tokens are rejected on admin routes.
 

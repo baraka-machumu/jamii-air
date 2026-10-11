@@ -80,6 +80,14 @@ Two cases need a hand-written migration:
 
 ## Run
 
+In containers, as on a server: one image runs the API (`node dist/main.js`) and the worker (`node dist/worker.js`). A one-shot `migrate` container runs `prisma migrate deploy` first.
+
+```bash
+npm run db:generate                          # the image needs the generated Prisma Client
+docker compose --profile app up -d --build   # migrate, api (localhost:3000), worker
+docker compose --profile app rm -sf api worker migrate   # stop them; the infrastructure keeps running
+```
+
 ```bash
 npm install
 npm run start:dev

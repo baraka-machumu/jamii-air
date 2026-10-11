@@ -47,7 +47,10 @@ export function requestIdOf(req: IncomingMessage, res: ServerResponse): string {
             req: (req: { id: string; method: string; url: string }) => ({ id: req.id, method: req.method, url: req.url }),
             res: (res: { statusCode: number }) => ({ status: res.statusCode }),
           },
-          transport: config.nodeEnv === 'development' ? { target: 'pino-pretty', options: { singleLine: true } } : undefined,
+          // Human-readable only in a local terminal; containers and CI log JSON (pino-pretty is a dev dependency).
+          transport: config.nodeEnv === 'development' && process.stdout.isTTY
+            ? { target: 'pino-pretty', options: { singleLine: true } }
+            : undefined,
         },
       }),
     }),

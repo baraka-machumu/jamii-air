@@ -1,0 +1,69 @@
+# Backend API checks (Plan task 2.16, TRD DP-03): lint, type-check, unit and e2e tests, build,
+# Docker image. UAT deploy is deferred until development is finished (local dev only).
+name: Backend
+
+on:
+  pull_request:
+    paths:
+      - backend/**
+      - .github/workflows/backend.yml
+  push:
+    branches: [main]
+    paths:
+      - backend/**
+      - .github/workflows/backend.yml
+
+concurrency:
+  group: backend-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      # TypedSQL types are generated against a migrated database.
+      - name: Start PostgreSQL 18 and apply migrations
+        run: |
+          sed "s/change-me/ci$(openssl rand -hex 12)/g" .env.example > .env
+          docker compose up -d --wait postgres
+          npm run db:migrate
+
+      - name: Generate Prisma Client and TypedSQL
+        run: npm run db:generate
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type-check
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm test
+
+      - name: E2E tests
+        run: npm run test:e2e
+
+      - name: Build
+        run: npm run build
+
+      - name: Docker image
+        run: docker build --target runtime -t jamii-air-api:ci .

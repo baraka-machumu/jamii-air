@@ -1,0 +1,82 @@
+# Database checks (Plan task 1.14, story E0-07). Required status check for main:
+# a failing step blocks the merge once branch protection requires "Database".
+name: Database
+
+on:
+  pull_request:
+    paths:
+      - backend/prisma/**
+      - backend/scripts/db/**
+      - backend/test/db/**
+      - backend/docker/postgres/**
+      - backend/docker-compose.yml
+      - backend/package.json
+      - backend/package-lock.json
+      - backend/vitest.config.db.ts
+      - .github/workflows/db.yml
+  push:
+    branches: [main]
+    paths:
+      - backend/prisma/**
+      - backend/scripts/db/**
+      - backend/test/db/**
+      - backend/docker/postgres/**
+      - backend/docker-compose.yml
+      - backend/package.json
+      - backend/package-lock.json
+      - backend/vitest.config.db.ts
+      - .github/workflows/db.yml
+
+concurrency:
+  group: db-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  database:
+    name: Database
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Lint and type-check database code
+        run: |
+          npx oxlint --type-aware scripts/ test/db/
+          npx tsc --noEmit -p scripts
+          npx tsc --noEmit -p test/db
+
+      - name: Migration generator unit tests
+        run: npx vitest run scripts
+
+      # Testcontainers: a fresh PostgreSQL 18, every migration applied as jamii_owner, procedures
+      # called as jamii_app. Includes the SR-01/03/04 security checks and the drift-check tests.
+      - name: Procedure tests and security checks
+        run: npm run test:db
+
+      # The deploy path: the Compose database with the roles script, `prisma migrate deploy`, then
+      # the drift check against the result.
+      - name: Start PostgreSQL 18
+        run: |
+          sed "s/change-me/ci$(openssl rand -hex 12)/g" .env.example > .env
+          docker compose up -d --wait postgres
+
+      - name: Apply migrations to a fresh database
+        run: npm run db:migrate
+
+      - name: Drift check
+        run: npm run db:drift-check

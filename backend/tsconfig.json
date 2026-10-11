@@ -26,6 +26,8 @@
   "exclude": [
     "node_modules",
     "dist",
-    "scripts"
+    "scripts",
+    "test/db",
+    "vitest.config.db.ts"
   ]
 }

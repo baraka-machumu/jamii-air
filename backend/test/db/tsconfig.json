@@ -1,0 +1,6 @@
+{
+  // Database tests import the scripts in scripts/db/ (run with Node's type stripping), so like
+  // scripts/tsconfig.json they keep .ts extensions and are type-checked only.
+  "extends": "../../scripts/tsconfig.json",
+  "include": ["**/*.ts", "../../vitest.config.db.ts"]
+}

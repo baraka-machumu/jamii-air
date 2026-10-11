@@ -239,6 +239,20 @@ describe('admin (e2e)', () => {
     await a.get('/api/v1/admin/dashboard?from=2026-10-11&to=2026-10-01').expect(400);
   });
 
+  it('changes the admin password: checks the current one, enforces the policy, ends every session', async () => {
+    const admin = await arrangeAdmin('MODERATOR');
+    const { accessToken, cookie } = await signIn(admin);
+    const change = (body: object) => asAdmin(accessToken).post('/api/v1/admin/auth/password').send(body);
+
+    expect((await change({ currentPassword: 'not-it', newPassword: 'a-much-longer-passphrase' }).expect(403)).body.error.code).toBe('INVALID_PASSWORD');
+    expect((await change({ currentPassword: PASSWORD, newPassword: 'short-one' }).expect(400)).body.error.code).toBe('PASSWORD_TOO_SHORT');
+    await change({ currentPassword: PASSWORD, newPassword: 'a-much-longer-passphrase' }).expect(204);
+
+    await http().post('/api/v1/admin/auth/refresh').set('Cookie', cookieValue(cookie)).set('X-Admin-Client', '1').expect(401);
+    await http().post('/api/v1/admin/auth/login').send({ email: admin.email, password: PASSWORD }).expect(401);
+    await http().post('/api/v1/admin/auth/login').send({ email: admin.email, password: 'a-much-longer-passphrase' }).expect(200);
+  });
+
   it('allows CORS for the admin origin on admin routes only', async () => {
     const origin = 'http://localhost:5173';
     const preflight = await http().options('/api/v1/admin/auth/login').set('Origin', origin).set('Access-Control-Request-Method', 'POST').expect(204);

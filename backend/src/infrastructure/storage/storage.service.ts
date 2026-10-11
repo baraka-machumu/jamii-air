@@ -35,17 +35,17 @@ export class StorageService {
     this.bucket = config.s3.bucket;
   }
 
-  /** Presigned PUT that only accepts exactly this type and size (MD-02). */
-  async presignUpload(key: string, contentType: string, byteSize: number): Promise<PresignedUpload> {
+  /** Presigned PUT that only accepts exactly this type and size (MD-02). `ttlSeconds`: tests only. */
+  async presignUpload(key: string, contentType: string, byteSize: number, ttlSeconds = UPLOAD_URL_TTL_SECONDS): Promise<PresignedUpload> {
     const command = new PutObjectCommand({ Bucket: this.bucket, Key: key, ContentType: contentType, ContentLength: byteSize });
     const url = await getSignedUrl(this.presigner, command, {
-      expiresIn: UPLOAD_URL_TTL_SECONDS,
+      expiresIn: ttlSeconds,
       signableHeaders: new Set(['content-type', 'content-length']),
     });
     return {
       url,
       headers: { 'Content-Type': contentType, 'Content-Length': String(byteSize) },
-      expiresAt: new Date(Date.now() + UPLOAD_URL_TTL_SECONDS * 1000),
+      expiresAt: new Date(Date.now() + ttlSeconds * 1000),
     };
   }
 

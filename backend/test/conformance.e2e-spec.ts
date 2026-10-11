@@ -108,6 +108,7 @@ describe('API responses match the OpenAPI spec (e2e)', () => {
     ok('PostState', (await a('post', `/api/v1/admin/posts/${postId}/hide`).send({ note: 'Spam', reportId: report.id }).expect(200)).body);
     ok('AdminPost', (await a('get', `/api/v1/admin/posts/${postId}`).expect(200)).body);
     ok('CommentState', (await a('post', `/api/v1/admin/comments/${comment.id}/hide`).send({ note: 'Rude' }).expect(200)).body);
+    expect((await a('post', `/api/v1/admin/comments/${comment.id}/unhide`).send({ note: 'Context' }).expect(200)).body).toEqual({ commentId: comment.id, hidden: false });
     ok('UserState', (await a('post', `/api/v1/admin/users/${author.id}/suspend`).send({ note: 'Spam' }).expect(200)).body);
     ok('UserState', (await a('post', `/api/v1/admin/users/${author.id}/reinstate`).send({ note: 'Appeal' }).expect(200)).body);
     ok('RevokedSessions', (await a('post', `/api/v1/admin/users/${reporter.id}/revoke-sessions`).send({ note: 'Takeover' }).expect(200)).body);

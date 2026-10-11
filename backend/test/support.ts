@@ -118,3 +118,48 @@ export function expectConforms(doc: OpenApi, schemaName: string, body: unknown, 
   };
   check({ $ref: `#/components/schemas/${schemaName}` }, body, path);
 }
+
+/**
+ * Runs an UPDATE as the superuser with triggers off, to back-date rows (updated_at is otherwise
+ * reset by its trigger). Arranging state only; the API under test never does this.
+ */
+export async function backdate(sql: string, params: unknown[] = []): Promise<void> {
+  const pg = (await import('pg')).default;
+  const env = process.env;
+  const client = new pg.Client({
+    connectionString: `postgresql://postgres:${env.POSTGRES_SUPERUSER_PASSWORD}@localhost:${env.POSTGRES_PORT ?? 5432}/${env.POSTGRES_DB ?? 'jamii_air'}`,
+  });
+  await client.connect();
+  try {
+    await client.query('BEGIN');
+    await client.query('SET LOCAL session_replication_role = replica');
+    await client.query(sql, params);
+    await client.query('COMMIT');
+  } finally {
+    await client.end();
+  }
+}
+
+/**
+ * A signed-in admin of the given role: arranged in the database (owner role, as no API creates
+ * the first admin), then through the real sign-in with TOTP enrolment. Returns the access token.
+ */
+export async function adminSession(app: INestApplication<App>, role: 'SUPER_ADMIN' | 'MODERATOR'): Promise<{ id: string; accessToken: string }> {
+  const pg = (await import('pg')).default;
+  const argon2 = (await import('argon2')).default;
+  const { totpAt, totpStep } = await import('../src/infrastructure/crypto/totp.js');
+  const email = `admin_${randomBytes(4).toString('hex')}@jamii.test`;
+  const password = 'admin-pass-mango-2026';
+  const owner = new pg.Client({ connectionString: process.env.MIGRATION_DATABASE_URL });
+  await owner.connect();
+  const hash = await argon2.hash(password, { type: argon2.argon2id, memoryCost: 19_456, timeCost: 2, parallelism: 1 });
+  const { rows } = await owner.query<{ id: string }>(
+    `INSERT INTO admin_users (email, display_name, password_hash, role) VALUES ($1, 'Test Admin', $2, $3) RETURNING id`, [email, hash, role]);
+  await owner.end();
+
+  const server = app.getHttpServer();
+  const step = (await request(server).post('/api/v1/admin/auth/login').send({ email, password }).expect(200)).body;
+  const code = totpAt(step.enrollment.secret, totpStep());
+  const session = (await request(server).post('/api/v1/admin/auth/totp/enroll').send({ challengeToken: step.challengeToken, code }).expect(200)).body;
+  return { id: rows[0].id, accessToken: session.accessToken };
+}

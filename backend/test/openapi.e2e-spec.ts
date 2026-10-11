@@ -1,6 +1,8 @@
 // Plan task 2.14: the OpenAPI spec is complete enough to generate the mobile and admin clients
 // from: every operation has a summary, a typed success response (202 / 204 have no body), and
 // declares bearer auth unless it is a public auth or health route.
+import { readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import type { INestApplication } from '@nestjs/common';
 import type { App } from 'supertest/types.js';
 import { createApp, openApiDocument } from './support.js';
@@ -43,5 +45,21 @@ describe('OpenAPI spec (e2e)', () => {
   it('keeps the share-link pages out of the API spec', async () => {
     const doc = await openApiDocument(app);
     expect(Object.keys(doc.paths).every((p) => p.startsWith('/api/v1/'))).toBe(true);
+  });
+
+  // Plan task 2.15 "API e2e for every endpoint": a route added without a test fails here.
+  it('has at least one e2e call for every operation', async () => {
+    const doc = await openApiDocument(app);
+    const dir = import.meta.dirname;
+    const tests = readdirSync(dir).filter((f) => f.endsWith('.e2e-spec.ts')).map((f) => readFileSync(join(dir, f), 'utf8')).join('\n');
+    const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const quote = '[\'"`]';
+    // A call looks like `.post('/api/v1/posts/${id}/like'` or `a('post', '/api/v1/admin/…'`; path
+    // parameters match any segment.
+    const untested = Object.entries(doc.paths).flatMap(([path, ops]) => Object.keys(ops).filter((method) => {
+      const route = path.split(/\{[^}]+\}/).map(escape).join('[^\'"`?/]+');
+      return !new RegExp(`(\\.${method}\\(|${method}', )${quote}${route}(${quote}|\\?)`).test(tests);
+    }).map((method) => `${method.toUpperCase()} ${path}`));
+    expect(untested).toEqual([]);
   });
 });

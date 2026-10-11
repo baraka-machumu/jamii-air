@@ -43,6 +43,7 @@ const MESSAGES: Record<string, string> = {
   NOT_OWNER: 'Only the owner can do this.',
   BLOCKED: 'You have blocked this user.',
   IDEMPOTENCY_KEY_REUSED: 'This Idempotency-Key was used for a different request.',
+  INVALID_IDEMPOTENCY_KEY: 'Idempotency-Key must be 8–64 characters: letters, digits, _ . : or -.',
 };
 
 export function defaultMessage(code: string): string {

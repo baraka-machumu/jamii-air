@@ -14,6 +14,7 @@ import { QueueModule, REDIS } from './infrastructure/queue/queue.module.js';
 import { StorageModule } from './infrastructure/storage/storage.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { MediaModule } from './modules/media/media.module.js';
+import { PostsModule } from './modules/posts/posts.module.js';
 import { UsersModule } from './modules/users/users.module.js';
 
 @Module({
@@ -39,6 +40,7 @@ import { UsersModule } from './modules/users/users.module.js';
     AuthModule,
     UsersModule,
     MediaModule,
+    PostsModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],

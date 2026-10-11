@@ -26,6 +26,8 @@ export class AppConfig {
   /** HMAC key for password-reset codes (stored as HMAC, never plaintext: SR-05). */
   readonly authCodeSecret: string;
   readonly smtp: { host: string; port: number; from: string };
+  /** Public base for media variant URLs (API-10): the nginx media cache, or MinIO locally. No trailing slash. */
+  readonly mediaBaseUrl: string;
 
   constructor(values: Omit<AppConfig, 'isProduction' | 'swaggerEnabled'>) {
     this.nodeEnv = values.nodeEnv;
@@ -36,6 +38,7 @@ export class AppConfig {
     this.jwtAccessSecret = values.jwtAccessSecret;
     this.authCodeSecret = values.authCodeSecret;
     this.smtp = values.smtp;
+    this.mediaBaseUrl = values.mediaBaseUrl;
   }
 
   get isProduction(): boolean {
@@ -87,9 +90,13 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
   };
   if (!Number.isInteger(smtp.port) || smtp.port < 1 || smtp.port > 65535) problems.push('SMTP_PORT must be an integer 1–65535');
 
+  const mediaBaseUrl = (env.MEDIA_BASE_URL ?? `http://localhost:${env.MINIO_API_PORT ?? 9000}/${env.S3_BUCKET ?? 'jamii-air-media-local'}`)
+    .replace(/\/+$/, '');
+  if (!/^https?:\/\/.+/.test(mediaBaseUrl)) problems.push('MEDIA_BASE_URL must be an http(s) URL');
+
   if (problems.length > 0) throw new ConfigError(problems);
   return new AppConfig({
-    nodeEnv, port, databaseUrl, logLevel, requireInvite: requireInvite!, jwtAccessSecret, authCodeSecret, smtp,
+    nodeEnv, port, databaseUrl, logLevel, requireInvite: requireInvite!, jwtAccessSecret, authCodeSecret, smtp, mediaBaseUrl,
   });
 }
 

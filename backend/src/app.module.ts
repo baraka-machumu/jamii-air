@@ -8,7 +8,9 @@ import { HealthController } from './health/health.controller.js';
 import { DbProceduresModule } from './infrastructure/db-procedures/db-procedures.module.js';
 import { MailModule } from './infrastructure/mail/mail.module.js';
 import { PrismaModule } from './infrastructure/prisma/prisma.module.js';
+import { StorageModule } from './infrastructure/storage/storage.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
+import { UsersModule } from './modules/users/users.module.js';
 
 @Module({
   imports: [
@@ -17,6 +19,7 @@ import { AuthModule } from './modules/auth/auth.module.js';
     PrismaModule,
     DbProceduresModule,
     MailModule,
+    StorageModule,
     // Per-IP rate limits (TRD §5.1); routes set their own with @Throttle. In memory for now,
     // Redis storage with Plan task 2.7. Off in automated tests.
     ThrottlerModule.forRootAsync({
@@ -27,6 +30,7 @@ import { AuthModule } from './modules/auth/auth.module.js';
       }),
     }),
     AuthModule,
+    UsersModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],

@@ -11,6 +11,19 @@ npx expo start          # then press a for Android (Expo Go, or a development bu
 
 Signing in arrives with task 3.4. Until then, development builds show **Continue without an account (development preview)** on the Log in screen to reach the tabs.
 
+## Build (EAS)
+
+Profiles are in `eas.json`: `development` (dev client, APK), `preview` (standalone APK for demos), `production` (store AAB, build number managed by EAS). One-time setup, then build:
+
+```bash
+npx eas-cli@latest login            # Expo account bmachumu
+npx eas-cli@latest init             # links the EAS project; commit the projectId it adds to app.json
+npm run build:dev                   # Android development build in the cloud; open the link on the phone to install
+npx expo start                      # the dev build on the phone connects to this server
+```
+
+`npm run build:preview` makes a standalone APK. It has no dev server to find the API, so it needs `EXPO_PUBLIC_API_URL` (set as an EAS environment variable) pointing at a reachable HTTPS API, which arrives with UAT.
+
 ## Check
 
 ```bash

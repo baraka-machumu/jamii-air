@@ -9,6 +9,7 @@
     "@tanstack/react-query": "^5.104.1",
     "expo": "~57.0.27",
     "expo-constants": "~57.0.21",
+    "expo-dev-client": "~57.0.19",
     "expo-font": "~57.0.4",
     "expo-image": "~57.0.5",
     "expo-linking": "~57.0.12",
@@ -47,7 +48,9 @@
     "lint": "expo lint",
     "typecheck": "tsc --noEmit",
     "test": "jest",
-    "api:sync": "node scripts/sync-api.mjs"
+    "api:sync": "node scripts/sync-api.mjs",
+    "build:dev": "npx eas-cli@latest build --platform android --profile development",
+    "build:preview": "npx eas-cli@latest build --platform android --profile preview"
   },
   "private": true,
   "jest": {

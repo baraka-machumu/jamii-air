@@ -44,6 +44,30 @@ npm run db:status
 - [prisma/functions/](prisma/functions/): one file per stored procedure; the source of truth.
 - [prisma/grants.sql](prisma/grants.sql): runtime-role grants. It's idempotent and gets appended to every migration that adds functions.
 
+### Stored procedures
+
+Each procedure is one file, `prisma/functions/<module>/<fn_name>.sql`, containing one `CREATE OR REPLACE FUNCTION` that follows Schema §6:
+- `SET search_path = public, pg_temp` on every function
+- `SECURITY DEFINER` on every `fn_*`
+- errors raised as `JA<status>` SQLSTATEs
+- `#variable_conflict use_column` in PL/pgSQL functions that return a table
+
+Never edit a function in a migration. Edit the source file, then generate a migration:
+
+```bash
+npm run db:fn-migration -- <name>            # new migration <timestamp>_<name>
+npm run db:fn-migration -- <name> --append   # add to the latest migration, if it is *_<name> and not applied yet
+npm run db:migrate
+```
+
+The generator checks every source file against the conventions, then takes each file that is new or differs from its latest migrated version. It wraps each one in `-- @function <path>` … `-- @end-function` markers and adds the grants. With no changes, it generates nothing.
+
+To put tables and their procedures in one migration, run `npx prisma migrate dev --create-only --name <name>`, then `npm run db:fn-migration -- <name> --append`.
+
+Two cases need a hand-written migration:
+- **Changing a function's signature or return type.** `CREATE OR REPLACE` cannot do this; add a `DROP FUNCTION` before the new definition.
+- **Removing a function.** The generator warns about migrated functions whose source file is gone.
+
 ## Run
 
 ```bash

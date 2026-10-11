@@ -1,0 +1,17 @@
+{
+  // Scripts run directly with Node's type stripping (`node scripts/db/x.ts`), so imports keep
+  // their .ts extension and only erasable syntax is allowed.
+  "compilerOptions": {
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "target": "ES2023",
+    "strict": true,
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true,
+    "types": ["vitest/globals", "node"]
+  },
+  "include": ["**/*.ts"]
+}

@@ -49,9 +49,9 @@ CREATE TYPE "admin_status" AS ENUM ('ACTIVE', 'DISABLED');
 -- CreateEnum
 CREATE TYPE "platform" AS ENUM ('ANDROID', 'IOS');
 
--- ───────────── Internal helpers (Schema §7.1; sources in prisma/functions/_common) ─────────────
+-- ───────────── Internal helpers (Schema §7.1) ─────────────
 
--- fn__touch_updated_at
+-- @function _common/fn__touch_updated_at.sql
 CREATE OR REPLACE FUNCTION fn__touch_updated_at()
 RETURNS trigger
 LANGUAGE plpgsql
@@ -61,8 +61,9 @@ BEGIN
   NEW.updated_at := now();
   RETURN NEW;
 END $$;
+-- @end-function
 
--- fn__assert_active_user
+-- @function _common/fn__assert_active_user.sql
 -- Raises unless the user exists and is ACTIVE (Schema §7.1).
 -- Unknown or NULL id → JA404 USER_NOT_FOUND; SUSPENDED → JA403 ACCOUNT_SUSPENDED;
 -- any other status (PENDING_DELETION) → JA401 ACCOUNT_NOT_ACTIVE.
@@ -84,8 +85,9 @@ BEGIN
     RAISE EXCEPTION USING ERRCODE = 'JA401', MESSAGE = 'ACCOUNT_NOT_ACTIVE';
   END IF;
 END $$;
+-- @end-function
 
--- fn__assert_admin
+-- @function _common/fn__assert_admin.sql
 -- Raises JA403 ADMIN_FORBIDDEN unless the admin exists, is ACTIVE and has one of p_roles
 -- (Schema §7.1). Defense in depth: the API's admin guards check roles first (TRD §12).
 CREATE OR REPLACE FUNCTION fn__assert_admin(p_admin_id uuid, p_roles admin_role[])
@@ -103,9 +105,9 @@ BEGIN
     RAISE EXCEPTION USING ERRCODE = 'JA403', MESSAGE = 'ADMIN_FORBIDDEN';
   END IF;
 END $$;
+-- @end-function
 
--- ───────────── Grants (prisma/grants.sql) ─────────────
-
+-- @grants (prisma/grants.sql)
 -- Runtime-role grants (Schema §9, TRD SP-05 / SR-01). Idempotent: appended to every
 -- migration that adds functions. Table column grants live in the migration that adds the table.
 
@@ -136,3 +138,4 @@ BEGIN
     END IF;
   END LOOP;
 END $$;
+-- @end-grants

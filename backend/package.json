@@ -14,7 +14,8 @@
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
-    "lint": "oxlint --type-aware src/ test/",
+    "lint": "oxlint --type-aware src/ test/ scripts/",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p scripts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:cov": "vitest run --coverage",
@@ -26,7 +27,8 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate deploy",
     "db:migrate:dev": "prisma migrate dev",
-    "db:status": "prisma migrate status"
+    "db:status": "prisma migrate status",
+    "db:fn-migration": "node scripts/db/fn-migration.ts"
   },
   "dependencies": {
     "@nestjs/common": "^12.0.1",

@@ -130,6 +130,13 @@ describe('E1-03 login and session creation', () => {
 
     await expectJa(app.query('SELECT * FROM fn_create_session($1, $2, $3, NULL, false)', [randomId(), hash(), daysFromNow(30)]),
       'JA404', 'USER_NOT_FOUND');
+
+    // after the 30-day grace period the account can no longer be restored (purge pending)
+    const late = await createUser();
+    await setUserStatus(late.id, 'PENDING_DELETION');
+    await owner.query(`UPDATE users SET deletion_requested_at = now() - interval '31 days' WHERE id = $1`, [late.id]);
+    await expectJa(app.query('SELECT * FROM fn_create_session($1, $2, $3, NULL, true)', [late.id, hash(), daysFromNow(30)]),
+      'JA401', 'ACCOUNT_NOT_ACTIVE');
   });
 });
 
@@ -259,6 +266,14 @@ describe('E1-07 password reset', () => {
     for (let i = 0; i < 5; i++) outcomes.push((await one('SELECT * FROM fn_reset_password($1, $2, $3)', [user.email, hash(), ARGON])).outcome);
     expect(outcomes).toEqual(['INVALID_CODE', 'INVALID_CODE', 'INVALID_CODE', 'INVALID_CODE', 'TOO_MANY_ATTEMPTS']);
     expect(await one('SELECT * FROM fn_reset_password($1, $2, $3)', [user.email, code, ARGON])).toEqual({ outcome: 'TOO_MANY_ATTEMPTS' });
+  });
+
+  it('never accepts a missing code', async () => {
+    const user = await createUser();
+    await one('SELECT * FROM fn_create_password_reset($1, $2, $3)', [user.email, hash(), daysFromNow(1)]);
+    expect(await one('SELECT * FROM fn_reset_password($1, NULL, $2)', [user.email, '$argon2id$v=19$attacker']))
+      .toEqual({ outcome: 'INVALID_CODE' });
+    expect(await one('SELECT password_hash FROM users WHERE id = $1', [user.id], owner)).toEqual({ password_hash: ARGON });
   });
 
   it('fails for an expired code, and an earlier code stops working when a new one is issued', async () => {

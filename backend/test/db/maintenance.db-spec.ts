@@ -33,7 +33,9 @@ describe('media and object-storage housekeeping', () => {
     const media = async (post: string) => (await one('SELECT media_id FROM post_media WHERE post_id = $1', [post], owner)).media_id;
     const [stuck, dead] = [await media(stuckPost), await media(deadPost)];
     await backdate(`UPDATE media_assets SET updated_at = now() - interval '11 minutes' WHERE id = $1`, [stuck]);
-    await backdate(`UPDATE media_assets SET created_at = now() - interval '25 hours', updated_at = now() - interval '25 hours' WHERE id = $1`, [dead]);
+    await backdate(`UPDATE media_assets SET uploaded_at = now() - interval '25 hours', updated_at = now() - interval '25 hours' WHERE id = $1`, [dead]);
+    // an upload intent created long ago but attached only now is not given up on
+    await backdate(`UPDATE media_assets SET created_at = now() - interval '30 hours' WHERE id = $1`, [stuck]);
 
     const ids = (await q('SELECT media_id FROM fn_maint_requeue_stuck_media(500)')).map((r) => r.media_id);
     expect(ids).toContain(stuck);
@@ -79,6 +81,16 @@ describe('retention purges', () => {
     expect(await q('SELECT 1 FROM comments WHERE id = $1', [c.comment_id], owner)).toEqual([]);
     expect(await q('SELECT 1 FROM likes WHERE post_id = $1', [gone], owner)).toEqual([]);
     expect(await q('SELECT 1 FROM media_assets WHERE owner_id = $1 AND status = $2', [author.id, 'DELETED'], owner)).toEqual([]);
+  });
+
+  it('keeps deleted content that has an open report (evidence for the moderator)', async () => {
+    const [author, reporter] = [await createUser(), await createUser()];
+    const post = await createPost(author.id);
+    await one(`SELECT * FROM fn_submit_report($1, 'POST', $2, 'HATE', NULL)`, [reporter.id, post]);
+    await one('SELECT * FROM fn_delete_post($1, $2)', [author.id, post]);
+    await owner.query(`UPDATE posts SET deleted_at = now() - interval '31 days' WHERE id = $1`, [post]);
+    await drain('fn_maint_purge_deleted_content');
+    expect(await q('SELECT status FROM posts WHERE id = $1', [post], owner)).toEqual([{ status: 'DELETED' }]);
   });
 
   it('erases accounts 30 days after deletion was requested, fixing other users’ counters', async () => {

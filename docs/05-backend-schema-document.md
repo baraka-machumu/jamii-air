@@ -1089,3 +1089,20 @@ Prisma prefixes migration folders with timestamps; names below are descriptive. 
 | Search | Prefix stages through btree `text_pattern_ops` indexes; substring and similarity stage through the trigram indexes, for queries of 3+ characters. | Keeps search within the 50 ms budget at 10k users (task 1.13). |
 | Error codes | `INVALID_VARIANT_KEY`, `CANNOT_REPORT_SELF`, `INVITE_NOT_FOUND`, `ADMIN_NOT_FOUND`; `EMAIL_TAKEN` also for admins. | New checks. |
 | Daily metrics | Days are East Africa Time (`Africa/Dar_es_Salaam`). DAU = refresh-token rotations, new sessions and content written that day. | `last_active_at` alone cannot give retention for past days. |
+
+### 16.1 Fixes from the Phase 1 code review (migration `phase1_review_fixes`)
+
+| Procedure | Fix |
+|---|---|
+| `fn_reset_password` | The code comparison is NULL-safe: a missing code can never reset a password. |
+| `fn_admin_record_login` | A correct password for a locked or disabled admin returns `locked = true` and is audit-logged as `LOGIN_BLOCKED`. Before, it raised an error, which also rolled back the audit row. |
+| `fn__assert_admin` | Also rejects locked admins, so a lock applies at once, even while an access token is valid. |
+| `fn_create_session` | A pending deletion can no longer be cancelled after the 30-day grace period. |
+| `fn_maint_requeue_stuck_media` | Gives up 24 h after the media was attached (new column `media_assets.uploaded_at`), not 24 h after the upload intent was created. |
+| `fn_maint_purge_deleted_accounts` | Locks posts before users, the order every procedure uses (no deadlocks). |
+| `fn_admin_update_admin` | Locks every super-admin row and checks at least one active super-admin remains, so two super-admins cannot demote each other at once. |
+| `fn_maint_purge_deleted_content` | Never removes content with an open report: deleting reported content cannot destroy the evidence. |
+| `fn_maint_reconcile_counters` | `NULL` now means the last 25 hours; a full recount (which locks every row) must be asked for with `'-infinity'`. |
+| `fn_create_post`, `fn_add_comment` | Shared, NULL-safe Idempotency-Key handling (`fn__claim_idempotency_key`). |
+
+Not changed: two refreshes of the same token at the same moment still revoke the family (`REUSE_DETECTED`). This is required by story E1-04, and the app refreshes one at a time (Plan task 3.4).

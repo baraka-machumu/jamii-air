@@ -33,7 +33,7 @@ BEGIN
     RETURN QUERY SELECT 'EXPIRED'; RETURN;
   END IF;
 
-  IF c.code_hash <> p_code_hash THEN
+  IF c.code_hash IS DISTINCT FROM p_code_hash THEN
     UPDATE password_reset_codes r SET attempts = r.attempts + 1 WHERE r.id = c.id;
     RETURN QUERY SELECT CASE WHEN c.attempts + 1 >= 5 THEN 'TOO_MANY_ATTEMPTS' ELSE 'INVALID_CODE' END;
     RETURN;

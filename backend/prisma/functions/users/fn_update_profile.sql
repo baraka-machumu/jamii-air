@@ -34,7 +34,7 @@ BEGIN
       IF m.purpose <> 'AVATAR' OR m.status IN ('FAILED', 'DELETED') THEN
         RAISE EXCEPTION USING ERRCODE = 'JA400', MESSAGE = 'MEDIA_NOT_ATTACHABLE';
       END IF;
-      UPDATE media_assets a SET status = 'UPLOADED' WHERE a.id = v_new_avatar AND a.status = 'PENDING_UPLOAD';
+      UPDATE media_assets a SET status = 'UPLOADED', uploaded_at = now() WHERE a.id = v_new_avatar AND a.status = 'PENDING_UPLOAD';
     END IF;
   END IF;
 

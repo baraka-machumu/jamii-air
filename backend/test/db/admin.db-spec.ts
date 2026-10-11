@@ -76,7 +76,9 @@ describe('admin login and sessions', () => {
     expect(last).toEqual({ failed_login_count: 10, locked: true });
     expect(await one(`SELECT count(*)::int AS n FROM admin_audit_log WHERE admin_id = $1 AND action = 'LOGIN_FAILED'`, [id], owner)).toEqual({ n: 10 });
     expect(await one(`SELECT count(*)::int AS n FROM admin_audit_log WHERE admin_id = $1 AND action = 'ACCOUNT_LOCKED'`, [id], owner)).toEqual({ n: 1 });
-    await expectJa(app.query('SELECT * FROM fn_admin_record_login($1, true, NULL)', [id]), 'JA403', 'ADMIN_FORBIDDEN');
+    // a correct password on the locked account is refused and still leaves an audit row
+    expect(await one('SELECT * FROM fn_admin_record_login($1, true, NULL)', [id])).toEqual({ failed_login_count: 10, locked: true });
+    expect(await one(`SELECT count(*)::int AS n FROM admin_audit_log WHERE admin_id = $1 AND action = 'LOGIN_BLOCKED'`, [id], owner)).toEqual({ n: 1 });
     await expectJa(app.query('SELECT * FROM fn_admin_create_session($1, $2, now() + interval \'30 min\', now() + interval \'12 h\', NULL)',
       [id, hash()]), 'JA403', 'ADMIN_FORBIDDEN');
 
@@ -301,6 +303,15 @@ describe('admin management (SUPER_ADMIN)', () => {
       .toMatchObject({ role: 'SUPER_ADMIN', status: 'ACTIVE' });
     await expectJa(app.query(`SELECT * FROM fn_admin_update_admin($1, $2, NULL, NULL, 'who is this')`, [root, randomId()]),
       'JA404', 'ADMIN_NOT_FOUND');
+
+    // two super-admins demoting each other at once: only one can win
+    const [a, b] = [await createAdmin('SUPER_ADMIN'), await createAdmin('SUPER_ADMIN')];
+    const results = await Promise.allSettled([
+      app.query(`SELECT * FROM fn_admin_update_admin($1, $2, 'MODERATOR', NULL, 'coup one')`, [a, b]),
+      app.query(`SELECT * FROM fn_admin_update_admin($1, $2, 'MODERATOR', NULL, 'coup two')`, [b, a]),
+    ]);
+    expect(results.filter((r) => r.status === 'fulfilled')).toHaveLength(1);
+    expect(await one(`SELECT count(*)::int AS n FROM admin_users WHERE id = ANY($1) AND role = 'SUPER_ADMIN'`, [[a, b]], owner)).toEqual({ n: 1 });
 
     await one(`SELECT * FROM fn_admin_enable_totp($1, '\\x01'::bytea)`, [mod]);
     await one(`SELECT * FROM fn_admin_reset_admin_totp($1, $2, 'lost phone')`, [root, mod]);

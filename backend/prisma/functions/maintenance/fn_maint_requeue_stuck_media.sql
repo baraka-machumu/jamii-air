@@ -1,6 +1,7 @@
 -- Every 10 min (TRD §9): media stuck in UPLOADED / PROCESSING for over 10 minutes (lost queue job)
 -- is returned for re-enqueueing; its updated_at is bumped so it is not returned again for another
--- 10 minutes. Media stuck for over 24 hours is given up on: asset and post become FAILED.
+-- 10 minutes. Media still unprocessed 24 hours after it was attached (uploaded_at) is given up
+-- on: asset and post become FAILED.
 CREATE OR REPLACE FUNCTION fn_maint_requeue_stuck_media(p_batch int DEFAULT 500)
 RETURNS TABLE (media_id uuid)
 LANGUAGE plpgsql VOLATILE SECURITY DEFINER
@@ -12,7 +13,7 @@ DECLARE
 BEGIN
   FOR v_id IN
     SELECT m.id FROM media_assets m
-    WHERE m.status IN ('UPLOADED', 'PROCESSING') AND m.created_at < now() - INTERVAL '24 hours'
+    WHERE m.status IN ('UPLOADED', 'PROCESSING') AND COALESCE(m.uploaded_at, m.created_at) < now() - INTERVAL '24 hours'
     LIMIT GREATEST(p_batch, 1)
     FOR UPDATE SKIP LOCKED
   LOOP

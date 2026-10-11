@@ -1,6 +1,7 @@
 -- Daily 02:00 (Schema §1 "Counters"): recomputes the denormalised counters of rows that changed
--- since p_since (NULL = every row) and fixes any that drifted. Returns how many rows were wrong
--- (reported as a metric; it should stay 0).
+-- since p_since and fixes any that drifted. NULL means the last 25 hours (the daily run); pass
+-- '-infinity' for a full recount, which locks every post and user row: off-hours only.
+-- Returns how many rows were wrong (reported as a metric; it should stay 0).
 --   users.follower_count / following_count  rows in follows
 --   users.post_count                        PUBLISHED posts
 --   posts.like_count                        rows in likes
@@ -14,7 +15,7 @@ SET search_path = public, pg_temp
 AS $$
 #variable_conflict use_column
 DECLARE
-  v_since timestamptz := COALESCE(p_since, '-infinity');
+  v_since timestamptz := COALESCE(p_since, now() - INTERVAL '25 hours');
   v_posts uuid[];
   v_users uuid[];
   v_drift int := 0;

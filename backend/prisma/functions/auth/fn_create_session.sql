@@ -1,6 +1,7 @@
 -- POST /auth/login, step 2 (story E1-03): new refresh-token family after Node verified the
 -- password. With p_cancel_deletion, a login during the 30-day grace period restores the account
--- (BR-AC-08); without it a pending-deletion account gets JA401 ACCOUNT_NOT_ACTIVE.
+-- (BR-AC-08); without it, or once the 30 days are over (purge pending), a pending-deletion
+-- account gets JA401 ACCOUNT_NOT_ACTIVE.
 CREATE OR REPLACE FUNCTION fn_create_session(
   p_user_id         uuid,
   p_refresh_hash    text,
@@ -14,15 +15,16 @@ AS $$
 #variable_conflict use_column
 DECLARE
   v_status    user_status;
+  v_requested timestamptz;
   v_family_id uuid := uuidv7();
 BEGIN
-  SELECT u.status INTO v_status FROM users u WHERE u.id = p_user_id FOR UPDATE;
+  SELECT u.status, u.deletion_requested_at INTO v_status, v_requested FROM users u WHERE u.id = p_user_id FOR UPDATE;
   IF NOT FOUND THEN
     RAISE EXCEPTION USING ERRCODE = 'JA404', MESSAGE = 'USER_NOT_FOUND';
   ELSIF v_status = 'SUSPENDED' THEN
     RAISE EXCEPTION USING ERRCODE = 'JA403', MESSAGE = 'ACCOUNT_SUSPENDED';
   ELSIF v_status = 'PENDING_DELETION' THEN
-    IF NOT COALESCE(p_cancel_deletion, false) THEN
+    IF NOT COALESCE(p_cancel_deletion, false) OR v_requested <= now() - INTERVAL '30 days' THEN
       RAISE EXCEPTION USING ERRCODE = 'JA401', MESSAGE = 'ACCOUNT_NOT_ACTIVE';
     END IF;
     UPDATE users u SET status = 'ACTIVE', deletion_requested_at = NULL WHERE u.id = p_user_id;

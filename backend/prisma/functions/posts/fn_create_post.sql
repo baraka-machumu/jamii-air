@@ -17,8 +17,7 @@ AS $$
 #variable_conflict use_column
 DECLARE
   c_route   constant text := 'POST /posts';
-  v_key     idempotency_keys%ROWTYPE;
-  v_rows    int;
+  v_replay  jsonb;
   v_post_id uuid;
   v_caption text := NULLIF(btrim(p_caption), '');
   v_media   record;
@@ -26,18 +25,11 @@ BEGIN
   PERFORM fn__assert_active_user(p_viewer_id);
 
   IF p_idempotency_key IS NOT NULL THEN
-    INSERT INTO idempotency_keys (user_id, key, route, request_hash, response_body)
-    VALUES (p_viewer_id, p_idempotency_key, c_route, p_request_hash, '{}')
-    ON CONFLICT DO NOTHING;
-    GET DIAGNOSTICS v_rows = ROW_COUNT;
-    IF v_rows = 0 THEN
-      SELECT * INTO v_key FROM idempotency_keys k WHERE k.user_id = p_viewer_id AND k.key = p_idempotency_key;
-      IF v_key.route <> c_route OR v_key.request_hash <> p_request_hash THEN
-        RAISE EXCEPTION USING ERRCODE = 'JA409', MESSAGE = 'IDEMPOTENCY_KEY_REUSED';
-      END IF;
+    v_replay := fn__claim_idempotency_key(p_viewer_id, p_idempotency_key, c_route, p_request_hash);
+    IF v_replay IS NOT NULL THEN
       RETURN QUERY
       SELECT p.id, p.status, p.caption, p.created_at, '{}'::uuid[], true
-      FROM posts p WHERE p.id = (v_key.response_body->>'postId')::uuid;
+      FROM posts p WHERE p.id = (v_replay->>'postId')::uuid;
       RETURN;
     END IF;
   END IF;
@@ -71,7 +63,7 @@ BEGIN
   SELECT v_post_id, ids.media_id, (ids.ord - 1)::smallint
   FROM unnest(p_media_ids) WITH ORDINALITY AS ids(media_id, ord);
 
-  UPDATE media_assets m SET status = 'UPLOADED' WHERE m.id = ANY (p_media_ids);
+  UPDATE media_assets m SET status = 'UPLOADED', uploaded_at = now() WHERE m.id = ANY (p_media_ids);
 
   IF p_idempotency_key IS NOT NULL THEN
     UPDATE idempotency_keys k SET response_body = jsonb_build_object('postId', v_post_id)

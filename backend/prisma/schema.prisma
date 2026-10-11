@@ -313,6 +313,7 @@ model MediaAsset {
   durationMs    Int?         @map("duration_ms") // R2 video
   blurhash      String?      @db.VarChar(64)
   failureReason String?      @map("failure_reason") @db.VarChar(255)
+  uploadedAt    DateTime?    @map("uploaded_at") @db.Timestamptz // attached to a post / profile: processing starts
   processedAt   DateTime?    @map("processed_at") @db.Timestamptz
   createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz
   updatedAt     DateTime     @default(now()) @map("updated_at") @db.Timestamptz

@@ -1,7 +1,8 @@
 -- Records an admin login attempt (AP-07): success resets the failure counter; the 10th
 -- consecutive failure locks the account until a super-admin re-activates it. Every attempt is
 -- audit-logged; p_admin_id is NULL for an unknown email. Returns instead of raising, so the
--- failure count is kept (Schema §6 rule 6).
+-- failure count and the audit row are kept (Schema §6 rule 6). A correct password for a locked or
+-- disabled admin is logged as LOGIN_BLOCKED and returns locked = true: the API must refuse it.
 CREATE OR REPLACE FUNCTION fn_admin_record_login(p_admin_id uuid, p_success boolean, p_user_agent text)
 RETURNS TABLE (failed_login_count int, locked boolean)
 LANGUAGE plpgsql VOLATILE SECURITY DEFINER
@@ -20,7 +21,9 @@ BEGIN
 
   IF p_success THEN
     IF a.status <> 'ACTIVE' OR a.locked_at IS NOT NULL THEN
-      RAISE EXCEPTION USING ERRCODE = 'JA403', MESSAGE = 'ADMIN_FORBIDDEN';
+      PERFORM fn__admin_audit(a.id, 'LOGIN_BLOCKED', NULL, NULL,
+                              v_ua || jsonb_build_object('status', a.status, 'locked', a.locked_at IS NOT NULL));
+      RETURN QUERY SELECT a.failed_login_count, true; RETURN;
     END IF;
     UPDATE admin_users x SET failed_login_count = 0, last_login_at = now() WHERE x.id = a.id;
     PERFORM fn__admin_audit(a.id, 'LOGIN_SUCCESS', NULL, NULL, v_ua);

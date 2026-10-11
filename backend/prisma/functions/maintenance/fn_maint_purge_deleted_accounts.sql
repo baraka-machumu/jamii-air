@@ -23,18 +23,7 @@ BEGIN
     RETURN QUERY SELECT 0; RETURN;
   END IF;
 
-  -- People the deleted users followed lose a follower; their followers follow one fewer.
-  UPDATE users u SET follower_count = u.follower_count - d.n
-  FROM (SELECT f.following_id AS id, count(*)::int AS n FROM follows f
-        WHERE f.follower_id = ANY (v_ids) AND NOT (f.following_id = ANY (v_ids))
-        GROUP BY f.following_id) d
-  WHERE u.id = d.id;
-  UPDATE users u SET following_count = u.following_count - d.n
-  FROM (SELECT f.follower_id AS id, count(*)::int AS n FROM follows f
-        WHERE f.following_id = ANY (v_ids) AND NOT (f.follower_id = ANY (v_ids))
-        GROUP BY f.follower_id) d
-  WHERE u.id = d.id;
-
+  -- Posts first, then users: the lock order every procedure uses (no deadlocks).
   -- Other people's posts lose the deleted users' likes and visible comments.
   UPDATE posts p SET like_count = p.like_count - d.n
   FROM (SELECT l.post_id AS id, count(*)::int AS n FROM likes l JOIN posts x ON x.id = l.post_id
@@ -47,6 +36,18 @@ BEGIN
           AND k.deleted_at IS NULL AND k.hidden_at IS NULL
         GROUP BY k.post_id) d
   WHERE p.id = d.id;
+
+  -- People the deleted users followed lose a follower; their followers follow one fewer.
+  UPDATE users u SET follower_count = u.follower_count - d.n
+  FROM (SELECT f.following_id AS id, count(*)::int AS n FROM follows f
+        WHERE f.follower_id = ANY (v_ids) AND NOT (f.following_id = ANY (v_ids))
+        GROUP BY f.following_id) d
+  WHERE u.id = d.id;
+  UPDATE users u SET following_count = u.following_count - d.n
+  FROM (SELECT f.follower_id AS id, count(*)::int AS n FROM follows f
+        WHERE f.following_id = ANY (v_ids) AND NOT (f.follower_id = ANY (v_ids))
+        GROUP BY f.follower_id) d
+  WHERE u.id = d.id;
 
   INSERT INTO pending_object_deletions (object_key, is_prefix)
   SELECT 'users/' || id || '/', true FROM unnest(v_ids) AS id;

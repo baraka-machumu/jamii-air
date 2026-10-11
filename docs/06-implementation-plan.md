@@ -44,8 +44,9 @@ Visual design (Design Brief, doc 04) is produced by the engineer with Claude Cod
 **Status (2026-10-11):**
 - **Phase 0:** complete.
 - **Phase 1, Database:** every task is built and tested locally and waiting for review (Review column). Story-level tracking: [backlog](backlog/phase-1-database-E0-E1.md#status).
-  - 9 migrations and 92 functions. They apply cleanly to a fresh PostgreSQL 18, and the drift check passes.
-  - 116 tests pass in `npm run test:db` (Testcontainers), including the authorization matrix and the SR-01/03/04 security checks.
+  - 10 migrations and 93 functions. They apply cleanly to a fresh PostgreSQL 18, and the drift check passes.
+  - A code review of the Phase 1 commits found 10 issues; 9 are fixed in migration `phase1_review_fixes` (Schema §16).
+  - 118 tests pass in `npm run test:db` (Testcontainers), including the authorization matrix and the SR-01/03/04 security checks.
   - Task 1.13: every measured procedure's P95 is under 50 ms at 10k users / 1M posts (feed 27 ms; numbers in task 1.13).
   - **Open before the phase gate:**
     - review and merge

@@ -1,6 +1,7 @@
 -- PATCH /admin/admins/:id (SUPER_ADMIN only): change role and / or status (NULL = unchanged).
 -- Re-activating also unlocks the account; disabling ends its sessions. A super-admin cannot
--- disable or demote themselves (App Flow §15.8), so at least one active super-admin remains.
+-- disable or demote themselves (App Flow §15.8), and every super-admin row is locked first, so two
+-- super-admins demoting each other at once cannot leave none.
 -- Audit-logged with the reason.
 CREATE OR REPLACE FUNCTION fn_admin_update_admin(
   p_admin_id  uuid,
@@ -16,6 +17,7 @@ AS $$
 DECLARE
   t admin_users%ROWTYPE;
 BEGIN
+  PERFORM 1 FROM admin_users a WHERE a.role = 'SUPER_ADMIN' ORDER BY a.id FOR UPDATE;
   PERFORM fn__assert_admin(p_admin_id, ARRAY['SUPER_ADMIN']::admin_role[]);
   PERFORM fn__require_note(p_note);
 
@@ -33,6 +35,10 @@ BEGIN
     locked_at          = CASE WHEN p_status = 'ACTIVE' THEN NULL ELSE a.locked_at END,
     failed_login_count = CASE WHEN p_status = 'ACTIVE' THEN 0 ELSE a.failed_login_count END
   WHERE a.id = p_target_id;
+
+  IF NOT EXISTS (SELECT 1 FROM admin_users a WHERE a.role = 'SUPER_ADMIN' AND a.status = 'ACTIVE' AND a.locked_at IS NULL) THEN
+    RAISE EXCEPTION USING ERRCODE = 'JA409', MESSAGE = 'INVALID_STATE';
+  END IF;
 
   IF p_status = 'DISABLED' THEN
     UPDATE admin_sessions s SET revoked_at = now() WHERE s.admin_id = p_target_id AND s.revoked_at IS NULL;

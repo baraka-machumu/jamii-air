@@ -16,8 +16,7 @@ AS $$
 #variable_conflict use_column
 DECLARE
   c_route      constant text := 'POST /posts/:id/comments';
-  v_key        idempotency_keys%ROWTYPE;
-  v_rows       int;
+  v_replay     jsonb;
   v_comment_id uuid;
   v_count      int;
   v_author_id  uuid;
@@ -26,19 +25,12 @@ BEGIN
   PERFORM fn__assert_active_user(p_viewer_id);
 
   IF p_idempotency_key IS NOT NULL THEN
-    INSERT INTO idempotency_keys (user_id, key, route, request_hash, response_body)
-    VALUES (p_viewer_id, p_idempotency_key, c_route, p_request_hash, '{}')
-    ON CONFLICT DO NOTHING;
-    GET DIAGNOSTICS v_rows = ROW_COUNT;
-    IF v_rows = 0 THEN
-      SELECT * INTO v_key FROM idempotency_keys k WHERE k.user_id = p_viewer_id AND k.key = p_idempotency_key;
-      IF v_key.route <> c_route OR v_key.request_hash <> p_request_hash THEN
-        RAISE EXCEPTION USING ERRCODE = 'JA409', MESSAGE = 'IDEMPOTENCY_KEY_REUSED';
-      END IF;
+    v_replay := fn__claim_idempotency_key(p_viewer_id, p_idempotency_key, c_route, p_request_hash);
+    IF v_replay IS NOT NULL THEN
       RETURN QUERY
       SELECT c.id, c.post_id, c.body, c.created_at, p.comment_count, NULL::uuid, true
       FROM comments c JOIN posts p ON p.id = c.post_id
-      WHERE c.id = (v_key.response_body->>'commentId')::uuid;
+      WHERE c.id = (v_replay->>'commentId')::uuid;
       RETURN;
     END IF;
   END IF;

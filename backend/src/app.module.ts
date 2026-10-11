@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import type { Redis } from 'ioredis';
+import { AppVersionGuard } from './common/app-version/app-version.guard.js';
 import { LoggingModule } from './common/logging/logging.module.js';
 import { RedisThrottlerStorage } from './common/rate-limit/redis-throttler.storage.js';
 import { AppConfig } from './config/app-config.js';
@@ -53,6 +54,6 @@ import { UsersModule } from './modules/users/users.module.js';
     LinksModule,
   ],
   controllers: [HealthController],
-  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
+  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }, { provide: APP_GUARD, useClass: AppVersionGuard }],
 })
 export class AppModule {}

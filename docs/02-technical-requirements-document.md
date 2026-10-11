@@ -178,7 +178,7 @@ admin/src/
 | API-04 | Lists: `?limit=` (default 20, max 50) and `?cursor=`; response `{ "items": [...], "nextCursor": "..." \| null }`. Cursors are opaque base64url. Admin tables may also use `?page=` for small, bounded result sets. |
 | API-05 | Error envelope: `{ "error": { "code": "POST_NOT_FOUND", "message": "…", "details": {…} }, "requestId": "…" }`. Codes raised inside stored procedures pass through unchanged (§6.4). |
 | API-06 | Every response carries `X-Request-Id`. |
-| API-07 | Mobile sends `X-App-Version` and `X-Platform`; server can return `426 APP_VERSION_UNSUPPORTED`. |
+| API-07 | Mobile sends `X-App-Version` and `X-Platform`; server can return `426 APP_VERSION_UNSUPPORTED` (`details.minVersion`) when the version is below `MIN_APP_VERSION`. |
 | API-08 | `POST /posts` and `POST /posts/:id/comments` accept `Idempotency-Key`; duplicates within 24 h return the original result. |
 | API-09 | Responses are screen-shaped: explicit columns only, no internal fields (password hashes, object keys, other users' emails or dates of birth). |
 | API-10 | Media URLs are full CDN URLs built server-side from object keys. |
@@ -195,6 +195,7 @@ admin/src/
 | POST | `/auth/logout` | 🔒 | Revoke session (+ device token) | `fn_revoke_session` | — |
 | POST | `/auth/password/forgot` | 🔓 | Send reset code (S) | `fn_create_password_reset` | 3 / h / email |
 | POST | `/auth/password/reset` | 🔓 | Reset with code (S) | `fn_reset_password` | 5 / h / IP |
+| POST | `/auth/password/change` | 🔒 | Change password; signs out other devices (S) | `fn_change_password` | 5 / h |
 | GET | `/me` | 🔒 | Current user | Prisma read | — |
 | PATCH | `/me` | 🔒 | Update displayName, bio, username, avatarMediaId, locale | `fn_update_profile` | 20 / h |
 | DELETE | `/me` | 🔒 | Request account deletion (password confirm) | `fn_request_account_deletion` | 3 / day |
@@ -235,18 +236,20 @@ Follow/like/block use **PUT/DELETE** (idempotent) so retries on flaky networks a
 | POST | `/admin/auth/totp/enroll` · `/totp/verify` | challenge | Enroll / verify TOTP → session cookie + access token | `fn_admin_enable_totp`, `fn_admin_create_session` |
 | POST | `/admin/auth/refresh` | cookie | Rotate admin session | `fn_admin_rotate_session` |
 | POST | `/admin/auth/logout` | 🛡 | End session | `fn_admin_revoke_session` |
+| POST | `/admin/auth/password` | 🛡 | Change own password (ends every session) | `fn_admin_change_password` |
 | GET | `/admin/dashboard` | 🛡 | KPIs (BR-DI-01) + open report count | `fn_admin_dashboard` |
 | GET | `/admin/reports?status=&type=&cursor=` | 🛡 | Moderation queue | `fn_admin_list_reports` |
 | GET | `/admin/reports/:id` | 🛡 | Report + target preview + prior reports | `fn_admin_get_report` |
 | PATCH | `/admin/reports/:id` | 🛡 | REVIEWING / RESOLVED / DISMISSED + note | `fn_admin_update_report` |
 | GET | `/admin/users?q=&status=` · `/admin/users/:id` | 🛡 | Search users · user detail (posts, reports, actions) | `fn_admin_search_users` · `fn_admin_get_user` |
 | POST | `/admin/users/:id/suspend` · `/reinstate` | 🛡 | Suspend / reinstate | `fn_admin_suspend_user` · `fn_admin_reinstate_user` |
+| POST | `/admin/users/:id/revoke-sessions` | 🛡 | Sign a user out everywhere | `fn_admin_revoke_user_sessions` |
 | GET | `/admin/posts/:id` | 🛡 | Post incl. hidden | `fn_admin_get_post` |
 | POST | `/admin/posts/:id/hide` · `/unhide` | 🛡 | Hide / restore | `fn_admin_set_post_hidden` |
 | POST | `/admin/comments/:id/hide` · `/unhide` | 🛡 | Hide / restore | `fn_admin_set_comment_hidden` |
 | GET / POST / DELETE | `/admin/invites` | 🛡 | List / create / revoke invite codes | `fn_admin_*_invite` |
 | GET | `/admin/audit-log` | 🛡 | Moderation & admin actions | `fn_admin_list_audit` |
-| GET / POST / PATCH | `/admin/admins` | 👑 | Manage admin accounts & roles, reset 2FA | `fn_admin_*_admin` |
+| GET / POST / PATCH | `/admin/admins` · `POST /admin/admins/:id/reset-2fa` | 👑 | Manage admin accounts & roles, reset 2FA | `fn_admin_*_admin`, `fn_admin_reset_admin_totp` |
 
 ## 6. Data-access strategy: Prisma + stored procedures (D-3)
 

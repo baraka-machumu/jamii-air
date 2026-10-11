@@ -45,6 +45,7 @@ export class AdminLoginStep {
 export class AdminIdentity {
   @ApiProperty() id!: string;
   @ApiProperty() email!: string;
+  @ApiProperty({ description: 'For the top bar' }) displayName!: string;
   @ApiProperty({ enum: ADMIN_ROLES }) role!: string;
 }
 
@@ -89,6 +90,9 @@ export class UsersQuery extends PageQuery {
 export class AuditQuery extends PageQuery {
   @ApiPropertyOptional() @IsOptional() @IsUUID() adminId?: string;
   @ApiPropertyOptional({ example: 'HIDE_POST' }) @IsOptional() @Matches(/^[A-Z_]{2,50}$/) action?: string;
+  @ApiPropertyOptional({ description: 'A user, post, comment, report, admin or invite id' }) @IsOptional() @IsUUID() targetId?: string;
+  @ApiPropertyOptional({ description: 'ISO date-time, inclusive' }) @IsOptional() @IsISO8601() from?: string;
+  @ApiPropertyOptional({ description: 'ISO date-time, exclusive' }) @IsOptional() @IsISO8601() to?: string;
 }
 
 // ── Invites and admins ────────────────────────────────────────

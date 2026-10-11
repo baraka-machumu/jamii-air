@@ -5,5 +5,8 @@
 -- @param {DateTime} $4:cursorTime?
 -- @param {String} $5:cursorId?
 -- @param {Int} $6:limit
+-- @param {String} $7:targetId?
+-- @param {DateTime} $8:from?
+-- @param {DateTime} $9:to?
 SELECT entry_id, source, action, admin_id, admin_name, target_type, target_id, note, details, created_at
-FROM fn_admin_list_audit($1::uuid, $2::uuid, $3::text, $4::timestamptz, $5::uuid, $6::int);
+FROM fn_admin_list_audit($1::uuid, $2::uuid, $3::text, $4::timestamptz, $5::uuid, $6::int, $7::uuid, $8::timestamptz, $9::timestamptz);

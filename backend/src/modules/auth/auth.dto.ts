@@ -91,6 +91,21 @@ export class ResetPasswordDto extends ForgotPasswordDto {
   newPassword!: string;
 }
 
+export class ChangePasswordDto {
+  @ApiProperty() @IsString() @Length(1, 128) currentPassword!: string;
+
+  @ApiProperty({ minLength: 8, maxLength: 128 })
+  @IsString()
+  @Length(8, 128)
+  newPassword!: string;
+
+  @ApiPropertyOptional({ description: 'This installation: its push registration is kept, every other one removed' })
+  @IsOptional()
+  @IsString()
+  @Length(1, 64)
+  installationId?: string;
+}
+
 export class SessionResponse {
   @ApiProperty({ description: 'JWT, 15 minutes; keep in memory' })
   accessToken!: string;

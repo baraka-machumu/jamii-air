@@ -5,7 +5,7 @@ RETURNS TABLE (
   user_id uuid, username citext, display_name varchar, bio varchar, email citext, status user_status,
   avatar_m_key text, locale varchar, post_count int, follower_count int, following_count int,
   invite_code varchar, suspended_at timestamptz, deletion_requested_at timestamptz,
-  last_active_at timestamptz, created_at timestamptz, reports_filed int,
+  last_active_at timestamptz, created_at timestamptz, reports_filed int, active_sessions int,
   recent_posts jsonb, reports_against jsonb, moderation_history jsonb)
 LANGUAGE plpgsql STABLE SECURITY DEFINER
 SET search_path = public, pg_temp
@@ -22,6 +22,8 @@ BEGIN
          u.post_count, u.follower_count, u.following_count, i.code,
          u.suspended_at, u.deletion_requested_at, u.last_active_at, u.created_at,
          (SELECT count(*)::int FROM reports r WHERE r.reporter_id = u.id),
+         (SELECT count(DISTINCT t.family_id)::int FROM refresh_tokens t
+          WHERE t.user_id = u.id AND t.revoked_at IS NULL AND t.expires_at > now()),
          COALESCE((
            SELECT jsonb_agg(x.item ORDER BY x.created_at DESC) FROM (
              SELECT p.created_at, jsonb_build_object('postId', p.id, 'status', p.status, 'caption', left(p.caption, 140),

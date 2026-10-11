@@ -1,5 +1,6 @@
 -- GET /users/:username/posts (profile grid, BR-PR-01). Newest first, keyset paging. Other people
--- see PUBLISHED posts; on their own profile the viewer also sees PROCESSING and FAILED posts.
+-- see PUBLISHED posts; on their own profile the viewer also sees PROCESSING and FAILED posts, and
+-- HIDDEN ones (shown as "Removed for violating Community Guidelines", App Flow §10.3).
 -- JA404 under the same rules as fn_get_profile; empty when the viewer blocked the profile.
 CREATE OR REPLACE FUNCTION fn_get_profile_posts(
   p_viewer_id   uuid,
@@ -33,7 +34,7 @@ BEGIN
     LEFT JOIN media_assets ma ON ma.id = pm.media_id
     LEFT JOIN media_variants tv ON tv.media_id = pm.media_id AND tv.variant = 'THUMB'
     WHERE p.author_id = p_viewer_id
-      AND p.status IN ('PROCESSING', 'PUBLISHED', 'FAILED')
+      AND p.status IN ('PROCESSING', 'PUBLISHED', 'FAILED', 'HIDDEN')
       AND (p.created_at, p.id) < (c.cursor_time, c.cursor_id)
     ORDER BY p.created_at DESC, p.id DESC
     LIMIT c.page_limit;

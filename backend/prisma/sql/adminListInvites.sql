@@ -3,5 +3,5 @@
 -- @param {DateTime} $2:cursorTime?
 -- @param {String} $3:cursorId?
 -- @param {Int} $4:limit
-SELECT invite_id, code, state, max_uses, use_count, expires_at, revoked_at, created_by_name, created_at
+SELECT invite_id, code, state, max_uses, use_count, expires_at, revoked_at, created_by_name, created_at, used_by
 FROM fn_admin_list_invites($1::uuid, $2::timestamptz, $3::uuid, $4::int);

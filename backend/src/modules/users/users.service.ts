@@ -9,6 +9,7 @@ import { type FollowListRow, UsersProcedures } from '../../infrastructure/db-pro
 import { PrismaService } from '../../infrastructure/prisma/prisma.service.js';
 import { MediaJobs, NotificationJobs } from '../../infrastructure/queue/queue.module.js';
 import { MediaUrls } from '../../infrastructure/storage/media-urls.js';
+import { ShareLinks } from '../links/share-links.js';
 import { MediaService } from '../media/media.service.js';
 import type { FollowListItem, FollowState, Me, Profile, UpdateMeDto, UserSummary } from './users.dto.js';
 
@@ -21,6 +22,7 @@ export class UsersService {
     private readonly media: MediaService,
     private readonly mediaJobs: MediaJobs,
     private readonly notificationJobs: NotificationJobs,
+    private readonly links: ShareLinks,
   ) {}
 
   async me(viewerId: string): Promise<Me> {
@@ -74,6 +76,7 @@ export class UsersService {
       isFollowing: p.is_following ?? false,
       followsMe: p.follows_me ?? false,
       isBlockedByMe: p.is_blocked_by_me ?? false,
+      shareUrl: this.links.profile(p.username!),
       createdAt: p.created_at!.toISOString(),
     };
   }

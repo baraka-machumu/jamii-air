@@ -52,6 +52,7 @@ const MESSAGES: Record<string, string> = {
   NOTE_REQUIRED: 'A reason note (at least 3 characters) is required.',
   REPORT_ALREADY_HANDLED: 'This report was already handled.',
   INVALID_STATE: 'This cannot be done in the current state.',
+  APP_VERSION_UNSUPPORTED: 'Please update Jamii Air to continue.',
   INVALID_PASSWORD: 'The password is not correct.',
   CANNOT_BLOCK_SELF: 'You cannot block yourself.',
   CANNOT_REPORT_SELF: 'You cannot report yourself or your own content.',

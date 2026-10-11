@@ -66,5 +66,17 @@ jobs:
       - name: Build
         run: npm run build
 
+      # Plan task 2.14: the spec the mobile app (task 3.2) and the admin portal generate their API
+      # types from. Built from route metadata only (no running services).
+      - name: OpenAPI spec
+        run: node dist/openapi.js openapi.json
+
+      - name: Upload OpenAPI spec
+        uses: actions/upload-artifact@v4
+        with:
+          name: openapi
+          path: backend/openapi.json
+          if-no-files-found: error
+
       - name: Docker image
         run: docker build --target runtime -t jamii-air-api:ci .

@@ -82,3 +82,39 @@ export async function publishPost(app: INestApplication<App>, user: TestUser, ca
 export async function block(app: INestApplication<App>, blocker: TestUser, target: TestUser): Promise<void> {
   await as(app, blocker).put(`/api/v1/users/${target.id}/block`).expect(200);
 }
+
+type Schema = { $ref?: string; type?: string; properties?: Record<string, Schema>; required?: string[]; items?: Schema; allOf?: Schema[]; nullable?: boolean };
+type OpenApi = { paths: Record<string, Record<string, unknown>>; components: { schemas: Record<string, Schema> } };
+
+/** The OpenAPI document of this app, exactly as `npm run openapi` builds it (Plan task 2.14). */
+export async function openApiDocument(app: INestApplication<App>): Promise<OpenApi> {
+  const { SwaggerModule } = await import('@nestjs/swagger');
+  const { openApiConfig } = await import('../src/app.setup.js');
+  return SwaggerModule.createDocument(app, openApiConfig()) as unknown as OpenApi;
+}
+
+/**
+ * Asserts a response body matches a component schema by field names: no field the spec does not
+ * declare, and every required field present (recursively through objects and arrays).
+ */
+export function expectConforms(doc: OpenApi, schemaName: string, body: unknown, path = schemaName): void {
+  if (!doc.components.schemas[schemaName]) throw new Error(`no schema named ${schemaName}`);
+  const resolve = (s: Schema): Schema => (s.$ref ? doc.components.schemas[s.$ref.split('/').pop()!] : s.allOf ? resolve(s.allOf[0]) : s);
+  const check = (schema: Schema, value: unknown, at: string): void => {
+    const s = resolve(schema);
+    if (value === null || value === undefined) return;
+    if (s.type === 'array') {
+      if (!Array.isArray(value)) throw new Error(`${at}: the spec says array, the response is ${typeof value}`);
+      return value.forEach((v, i) => check(s.items!, v, `${at}[${i}]`));
+    }
+    if (Array.isArray(value)) throw new Error(`${at}: the response is an array, the spec says ${s.type ?? 'object'}`);
+    if (!s.properties || typeof value !== 'object') return;
+    const declared = Object.keys(s.properties);
+    const extra = Object.keys(value).filter((k) => !declared.includes(k));
+    if (extra.length) throw new Error(`${at}: undocumented field(s) ${extra.join(', ')}`);
+    const missing = (s.required ?? []).filter((k) => !(k in (value as object)));
+    if (missing.length) throw new Error(`${at}: missing required field(s) ${missing.join(', ')}`);
+    for (const [k, v] of Object.entries(value)) check(s.properties[k], v, `${at}.${k}`);
+  };
+  check({ $ref: `#/components/schemas/${schemaName}` }, body, path);
+}

@@ -3,7 +3,7 @@ import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Patch, Put, Query 
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { type AuthUser, CurrentUser } from '../../common/auth/auth.decorators.js';
-import { FollowListPage, FollowState, Me, PageQuery, Profile, SearchQuery, UpdateMeDto, UserSummary } from './users.dto.js';
+import { FollowListPage, FollowState, Me, PageQuery, Profile, SearchQuery, UpdateMeDto, UserSearchResult } from './users.dto.js';
 import { UsersService } from './users.service.js';
 
 const HOUR = 3_600_000;
@@ -34,8 +34,8 @@ export class UsersController {
   @Get('users/search')
   @Throttle({ default: { limit: 60, ttl: 60_000 } })
   @ApiOperation({ summary: 'Search by username or display name' })
-  @ApiResponse({ status: 200, type: [UserSummary] })
-  search(@CurrentUser() user: AuthUser, @Query() query: SearchQuery): Promise<{ items: UserSummary[] }> {
+  @ApiResponse({ status: 200, type: UserSearchResult })
+  search(@CurrentUser() user: AuthUser, @Query() query: SearchQuery): Promise<UserSearchResult> {
     return this.users.search(user.id, query.q, query.limit);
   }
 

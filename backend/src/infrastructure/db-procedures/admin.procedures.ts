@@ -92,8 +92,10 @@ export class AdminProcedures {
     return this.db.one('fn_admin_revoke_invite', adminRevokeInvite(adminId, inviteId, note));
   }
 
-  listAudit(adminId: string, filterAdminId: string | null, action: string | null, cursor: Cursor | undefined, limit: number) {
-    return this.db.rows('fn_admin_list_audit', adminListAudit(adminId, filterAdminId, action, cursor?.time ?? null, cursor?.id ?? null, limit));
+  listAudit(adminId: string, filter: { adminId: string | null; action: string | null; targetId: string | null; from: Date | null; to: Date | null },
+    cursor: Cursor | undefined, limit: number) {
+    return this.db.rows('fn_admin_list_audit', adminListAudit(
+      adminId, filter.adminId, filter.action, cursor?.time ?? null, cursor?.id ?? null, limit, filter.targetId, filter.from, filter.to));
   }
 
   listAdmins(adminId: string) {

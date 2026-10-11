@@ -37,6 +37,8 @@ export class AppConfig {
   readonly push: PushConfig;
   /** Admin portal (TRD §8). */
   readonly admin: AdminConfig;
+  /** Oldest mobile app version the API serves (API-07); null = no gate. */
+  readonly minAppVersion: string | null;
 
   constructor(values: Omit<AppConfig, 'isProduction' | 'swaggerEnabled'>) {
     this.nodeEnv = values.nodeEnv;
@@ -53,6 +55,7 @@ export class AppConfig {
     this.links = values.links;
     this.push = values.push;
     this.admin = values.admin;
+    this.minAppVersion = values.minAppVersion;
   }
 
   get isProduction(): boolean {
@@ -193,9 +196,12 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
   if (new Set(secrets).size !== secrets.length) problems.push('JWT_ACCESS_SECRET, AUTH_CODE_SECRET, ADMIN_JWT_SECRET and ADMIN_TOTP_KEY must all differ');
   if (!/^https?:\/\/[^/]+$/.test(admin.origin)) problems.push('ADMIN_ORIGIN must be an origin, e.g. https://admin.example.com');
 
+  const minAppVersion = env.MIN_APP_VERSION?.trim() || null;
+  if (minAppVersion && !/^\d{1,4}\.\d{1,4}\.\d{1,4}$/.test(minAppVersion)) problems.push('MIN_APP_VERSION must look like 1.2.0');
+
   if (problems.length > 0) throw new ConfigError(problems);
   return new AppConfig({
-    nodeEnv, port, databaseUrl, logLevel, requireInvite: requireInvite!, jwtAccessSecret, authCodeSecret, smtp, mediaBaseUrl, redisUrl, s3, links, push, admin,
+    nodeEnv, port, databaseUrl, logLevel, requireInvite: requireInvite!, jwtAccessSecret, authCodeSecret, smtp, mediaBaseUrl, redisUrl, s3, links, push, admin, minAppVersion,
   });
 }
 

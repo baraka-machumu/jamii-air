@@ -14,6 +14,7 @@ export type AdminRotateOutcome = 'OK' | 'INVALID' | 'REUSE_DETECTED' | 'EXPIRED'
 
 export interface AdminLoginCandidate {
   adminId: string;
+  displayName: string;
   passwordHash: string;
   role: AdminRole;
   active: boolean;
@@ -32,7 +33,7 @@ export class AdminAuthProcedures {
     const [row] = await this.db.rows('fn_admin_get_login_candidate', adminGetLoginCandidate(email));
     if (!row) return undefined;
     return {
-      adminId: row.admin_id!, passwordHash: row.password_hash!, role: row.role as AdminRole,
+      adminId: row.admin_id!, displayName: row.display_name!, passwordHash: row.password_hash!, role: row.role as AdminRole,
       active: row.status === 'ACTIVE', locked: row.locked ?? false, totpEnabled: row.totp_enabled ?? false,
       totpSecretEnc: row.totp_secret_enc ? Buffer.from(row.totp_secret_enc, 'base64') : null,
     };

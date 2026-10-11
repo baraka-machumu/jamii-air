@@ -85,7 +85,9 @@ describe('admin (e2e)', () => {
     expect((await http().post('/api/v1/admin/auth/totp/enroll').send({ challengeToken: step1.challengeToken, code: '000000' }).expect(401)).body.error.code)
       .toBe('INVALID_TOTP');
     const enrolled = await http().post('/api/v1/admin/auth/totp/enroll').send({ challengeToken: step1.challengeToken, code: code(admin) }).expect(200);
-    expect(enrolled.body).toMatchObject({ accessToken: expect.any(String), expiresIn: 900, admin: { id: admin.id, email: admin.email, role: 'MODERATOR' } });
+    expect(enrolled.body).toMatchObject({
+      accessToken: expect.any(String), expiresIn: 900, admin: { id: admin.id, email: admin.email, displayName: 'Test Admin', role: 'MODERATOR' },
+    });
     const cookie = refreshCookie(enrolled);
     expect(cookie).toMatch(/HttpOnly/);
     expect(cookie).toMatch(/Secure/);
@@ -188,6 +190,10 @@ describe('admin (e2e)', () => {
     expect((await a.post(`/api/v1/admin/posts/${postId}/hide`).send({ note: 'Spam', reportId: report.id }).expect(200)).body)
       .toEqual({ postId, status: 'HIDDEN' });
     await as(app, reporter).get(`/api/v1/posts/${postId}`).expect(404);
+    // The author still sees it in their own grid, to badge it as removed (App Flow §10.3).
+    expect((await as(app, author).get(`/api/v1/users/${author.username}/posts`).expect(200)).body.items)
+      .toEqual([expect.objectContaining({ id: postId, status: 'HIDDEN' })]);
+    expect((await as(app, reporter).get(`/api/v1/users/${author.username}/posts`).expect(200)).body.items).toEqual([]);
     expect((await a.get(`/api/v1/admin/posts/${postId}`).expect(200)).body).toMatchObject({ postId, status: 'HIDDEN', caption: 'Spam spam spam' });
     expect((await a.get(`/api/v1/admin/reports/${report.id}`).expect(200)).body.status).toBe('RESOLVED');
     expect((await a.patch(`/api/v1/admin/reports/${report.id}`).send({ status: 'DISMISSED', note: 'Again' }).expect(409)).body.error.code)
@@ -210,6 +216,12 @@ describe('admin (e2e)', () => {
 
     const audit = (await a.get(`/api/v1/admin/audit-log?adminId=${admin.id}`).expect(200)).body.items.map((e: { action: string }) => e.action);
     expect(audit).toEqual(expect.arrayContaining(['HIDE_POST', 'SUSPEND_USER', 'REINSTATE_USER', 'UNHIDE_POST']));
+    // By target: a user's entries include actions on their content; a post's only its own.
+    const forUser = (await a.get(`/api/v1/admin/audit-log?targetId=${author.id}`).expect(200)).body.items.map((e: { action: string }) => e.action);
+    expect(forUser).toEqual(expect.arrayContaining(['SUSPEND_USER', 'REINSTATE_USER']));
+    const forPost = (await a.get(`/api/v1/admin/audit-log?targetId=${postId}`).expect(200)).body.items.map((e: { action: string }) => e.action);
+    expect(forPost.sort()).toEqual(['HIDE_POST', 'UNHIDE_POST']);
+    expect((await a.get(`/api/v1/admin/audit-log?adminId=${admin.id}&from=${new Date(Date.now() + 60_000).toISOString()}`).expect(200)).body.items).toEqual([]);
   });
 
   it('creates, lists and revokes invite codes; shows the dashboard', async () => {

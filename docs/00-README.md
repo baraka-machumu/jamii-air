@@ -22,6 +22,7 @@ Read in this order. Every later document builds on the decisions in the earlier 
 | 04 | [Design Brief](04-design-brief.md) | What should Jamii Air (and the admin portal) look and feel like? | Whoever produces the designs (engineer + Claude Code), engineering |
 | 05 | [Backend Schema Document](05-backend-schema-document.md) | What is stored, where, and which stored procedures operate on it? | Backend engineering |
 | 06 | [Implementation Plan](06-implementation-plan.md) | In what order do we build it, and how do we know each step is done? | Whole team |
+| 07 | [API Review](07-api-review.md) | Does every screen have the endpoints it needs? (Plan task 2.14 record) | Engineering |
 
 ## 2. Release numbering
 

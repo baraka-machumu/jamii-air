@@ -57,7 +57,7 @@ export class PostsController {
   }
 
   @Get('users/:username/posts')
-  @ApiOperation({ summary: 'Profile grid, newest first (your own also shows PROCESSING and FAILED posts)' })
+  @ApiOperation({ summary: 'Profile grid, newest first (your own also shows PROCESSING, FAILED and HIDDEN posts)' })
   @ApiResponse({ status: 200, type: GridPage })
   profileGrid(@CurrentUser() user: AuthUser, @Param('username') username: string, @Query() page: PageQuery) {
     return this.posts.profileGrid(user.id, username, page.cursor, page.limit);

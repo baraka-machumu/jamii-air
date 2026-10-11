@@ -38,7 +38,7 @@ export interface AdminSession {
   accessToken: string;
   expiresIn: number;
   refreshToken: string;
-  admin: { id: string; email: string; role: AdminRole };
+  admin: { id: string; email: string; displayName: string; role: AdminRole };
 }
 
 export type LoginStep =
@@ -107,7 +107,8 @@ export class AdminAuthService {
     const result = await this.procedures.rotateSession(sha256Hex(current.token), sha256Hex(next), new Date(Date.now() + ADMIN_IDLE_MS));
     if (result.outcome === 'REUSE_DETECTED') throw new ApiError(401, 'SESSION_REUSE_DETECTED', 'Please sign in again.');
     if (result.outcome !== 'OK') throw sessionExpired();
-    return this.issue(result.adminId!, result.role!, result.familyId!, current.email, next);
+    const candidate = await this.procedures.getLoginCandidate(current.email); // display name for the top bar
+    return this.issue(result.adminId!, result.role!, result.familyId!, current.email, candidate?.displayName ?? '', next);
   }
 
   async logout(cookie: string | undefined): Promise<void> {
@@ -145,17 +146,19 @@ export class AdminAuthService {
     const now = Date.now();
     const familyId = await this.procedures.createSession(
       claims.sub, sha256Hex(refreshToken), new Date(now + ADMIN_IDLE_MS), new Date(now + ADMIN_ABSOLUTE_MS), userAgent);
-    return this.issue(claims.sub, candidate.role, familyId, claims.email, refreshToken);
+    return this.issue(claims.sub, candidate.role, familyId, claims.email, candidate.displayName, refreshToken);
   }
 
-  private async issue(adminId: string, role: AdminRole, familyId: string, email: string, refreshToken: string): Promise<AdminSession> {
+  private async issue(
+    adminId: string, role: AdminRole, familyId: string, email: string, displayName: string, refreshToken: string,
+  ): Promise<AdminSession> {
     const claims: AdminAccessClaims = { sub: adminId, role, sid: familyId, email };
     const accessToken = await this.jwt.signAsync(claims, {
       audience: ADMIN_AUDIENCE, issuer: ADMIN_ISSUER, expiresIn: ADMIN_ACCESS_TTL_SECONDS, algorithm: 'HS256',
     });
     return {
       accessToken, expiresIn: ADMIN_ACCESS_TTL_SECONDS, refreshToken: refreshCookie(refreshToken, email),
-      admin: { id: adminId, email, role },
+      admin: { id: adminId, email, displayName, role },
     };
   }
 

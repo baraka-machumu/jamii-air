@@ -9,7 +9,10 @@ import { PasswordHasher } from '../../infrastructure/crypto/password-hasher.js';
 import { hmacHex, newOpaqueToken, randomDigits, sha256Hex } from '../../infrastructure/crypto/tokens.js';
 import { AuthProcedures } from '../../infrastructure/db-procedures/auth.procedures.js';
 import { MailService } from '../../infrastructure/mail/mail.service.js';
-import type { ForgotPasswordDto, LoginDto, RegisterDto, ResetPasswordDto, SessionResponse } from './auth.dto.js';
+import { PrismaService } from '../../infrastructure/prisma/prisma.service.js';
+import type {
+  ChangePasswordDto, ForgotPasswordDto, LoginDto, RegisterDto, ResetPasswordDto, SessionResponse,
+} from './auth.dto.js';
 import { isCommonPassword } from './common-passwords.js';
 import { resetCodeMail } from './reset-code.mail.js';
 
@@ -29,6 +32,7 @@ export class AuthService {
     private readonly procedures: AuthProcedures,
     private readonly mail: MailService,
     private readonly statuses: UserStatusCache,
+    private readonly prisma: PrismaService,
   ) {}
 
   async register(dto: RegisterDto, userAgent: string | null): Promise<SessionResponse> {
@@ -100,6 +104,20 @@ export class AuthService {
     } catch (error) {
       this.logger.error({ err: error, userId: target.userId }, 'password reset mail failed');
     }
+  }
+
+  /**
+   * Settings → Change password (BR-AC-07). The current password is checked again; this session
+   * stays signed in, every other one is signed out (fn_change_password).
+   */
+  async changePassword(userId: string, sessionId: string, dto: ChangePasswordDto): Promise<void> {
+    const user = await this.prisma.user.findUnique({ where: { id: userId }, select: { username: true } });
+    const candidate = user ? await this.procedures.getLoginCandidate(user.username) : undefined;
+    const ok = await this.hasher.verify(candidate?.passwordHash, dto.currentPassword);
+    // 403, not 401: the session is fine, and the app must not treat this as "log in again".
+    if (!candidate || candidate.userId !== userId || !ok) throw new ApiError(403, 'INVALID_PASSWORD', 'The current password is not correct.');
+    this.assertStrongPassword(dto.newPassword);
+    await this.procedures.changePassword(userId, await this.hasher.hash(dto.newPassword), sessionId, dto.installationId ?? null);
   }
 
   async resetPassword(dto: ResetPasswordDto): Promise<void> {

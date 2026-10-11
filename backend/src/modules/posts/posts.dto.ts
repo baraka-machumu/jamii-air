@@ -68,7 +68,8 @@ export class FeedPage {
 
 export class GridItem {
   @ApiProperty() id!: string;
-  @ApiProperty({ enum: ['PROCESSING', 'PUBLISHED', 'FAILED'] }) status!: string;
+  @ApiProperty({ enum: ['PROCESSING', 'PUBLISHED', 'FAILED', 'HIDDEN'], description: 'Your own grid only: PROCESSING, FAILED, and HIDDEN ("Removed for violating Community Guidelines")' })
+  status!: string;
   @ApiProperty({ nullable: true, type: String }) thumbUrl!: string | null;
   @ApiProperty({ nullable: true, type: String }) blurhash!: string | null;
   @ApiProperty({ description: '> 1 shows the carousel badge' }) mediaCount!: number;

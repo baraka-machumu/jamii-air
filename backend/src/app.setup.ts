@@ -3,7 +3,7 @@
 import { type INestApplication, ValidationPipe } from '@nestjs/common';
 import type { NextFunction, Request, Response } from 'express';
 import type { NestExpressApplication } from '@nestjs/platform-express';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { DocumentBuilder, type OpenAPIObject, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { Logger } from 'nestjs-pino';
 import { AllExceptionsFilter } from './common/errors/all-exceptions.filter.js';
@@ -11,6 +11,18 @@ import { AppConfig } from './config/app-config.js';
 import { LINK_ROUTES } from './modules/links/links.controller.js';
 
 export const API_PREFIX = 'api/v1';
+/** Routes served at the root, outside /api/v1. */
+export const LINK_EXCLUDE = LINK_ROUTES;
+
+/** Shared by the served docs and `npm run openapi` (Plan task 2.14). */
+export function openApiConfig(): Omit<OpenAPIObject, 'paths'> {
+  return new DocumentBuilder()
+    .setTitle('Jamii Air API')
+    .setDescription('Mobile app routes and, under /api/v1/admin, the admin portal (separate auth: tags "admin" and "admin auth").')
+    .setVersion('1')
+    .addBearerAuth()
+    .build();
+}
 
 export function configureApp(app: INestApplication): void {
   const express = app as NestExpressApplication;
@@ -21,7 +33,7 @@ export function configureApp(app: INestApplication): void {
   app.use(adminCors(config.admin.origin)); // TRD §8.2
   express.useBodyParser('json', { limit: '100kb' }); // SE-05
   express.disable('x-powered-by');
-  app.setGlobalPrefix(API_PREFIX, { exclude: LINK_ROUTES }); // API-01; share-link targets at the root (SH-01)
+  app.setGlobalPrefix(API_PREFIX, { exclude: LINK_EXCLUDE }); // API-01; share-link targets at the root (SH-01)
   app.useGlobalPipes(
     new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }), // SE-05
   );
@@ -29,10 +41,7 @@ export function configureApp(app: INestApplication): void {
   app.enableShutdownHooks();
 
   if (config.swaggerEnabled) {
-    const document = SwaggerModule.createDocument(
-      app,
-      new DocumentBuilder().setTitle('Jamii Air API').setVersion('1').addBearerAuth().build(),
-    );
+    const document = SwaggerModule.createDocument(app, openApiConfig());
     SwaggerModule.setup(`${API_PREFIX}/docs`, app, document, { jsonDocumentUrl: `${API_PREFIX}/openapi.json` });
   }
 }

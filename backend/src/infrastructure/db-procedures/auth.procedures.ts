@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { changePassword } from '../../generated/prisma/sql/changePassword.js';
 import { createPasswordReset } from '../../generated/prisma/sql/createPasswordReset.js';
 import { createSession } from '../../generated/prisma/sql/createSession.js';
 import { getLoginCandidate } from '../../generated/prisma/sql/getLoginCandidate.js';
@@ -60,6 +61,12 @@ export class AuthProcedures {
   async createPasswordReset(email: string, codeHash: string, expiresAt: Date): Promise<{ userId: string; email: string; locale: string } | undefined> {
     const [row] = await this.db.rows('fn_create_password_reset', createPasswordReset(email, codeHash, expiresAt));
     return row ? { userId: row.user_id!, email: row.email!, locale: row.locale! } : undefined;
+  }
+
+  /** Signs out every other session and device; returns how many sessions ended. */
+  async changePassword(userId: string, newPasswordHash: string, keepFamilyId: string, keepInstallationId: string | null): Promise<number> {
+    const row = await this.db.one('fn_change_password', changePassword(userId, newPasswordHash, keepFamilyId, keepInstallationId));
+    return row.revoked_sessions ?? 0;
   }
 
   async resetPassword(email: string, codeHash: string, newPasswordHash: string): Promise<ResetOutcome> {

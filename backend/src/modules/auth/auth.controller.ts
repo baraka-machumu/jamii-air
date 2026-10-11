@@ -2,9 +2,9 @@
 import { Body, Controller, Headers, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
-import { Public } from '../../common/auth/auth.decorators.js';
+import { type AuthUser, CurrentUser, Public } from '../../common/auth/auth.decorators.js';
 import {
-  ForgotPasswordDto, LoginDto, LogoutDto, RefreshDto, RegisterDto, ResetPasswordDto, SessionResponse,
+  ChangePasswordDto, ForgotPasswordDto, LoginDto, LogoutDto, RefreshDto, RegisterDto, ResetPasswordDto, SessionResponse,
 } from './auth.dto.js';
 import { AuthService } from './auth.service.js';
 
@@ -60,6 +60,15 @@ export class AuthController {
   @ApiOperation({ summary: 'Email a reset code (same answer whether or not the email exists)' })
   async forgotPassword(@Body() dto: ForgotPasswordDto): Promise<void> {
     await this.auth.forgotPassword(dto);
+  }
+
+  @Post('password/change')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Throttle({ default: { limit: 5, ttl: HOUR } })
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Change your password (current one re-entered); signs out every other device' })
+  async changePassword(@CurrentUser() user: AuthUser, @Body() dto: ChangePasswordDto): Promise<void> {
+    await this.auth.changePassword(user.id, user.sessionId, dto);
   }
 
   @Public()

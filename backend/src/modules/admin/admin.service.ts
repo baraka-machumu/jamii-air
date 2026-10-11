@@ -105,7 +105,10 @@ export class AdminService {
 
   async audit(adminId: string, q: AuditQuery) {
     const size = clampLimit(q.limit);
-    const rows = await this.procedures.listAudit(adminId, q.adminId ?? null, q.action ?? null, decodeCursor(q.cursor), size);
+    const range = { from: q.from ? new Date(q.from) : null, to: q.to ? new Date(q.to) : null };
+    if (range.from && range.to && range.from >= range.to) throw new ApiError(400, 'VALIDATION_FAILED', 'from must be before to.');
+    const rows = await this.procedures.listAudit(adminId,
+      { adminId: q.adminId ?? null, action: q.action ?? null, targetId: q.targetId ?? null, ...range }, decodeCursor(q.cursor), size);
     return this.page(rows, size, (r) => ({ time: r.created_at!, id: r.entry_id! }));
   }
 

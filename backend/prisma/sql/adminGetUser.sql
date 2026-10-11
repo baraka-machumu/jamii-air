@@ -3,5 +3,5 @@
 -- @param {String} $2:userId
 SELECT user_id, username::text AS username, display_name, bio, email::text AS email, status::text AS status, avatar_m_key,
        locale, post_count, follower_count, following_count, invite_code, suspended_at, deletion_requested_at,
-       last_active_at, created_at, reports_filed, recent_posts, reports_against, moderation_history
+       last_active_at, created_at, reports_filed, active_sessions, recent_posts, reports_against, moderation_history
 FROM fn_admin_get_user($1::uuid, $2::uuid);

@@ -77,6 +77,10 @@ export class UserSummary {
   @ApiProperty() isFollowing!: boolean;
 }
 
+export class UserSearchResult {
+  @ApiProperty({ type: [UserSummary] }) items!: UserSummary[];
+}
+
 export class FollowListItem extends UserSummary {
   @ApiProperty() isMe!: boolean;
   @ApiProperty() followedAt!: string;
@@ -101,6 +105,7 @@ export class Profile {
   @ApiProperty() isFollowing!: boolean;
   @ApiProperty() followsMe!: boolean;
   @ApiProperty({ description: 'You blocked this user: show Unblock; posts and lists stay empty' }) isBlockedByMe!: boolean;
+  @ApiProperty({ description: '"Copy profile link": opens the profile in the app, else a landing page' }) shareUrl!: string;
   @ApiProperty() createdAt!: string;
 }
 

@@ -1,5 +1,6 @@
 // Plan task 2.6 end to end: /me and /users.
 import type { INestApplication } from '@nestjs/common';
+import request from 'supertest';
 import type { App } from 'supertest/types.js';
 import { as, createApp, registerUser } from './support.js';
 
@@ -77,5 +78,28 @@ describe('users (e2e)', () => {
   it('needs a token', async () => {
     const { default: request } = await import('supertest');
     await request(app.getHttpServer()).get('/api/v1/me').expect(401);
+  });
+
+  it('shares a profile link', async () => {
+    const [me, other] = [await registerUser(app), await registerUser(app)];
+    const profile = (await as(app, other).get(`/api/v1/users/${me.username}`).expect(200)).body;
+    expect(profile.shareUrl).toMatch(new RegExp(`/u/${me.username}$`));
+  });
+
+  it('changes the password: this device stays signed in, every other one is signed out', async () => {
+    const me = await registerUser(app);
+    const server = app.getHttpServer();
+    const other = (await request(server).post('/api/v1/auth/login').send({ identifier: me.username, password: me.password }).expect(200)).body;
+
+    expect((await as(app, me).post('/api/v1/auth/password/change').send({ currentPassword: 'wrong-password-1', newPassword: 'papaya-tea-2027' }).expect(403)).body.error.code)
+      .toBe('INVALID_PASSWORD');
+    expect((await as(app, me).post('/api/v1/auth/password/change').send({ currentPassword: me.password, newPassword: 'password123' }).expect(400)).body.error.code)
+      .toBe('PASSWORD_TOO_COMMON');
+    await as(app, me).post('/api/v1/auth/password/change').send({ currentPassword: me.password, newPassword: 'papaya-tea-2027' }).expect(204);
+
+    await request(server).post('/api/v1/auth/refresh').send({ refreshToken: other.refreshToken }).expect(401);
+    await request(server).post('/api/v1/auth/refresh').send({ refreshToken: me.refreshToken }).expect(200);
+    await request(server).post('/api/v1/auth/login').send({ identifier: me.username, password: me.password }).expect(401);
+    await request(server).post('/api/v1/auth/login').send({ identifier: me.username, password: 'papaya-tea-2027' }).expect(200);
   });
 });

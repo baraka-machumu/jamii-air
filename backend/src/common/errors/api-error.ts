@@ -43,6 +43,9 @@ const MESSAGES: Record<string, string> = {
   NOT_OWNER: 'Only the owner can do this.',
   BLOCKED: 'You have blocked this user.',
   IDEMPOTENCY_KEY_REUSED: 'This Idempotency-Key was used for a different request.',
+  INVALID_PASSWORD: 'The password is not correct.',
+  CANNOT_BLOCK_SELF: 'You cannot block yourself.',
+  CANNOT_REPORT_SELF: 'You cannot report yourself or your own content.',
   INVALID_IDEMPOTENCY_KEY: 'Idempotency-Key must be 8–64 characters: letters, digits, _ . : or -.',
 };
 

@@ -79,8 +79,6 @@ export async function publishPost(app: INestApplication<App>, user: TestUser, ca
   return post.id as string;
 }
 
-/** Block endpoints arrive with task 2.11: call the procedure directly. */
 export async function block(app: INestApplication<App>, blocker: TestUser, target: TestUser): Promise<void> {
-  const { PrismaService } = await import('../src/infrastructure/prisma/prisma.service.js');
-  await app.get(PrismaService).$queryRaw`SELECT * FROM fn_block_user(${blocker.id}::uuid, ${target.id}::uuid)`;
+  await as(app, blocker).put(`/api/v1/users/${target.id}/block`).expect(200);
 }

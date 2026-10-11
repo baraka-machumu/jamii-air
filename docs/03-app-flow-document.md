@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Document** | 03 — App Flow |
-| **Version** | 1.1 (decisions D-1…D-6 applied) |
+| **Version** | 1.2 (Phase 2 API review: change password, removed-post badge, admin onboarding by temporary password) |
 | **Status** | **Approved** — 2026-10-11 |
 | **Date** | 2026-10-09 |
 | **Scope** | Release 1 mobile app (Android & iOS) and admin portal (web, §15). R2 Reels flow sketched in §14. |
@@ -356,7 +356,7 @@ Read-only, newest first, filterable by admin, action type, target and date. Ever
 
 ### 15.8 Admins (super-admin only)
 
-List admins with role and last login. **Invite admin** (email + role → one-time setup link), **Change role**, **Disable**, **Reset 2FA** (forces re-enrollment). Super-admins cannot disable themselves.
+List admins with role and last login. **Add admin** (email, name, role) → a **one-time temporary password** shown once, to hand over securely; the new admin sets up 2FA at first sign-in, then changes the password (account menu → *Change password*). **Change role**, **Disable** (re-enabling also unlocks a locked account), **Reset 2FA** (forces re-enrollment). Super-admins cannot demote or disable themselves.
 
 ### 15.9 Portal states
 

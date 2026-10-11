@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Document** | 02 — Technical Requirements Document |
-| **Version** | 1.3 (stakeholder decisions D-1…D-12 applied — see [00 §3](00-README.md)) |
+| **Version** | 1.4 (Phase 2 implementation: admin sign-in details §8.2, new endpoints from the API review; see [07](07-api-review.md)) |
 | **Status** | **Approved** — 2026-10-11 |
 | **Date** | 2026-10-10 |
 | **Scope** | Release 1 (MVP) in detail; R1.1–R4 as forward-compatibility requirements |
@@ -347,11 +347,14 @@ Each module has a thin typed wrapper; services never write SQL strings inline.
 
 ### 8.2 Admin session model
 
-- Access token: JWT (15 min, `aud=admin`, claims `sub`, `role`), held in memory in the browser.
-- Refresh: opaque token in an **`HttpOnly; Secure; SameSite=Strict` cookie** scoped to `Path=/api/v1/admin/auth`, rotated on use (`admin_sessions`).
-- CSRF: SameSite=Strict + refresh endpoint requires header `X-Admin-Client: 1`.
-- CORS: only the admin origin, `credentials: true`; mobile routes do not enable CORS.
-- Separate guard `AdminJwtGuard` (`aud=admin`) + `AdminRolesGuard`; user tokens are rejected on admin routes and vice versa.
+- Sign-in: email + password → a **5-minute challenge token** (`aud=admin-challenge`), then a TOTP code (`/totp/verify`), or on the first sign-in the authenticator enrolment (`/totp/enroll`, QR code + manual key). Wrong passwords **and** wrong codes count towards the lock after 10 failures; the count resets only when the whole sign-in succeeds. A code is accepted once (replay within its window refused).
+- TOTP: RFC 6238 (SHA-1, 6 digits, 30 s, ±1 step). Secrets are stored AES-256-GCM sealed with a key outside the database (`ADMIN_TOTP_KEY`).
+- Access token: JWT (15 min, `aud=admin`, claims `sub`, `role`, `sid`, `email`) signed with its own key (`ADMIN_JWT_SECRET`), held in memory in the browser.
+- Refresh: opaque token in an **`HttpOnly; Secure; SameSite=Strict` cookie** scoped to `Path=/api/v1/admin/auth`, rotated on use (`admin_sessions`, reuse detection). Idle timeout 30 min, absolute 12 h.
+- New admins: a super-admin creates the account and receives a **one-time temporary password** (App Flow §15.8). The first super-admin is created with `npm run admin:bootstrap`.
+- CSRF: SameSite=Strict + refresh and logout require header `X-Admin-Client: 1`.
+- CORS: only the admin origin (`ADMIN_ORIGIN`), `credentials: true`, only on `/api/v1/admin/*`; mobile routes do not enable CORS.
+- Separate guard `AdminJwtGuard` (`aud=admin`) with role metadata (`@AdminAuth('SUPER_ADMIN')`); user tokens are rejected on admin routes and vice versa. Every admin procedure re-checks role, status and lock (`fn__assert_admin`).
 
 ## 9. Media pipeline (photos, R1)
 

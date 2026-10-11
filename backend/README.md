@@ -77,6 +77,37 @@ Two cases need a hand-written migration:
 - `src/common/logging/`: pino JSON logs, a request id per request (`X-Request-Id`, the caller's or a new one), and redaction of secrets and personal data (SE-07).
 - `src/common/pagination/`: opaque keyset cursors (`nextCursor`) and `limit` clamping.
 - Routes live under `/api/v1`. Health checks are at `/api/v1/health/live` and `/api/v1/health/ready`. OpenAPI is at `/api/v1/docs` and `/api/v1/openapi.json` everywhere except production.
+- `src/modules/`: one module per area. `auth`, `users`, `media`, `posts` (posts and feed), `engagement` (likes and comments), `notifications`, `safety` (blocks, reports, account deletion), `links` (share-link landing pages and app-link files, served outside `/api/v1`) and `admin` (the portal API under `/api/v1/admin`, with its own sign-in and guards; TRD §8).
+- `src/workers/`: the worker process (`src/worker.ts`). It runs media processing, push notifications (Expo Push) and the maintenance schedule (10 BullMQ job schedulers in East Africa Time, Schema §7.7).
+
+### Configuration
+
+Every variable is documented in [.env.example](.env.example), and `src/config/app-config.ts` validates them at boot. Phase 2 added:
+
+| Variable | Purpose |
+|---|---|
+| `ADMIN_JWT_SECRET`, `ADMIN_TOTP_KEY` | Admin token key; key that encrypts admin TOTP secrets. At least 32 characters each, all four secrets different |
+| `ADMIN_ORIGIN` | The admin portal's origin, the only one CORS allows |
+| `PUBLIC_WEB_URL` | Base of share links and landing pages (default: this API) |
+| `ANDROID_PACKAGE`, `ANDROID_CERT_SHA256`, `IOS_APP_ID`, `IOS_STORE_URL` | App Links / Universal Links and store links; the app-link files stay empty until set |
+| `EXPO_PUSH_API_URL`, `EXPO_ACCESS_TOKEN` | Expo Push API (the default URL is Expo's) |
+| `MIN_APP_VERSION` | Oldest app version served; older apps get `426` (empty = off) |
+
+### First admin
+
+```bash
+npm run admin:bootstrap -- --email you@example.com --name "Your Name"
+```
+
+This works only while there are no admins; it prints a one-time password. Sign in to the portal, set up 2FA, then change the password. The e2e tests create admins in the local database, so run `npm run infra:reset` first if you want a real first admin locally.
+
+### OpenAPI spec
+
+```bash
+npm run openapi     # builds, then writes openapi.json (git-ignored)
+```
+
+This is built from the route metadata alone, so no services are needed. CI uploads it as the `openapi` artifact for the mobile and admin type generators (Plan 3.2, 4.x).
 
 ## Run
 
@@ -98,8 +129,18 @@ npm run start:dev
 ```bash
 npm run test        # unit (includes the migration generator)
 npm run test:db     # stored procedures and database security checks (needs Docker)
-npm run test:e2e    # end-to-end
+npm run test:e2e    # end-to-end against the local stack (npm run infra:up, db:migrate first)
 ```
+
+### End-to-end tests
+
+The e2e tests boot the real HTTP pipeline (`configureApp`) against the local PostgreSQL, Redis, MinIO and Mailpit. Each test file is one area (`test/*.e2e-spec.ts`). Push notifications go to a fake Expo server, and the media and maintenance processors are called directly, so tests never wait for queue timing.
+
+Suites that guard the whole API:
+- [openapi.e2e-spec.ts](test/openapi.e2e-spec.ts): every operation has a summary, a typed success response and declared auth. **Every operation must have at least one e2e call**, so a new route without a test fails here.
+- [conformance.e2e-spec.ts](test/conformance.e2e-spec.ts): real responses from every endpoint that returns a body match their OpenAPI schema field by field.
+- [authz.e2e-spec.ts](test/authz.e2e-spec.ts): the authorization sweep. It reads the spec and tries every protected operation with no token, the wrong kind of token, a suspended or pending-deletion account, and a moderator on super-admin routes. It adds an owner / other user / blocked-user table for content routes.
+- [upload-security.e2e-spec.ts](test/upload-security.e2e-spec.ts): oversized and wrong-type uploads, a renamed non-image, another user's media, expired intents, and Idempotency-Key replay.
 
 ### Database tests
 
@@ -144,6 +185,8 @@ This uses the local Docker PostgreSQL. It drops and re-creates `jamii_air_perf`,
 
 ### CI
 
+[`.github/workflows/backend.yml`](../.github/workflows/backend.yml) runs on every PR and push to `main` that touches `backend/`. It starts the local stack, migrates, and runs lint, type-check, unit and e2e tests and the build. It then builds the OpenAPI spec (uploaded as the `openapi` artifact) and the Docker image.
+
 [`.github/workflows/db.yml`](../.github/workflows/db.yml) runs on every PR that touches the database. It runs:
 - lint and type-check
 - the generator unit tests
@@ -151,4 +194,4 @@ This uses the local Docker PostgreSQL. It drops and re-creates `jamii_air_perf`,
 - `prisma migrate deploy` on a fresh Compose PostgreSQL 18
 - `npm run db:drift-check`
 
-Make the **Database** check required in `main`'s branch protection.
+Make the **Database** and **Backend** checks required in `main`'s branch protection.

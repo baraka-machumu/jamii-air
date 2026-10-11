@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Document** | 05 — Backend Schema |
-| **Version** | 1.2 (Phase 1 implementation: aligned with what was built and tested; see §16) |
+| **Version** | 1.3 (Phase 2 API review: `fn_change_password` and five changed procedures; see §17) |
 | **Status** | **Approved** — 2026-10-11 |
 | **Date** | 2026-10-09 |
 | **Scope** | PostgreSQL schema (Prisma), stored procedures, grants, object storage layout, Redis, retention |
@@ -677,6 +677,7 @@ Full rules are in [TRD §6](02-technical-requirements-document.md). In short:
 | `fn_revoke_session(refresh_hash, installation_id)` | W | `revoked` | Also removes the device push token. |
 | `fn_create_password_reset(email, code_hash, expires_at)` | W | `user_id, email, locale` (0 rows if unknown) | Node sends email only if a row is returned; API always answers the same. |
 | `fn_reset_password(email, code_hash, new_password_hash)` | W | `outcome` | Max 5 attempts; revokes all sessions on success. |
+| `fn_change_password(viewer, new_password_hash, keep_family_id, keep_installation_id)` | W | `revoked_sessions` | Node checked the current password; every other session and push token ends (§17). |
 | `fn_update_profile(viewer, patch jsonb)` | W | profile row | Only keys present in `patch` change. The avatar must be the viewer's own media with purpose AVATAR that has not failed; a just-uploaded one is marked UPLOADED and the API enqueues its processing (a no-op if already READY). The replaced avatar is queued for deletion. |
 | `fn_request_account_deletion(viewer)` | W | `deletion_due_at` | Password checked in Node first; revokes sessions and device tokens. |
 
@@ -705,7 +706,7 @@ Full rules are in [TRD §6](02-technical-requirements-document.md). In short:
 | `fn_update_post_caption(viewer, post_id, caption)` | W | post row |
 | `fn_delete_post(viewer, post_id)` | W | `deleted` — queues object deletion rows |
 | `fn_get_home_feed(viewer, cursor)` | R | feed items (§8.1) |
-| `fn_get_profile_posts(viewer, username, cursor)` | R | id, status, thumb key, created_at |
+| `fn_get_profile_posts(viewer, username, cursor)` | R | id, status, thumb key, created_at (own grid: also PROCESSING, FAILED, HIDDEN) |
 
 ### 7.5 Engagement & notifications
 
@@ -737,7 +738,7 @@ Full rules are in [TRD §6](02-technical-requirements-document.md). In short:
 | `fn_admin_suspend_user(admin_id, user_id, note, report_id)` · `fn_admin_reinstate_user(…)` · `fn_admin_revoke_user_sessions(…)` | W | any |
 | `fn_admin_get_post(admin_id, post_id)` · `fn_admin_set_post_hidden(admin_id, post_id, hidden, note, report_id)` · `fn_admin_set_comment_hidden(…)` | R / W | any |
 | `fn_admin_list_invites` · `fn_admin_create_invite(admin_id, max_uses, expires_at)` · `fn_admin_revoke_invite` | R / W | any |
-| `fn_admin_list_audit(admin_id, filters, cursor)` | R | any |
+| `fn_admin_list_audit(admin_id, filter_admin, action, cursor, limit, target_id, from, to)` | R | any |
 | `fn_admin_list_admins` · `fn_admin_create_admin` · `fn_admin_update_admin(role, status)` · `fn_admin_reset_admin_totp` | R / W | SUPER_ADMIN |
 | `fn_admin_bootstrap_super_admin(email, display_name, hash)` | W | — (only while `admin_users` is empty; a deployment step) |
 | `fn_admin_change_password(admin_id, hash)` | W | self (ends the admin's sessions) |
@@ -1059,6 +1060,8 @@ Prisma prefixes migration folders with timestamps; names below are descriptive. 
 1.10  moderation_admin        reports, moderation_actions, admin_users, admin_sessions,
                               admin_audit_log + admin procedures
 1.11  metrics_maintenance     daily_metrics + fn_maint_* procedures, final grants
+—     phase1_review_fixes     Phase 1 code-review fixes (§16.1)
+2.14  api_review_fixes        fn_change_password; changed profile-grid and admin procedures (§17)
 ```
 
 ## 14. Seed data (development & UAT only)
@@ -1106,3 +1109,18 @@ Prisma prefixes migration folders with timestamps; names below are descriptive. 
 | `fn_create_post`, `fn_add_comment` | Shared, NULL-safe Idempotency-Key handling (`fn__claim_idempotency_key`). |
 
 Not changed: two refreshes of the same token at the same moment still revoke the family (`REUSE_DETECTED`). This is required by story E1-04, and the app refreshes one at a time (Plan task 3.4).
+
+## 17. Changes in version 1.3 (Phase 2 API review, migration `api_review_fixes`)
+
+The Plan 2.14 review of the API against every App Flow screen ([07-api-review.md](07-api-review.md)) found these gaps in the procedures. The procedure tests are in `test/db/api-review.db-spec.ts`.
+
+| Procedure | Change | Why |
+|---|---|---|
+| `fn_change_password` (new) | Sets the new hash and `password_changed_at`, revokes the refresh tokens of every other session family, and removes the push tokens of every other installation. | Settings → Change password (App Flow §11) had no procedure; the device that made the change stays signed in. |
+| `fn_get_profile_posts` | On their own profile the viewer also gets `HIDDEN` posts. | App Flow §10.3: hidden content shows on the author's grid as "Removed for violating Community Guidelines". |
+| `fn_admin_get_login_candidate` | Returns `display_name`. | Admin top bar (App Flow §15.1). |
+| `fn_admin_get_user` | Returns `active_sessions` (live refresh-token families). | User detail (App Flow §15.5). |
+| `fn_admin_list_invites` | Returns `used_by` (accounts registered with the code). | Invite codes page (App Flow §15.6). |
+| `fn_admin_list_audit` | New trailing parameters `p_target_id`, `p_from`, `p_to` (defaults `NULL`, so existing calls still work). A target matches any id an entry touches; a user's entries include actions on their content. | Audit log filters (App Flow §15.7). |
+
+The four admin procedures change their result columns or parameters, so the migration drops them before re-creating them (`CREATE OR REPLACE` cannot change a signature).

@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Document** | 06 — Implementation Plan |
-| **Version** | 1.7 (local dev ready; Expo account exists; Android-only testing until production) |
+| **Version** | 1.8 (Phase 2 backend built and tested locally; app identifiers set; API review record) |
 | **Status** | **Approved** — 2026-10-11 |
 | **Date** | 2026-10-10 |
 | **Team** | 1 engineer building with Claude Code; Product (stakeholder) as product owner |
@@ -42,17 +42,24 @@ flowchart LR
 Visual design (Design Brief, doc 04) is produced by the engineer with Claude Code: the mobile designs as the first increment of Phase 3, the admin wireframes as the first increment of Phase 4.
 
 **Status (2026-10-11):**
-- **Phase 0:** complete.
-- **Phase 1, Database:** every task is built and tested locally and waiting for review (Review column). Story-level tracking: [backlog](backlog/phase-1-database-E0-E1.md#status).
-  - 10 migrations and 93 functions. They apply cleanly to a fresh PostgreSQL 18, and the drift check passes.
-  - A code review of the Phase 1 commits found 10 issues; 9 are fixed in migration `phase1_review_fixes` (Schema §16).
-  - 118 tests pass in `npm run test:db` (Testcontainers), including the authorization matrix and the SR-01/03/04 security checks.
-  - Task 1.13: every measured procedure's P95 is under 50 ms at 10k users / 1M posts (feed 27 ms; numbers in task 1.13).
-  - **Open before the phase gate:**
-    - review and merge
-    - make the "Database" CI check required in `main`'s branch protection
-    - create the GitHub board (the `gh` CLI is not installed on the engineer's machine)
-- **Repository:** one repository, `jamii-air`, on GitHub at [`baraka-machumu/jamii-air`](https://github.com/baraka-machumu/jamii-air). Docs and the app scaffolds are committed: the backend (2.1), the Expo app (3.1, partly) and an admin placeholder.
+
+| Phase | State | Tracker |
+|---|---|---|
+| 0 Docs | ✅ Complete | §4 Phase 0 |
+| 1 Database design | Built and tested locally; in **Review** | [Phase 1 backlog](backlog/phase-1-database-E0-E1.md#status) |
+| 2 Backend | Built and tested locally; exit gate met locally (UAT deferred); in **Review** | [Phase 2 backlog](backlog/phase-2-backend.md#status) |
+| 3 Mobile | **Next.** Scaffold (part of 3.1) and Expo account (3.3) exist | §4 Phase 3 |
+| 4 Admin portal | Not started; the admin API it needs is done (2.12) | §4 Phase 4 |
+| 5–6 Release, pilot | Not started | §4 Phases 5–6 |
+
+- **Database:** 11 migrations and 94 functions. The drift check passes, and the 123 procedure tests pass, including the authorization matrix and the SR-01/03/04 security checks. Every measured P95 is under 50 ms at 10k users / 1M posts (task 1.13).
+- **Backend:** 56 API paths, all in the OpenAPI spec. 47 unit and 77 e2e tests pass, including a spec-driven authorization sweep and the upload-security tests. Every endpoint has an e2e call. The API was reviewed against every App Flow screen ([07-api-review.md](07-api-review.md)).
+- **Open before Phases 1 and 2 are Done:**
+  - push `main` (it is ahead of `origin`), check CI on GitHub, and review the commits;
+  - make the **Database** and **Backend** checks required in `main`'s branch protection;
+  - create the GitHub board (the `gh` CLI is not installed yet; §9).
+- **Deferred (local dev only until development is finished):** the UAT deploy, Sentry and metrics (task 2.16).
+- **Repository:** [`baraka-machumu/jamii-air`](https://github.com/baraka-machumu/jamii-air) on GitHub. `backend/` holds the API, worker and database; `mobile/` has the Expo scaffold; `admin/` is a placeholder.
 
 ## 2. Agile delivery model
 
@@ -333,13 +340,16 @@ If priorities change, these stories are dropped first, in this order: 1) Caption
 
 ## 9. Immediate next steps
 
-1. ✅ Phase 0 complete: BRS signed off, all documents approved, decisions D-7…D-12 recorded, repo on GitHub.
-2. Create the board and the E0 + E1 issues from [`docs/backlog/phase-1-database-E0-E1.md`](backlog/phase-1-database-E0-E1.md) (§2.3).
-   - This needs the GitHub CLI: `winget install GitHub.cli`, then `gh auth login` and `gh auth refresh -s project`.
-   - Then move E0-01 … E0-03 to **Review**.
-3. ✅ **Phase 1 · Database** built and tested locally: tasks 1.1 … 1.14, E0 … E8.
-4. Phase 1 gate:
-   - review the Phase 1 work, then merge
-   - require the "Database" check on `main`
-   - confirm the exit criteria (§4 Phase 1)
-5. Then **Phase 2 · Backend**, starting with E0 (2.2–2.4, 2.16).
+1. ✅ Phase 0 complete: BRS signed off, documents approved, decisions D-7…D-12 recorded, repo on GitHub.
+2. ✅ **Phase 1 · Database** built and tested locally (tasks 1.1–1.14).
+3. ✅ **Phase 2 · Backend** built and tested locally (tasks 2.1–2.16; UAT deploy deferred).
+4. **Close Phases 1 and 2** (Review → Done):
+   - push `main` and check the Backend and Database CI runs on GitHub;
+   - review the Phase 1 and 2 commits, then make both checks required in `main`'s branch protection;
+   - create the board: `winget install GitHub.cli`, `gh auth login`, `gh auth refresh -s project`, then `node docs/backlog/create-github-issues.mjs <backlog file>`. Until then the backlog files are the tracker.
+5. **Start Phase 3 · Mobile:**
+   - first increment: the mobile designs (Design Brief, doc 04);
+   - then 3.1 (navigation, TanStack Query, Zustand, i18n, theme tokens);
+   - then 3.2 (API client generated from `npm run openapi`).
+   - Draft the stories in `docs/backlog/phase-3-mobile.md` before starting.
+

@@ -17,8 +17,14 @@ The apps share no code. They talk only over the HTTP API (`/api/v1`). `mobile/` 
 ```bash
 cd backend
 npm install
-npm run start:dev
+cp .env.example .env        # replace every change-me
+npm run infra:up            # PostgreSQL, Redis, MinIO, Mailpit in Docker
+npm run db:migrate && npm run db:generate
+npm run start:dev           # API on http://localhost:3000 (docs: /api/v1/docs)
+npm run build && node --env-file=.env dist/worker.js   # worker: media, push, maintenance
 ```
+
+Details, tests and scripts are in [backend/README.md](backend/README.md).
 
 ```bash
 cd mobile
@@ -26,4 +32,4 @@ npm install
 npx expo start
 ```
 
-See [docs/00-README.md](docs/00-README.md) for the document set and [docs/06-implementation-plan.md](docs/06-implementation-plan.md) for the roadmap.
+See [docs/00-README.md](docs/00-README.md) for the document set and [docs/06-implementation-plan.md](docs/06-implementation-plan.md) for the roadmap and current status (Phases 1–2 built; next: mobile). Story tracking is in [docs/backlog/](docs/backlog/).

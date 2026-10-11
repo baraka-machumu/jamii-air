@@ -3,8 +3,8 @@
 | | |
 |---|---|
 | **Project** | Jamii Air — photo & short-video social platform |
-| **Phase** | Phase 0 complete (2026-10-11). Phase 1 · Database design built and tested, in review; next: Phase 2 · Backend |
-| **Doc version** | 1.3 — 2026-10-10 (open questions answered: D-7…D-11; BRS signed off; environments D-12) |
+| **Phase** | Phase 0 complete. Phases 1 · Database and 2 · Backend built and tested locally, in review (2026-10-11); next: Phase 3 · Mobile. Status: [Plan §1](06-implementation-plan.md#1-summary) |
+| **Doc version** | 1.4 — 2026-10-11 (API review record 07 added; Phase 2 decisions in the [Phase 2 backlog](backlog/phase-2-backend.md#decisions-taken-during-phase-2)) |
 | **Prepared by** | Senior Software Engineer |
 | **Source guidelines** | `instagram_mvp_technical_specification_10_users.pdf` (the "Spec"), `application-consideration.txt` (the "Guidelines") |
 

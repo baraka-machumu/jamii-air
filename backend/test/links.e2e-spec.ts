@@ -8,9 +8,15 @@ import { createApp, publishPost, registerUser } from './support.js';
 describe('share links (e2e)', () => {
   let app: INestApplication<App>;
 
+  const LINK_ENV = ['ANDROID_PACKAGE', 'ANDROID_CERT_SHA256', 'IOS_APP_ID', 'IOS_STORE_URL'];
+
+  // Each test sets its own app identities, whatever the local .env holds.
+  beforeEach(() => {
+    for (const name of LINK_ENV) delete process.env[name];
+  });
+
   afterEach(async () => {
     await app?.close();
-    for (const name of ['ANDROID_PACKAGE', 'ANDROID_CERT_SHA256', 'IOS_APP_ID', 'IOS_STORE_URL']) delete process.env[name];
   });
 
   it('serves a public landing page for /p/:id and /u/:username without any post content', async () => {

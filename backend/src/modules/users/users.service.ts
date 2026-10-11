@@ -1,13 +1,13 @@
 // Profiles and the social graph (Plan task 2.6). Rules live in the procedures; this layer shapes
 // responses (camelCase, media URLs, pages) and enqueues side effects after the calls commit
-// (SP-09): avatar processing now, push with task 2.10.
+// (SP-09): avatar processing and follow pushes.
 import { Injectable } from '@nestjs/common';
 import type { InputJsonObject } from '@prisma/client/runtime/client';
 import { ApiError } from '../../common/errors/api-error.js';
 import { clampLimit, decodeCursor, type Page, toPage } from '../../common/pagination/cursor.js';
 import { type FollowListRow, UsersProcedures } from '../../infrastructure/db-procedures/users.procedures.js';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service.js';
-import { MediaJobs } from '../../infrastructure/queue/queue.module.js';
+import { MediaJobs, NotificationJobs } from '../../infrastructure/queue/queue.module.js';
 import { MediaUrls } from '../../infrastructure/storage/media-urls.js';
 import { MediaService } from '../media/media.service.js';
 import type { FollowListItem, FollowState, Me, Profile, UpdateMeDto, UserSummary } from './users.dto.js';
@@ -20,6 +20,7 @@ export class UsersService {
     private readonly urls: MediaUrls,
     private readonly media: MediaService,
     private readonly mediaJobs: MediaJobs,
+    private readonly notificationJobs: NotificationJobs,
   ) {}
 
   async me(viewerId: string): Promise<Me> {
@@ -89,7 +90,7 @@ export class UsersService {
 
   async follow(viewerId: string, targetId: string): Promise<FollowState> {
     const row = await this.procedures.followUser(viewerId, targetId);
-    // TODO(2.10): enqueue the push for row.notification_id.
+    await this.notificationJobs.push(row.notification_id);
     return { following: row.following ?? true, followerCount: row.follower_count ?? 0 };
   }
 

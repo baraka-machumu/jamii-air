@@ -4,13 +4,16 @@
     "slug": "jamii-air",
     "owner": "bmachumu",
     "version": "1.0.0",
+    "scheme": "jamiiair",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "tz.jamiiair.app"
     },
     "android": {
+      "package": "tz.jamiiair.app",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",

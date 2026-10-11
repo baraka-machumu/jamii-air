@@ -16,6 +16,7 @@ import { AuthModule } from './modules/auth/auth.module.js';
 import { EngagementModule } from './modules/engagement/engagement.module.js';
 import { LinksModule } from './modules/links/links.module.js';
 import { MediaModule } from './modules/media/media.module.js';
+import { NotificationsModule } from './modules/notifications/notifications.module.js';
 import { PostsModule } from './modules/posts/posts.module.js';
 import { UsersModule } from './modules/users/users.module.js';
 
@@ -44,6 +45,7 @@ import { UsersModule } from './modules/users/users.module.js';
     MediaModule,
     PostsModule,
     EngagementModule,
+    NotificationsModule,
     LinksModule,
   ],
   controllers: [HealthController],

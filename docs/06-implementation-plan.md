@@ -155,7 +155,7 @@ Progress is tracked by **flow**, not deadlines: stories Done per iteration, cycl
 |---|---|---|
 | 0.1 | ✅ BRS signed off (2026-10-10); ✅ open questions answered (D-7…D-12, [00 §3a](00-README.md)); ✅ docs 00, 02–06 approved (2026-10-11) | Product + Engineer |
 | 0.2 | ✅ GitHub account (barakabryson@gmail.com); ✅ repo [`baraka-machumu/jamii-air`](https://github.com/baraka-machumu/jamii-air); Container Registry when 2.16 needs it. Other accounts are **not needed now** — see 5.0 | Engineer |
-| 0.3 | App identifiers (bundle ID / package name). Domain and DNS move to 5.0 — UAT is reached by IP | Product |
+| 0.3 | ✅ App identifiers: Android package and iOS bundle ID **`tz.jamiiair.app`**, URL scheme `jamiiair`. Domain and DNS move to 5.0 — UAT is reached by IP | Product |
 | 0.4 | Terms of Service (incl. **18+ requirement**), Privacy Policy, Community Guidelines — legal review | Product |
 | 0.5 | Product reviews doc 04 (Design Brief); designs are produced by the engineer with Claude Code in Phases 3–4 | Product |
 | 0.6 | Reference device: 1 mid-range Android (testing is **Android-only** for now; an iPhone is added in 5.0) | Engineer |
@@ -201,7 +201,7 @@ NestJS API and workers on top of the finished procedures. The API layer validate
 | 2.7 | ✅ Media (local: MinIO serves variant keys publicly as the stand-in for the nginx media cache, which comes with the server setup; HEIC is converted on the phone because prebuilt sharp has no HEVC decoder): `StorageService` (presigned PUT with signed type/length, HEAD, delete) for MinIO; **Redis + BullMQ**; throttler → Redis storage; media worker (sharp): decode-validate, auto-orient, **strip EXIF/GPS**, variants, blurhash, retries; nginx media cache for variant paths only + `mediaUrl()` helper |
 | 2.8 | ✅ Posts and feed modules (create with `Idempotency-Key`, get, delete, caption edit, home feed, profile grid; media URLs, `nextCursor`) |
 | 2.9 | ✅ Engagement: likes, comments; `shareUrl`; landing page for `/p/*`, `/u/*`; `assetlinks.json`, `apple-app-site-association` (identities from env: empty until 0.3 app identifiers exist) |
-| 2.10 | Notifications module + push worker (Expo Push API, batching, receipts, invalid-token cleanup, localised text) |
+| 2.10 | ✅ Notifications module + push worker (Expo Push API, batching, receipts, invalid-token cleanup, localised text) |
 | 2.11 | Safety: block/unblock, blocked list, reports, account deletion endpoints |
 | 2.12 | **Admin API** (`/api/v1/admin`): admin login + **mandatory TOTP** (enroll/verify, encrypted secret), cookie-based refresh, `AdminJwtGuard`, `AdminRolesGuard`, CORS for the admin origin only; dashboard, reports, users, content, invites, audit log, admins endpoints |
 | 2.13 | Maintenance worker loops calling the `fn_maint_*` procedures on schedule |

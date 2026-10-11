@@ -33,6 +33,8 @@ export class AppConfig {
   readonly s3: S3Config;
   /** Share links and app links (TRD SH-01/02). */
   readonly links: LinksConfig;
+  /** Expo Push API (TRD NT-03). */
+  readonly push: PushConfig;
 
   constructor(values: Omit<AppConfig, 'isProduction' | 'swaggerEnabled'>) {
     this.nodeEnv = values.nodeEnv;
@@ -47,6 +49,7 @@ export class AppConfig {
     this.redisUrl = values.redisUrl;
     this.s3 = values.s3;
     this.links = values.links;
+    this.push = values.push;
   }
 
   get isProduction(): boolean {
@@ -81,6 +84,13 @@ export interface LinksConfig {
   iosAppId: string | null;
   /** App Store page, shown on the landing page once the app is listed. */
   iosStoreUrl: string | null;
+}
+
+export interface PushConfig {
+  /** Base of the Expo Push API (…/send, …/getReceipts). No trailing slash. */
+  apiUrl: string;
+  /** Expo access token, required once "enhanced push security" is on for the project. */
+  accessToken: string | null;
 }
 
 export class ConfigError extends Error {
@@ -155,9 +165,15 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
   if (links.iosAppId && !/^[A-Z0-9]{10}\.[\w.-]+$/.test(links.iosAppId)) problems.push('IOS_APP_ID must be <TeamID>.<bundleId>');
   if (links.iosStoreUrl && !/^https:\/\/.+/.test(links.iosStoreUrl)) problems.push('IOS_STORE_URL must be an https URL');
 
+  const push: PushConfig = {
+    apiUrl: (env.EXPO_PUSH_API_URL || 'https://exp.host/--/api/v2/push').replace(/\/+$/, ''),
+    accessToken: env.EXPO_ACCESS_TOKEN || null,
+  };
+  if (!/^https?:\/\/.+/.test(push.apiUrl)) problems.push('EXPO_PUSH_API_URL must be an http(s) URL');
+
   if (problems.length > 0) throw new ConfigError(problems);
   return new AppConfig({
-    nodeEnv, port, databaseUrl, logLevel, requireInvite: requireInvite!, jwtAccessSecret, authCodeSecret, smtp, mediaBaseUrl, redisUrl, s3, links,
+    nodeEnv, port, databaseUrl, logLevel, requireInvite: requireInvite!, jwtAccessSecret, authCodeSecret, smtp, mediaBaseUrl, redisUrl, s3, links, push,
   });
 }
 

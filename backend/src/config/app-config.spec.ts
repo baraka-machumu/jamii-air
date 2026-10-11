@@ -6,6 +6,11 @@ const valid = {
   MIGRATION_DATABASE_URL: 'postgresql://jamii_owner:secret@localhost:5432/jamii_air',
   JWT_ACCESS_SECRET: 'a'.repeat(32),
   AUTH_CODE_SECRET: 'b'.repeat(32),
+  REDIS_URL: 'redis://:pw@localhost:6379',
+  S3_ENDPOINT: 'http://localhost:9000',
+  S3_BUCKET: 'jamii-air-media-local',
+  S3_ACCESS_KEY_ID: 'key',
+  S3_SECRET_ACCESS_KEY: 'secret',
 };
 
 function problems(env: NodeJS.ProcessEnv): string[] {
@@ -40,6 +45,11 @@ describe('loadConfig', () => {
       'REQUIRE_INVITE must be true or false',
       'JWT_ACCESS_SECRET must be at least 32 characters',
       'AUTH_CODE_SECRET must be at least 32 characters',
+      'REDIS_URL must be a redis:// URL',
+      'S3_ENDPOINT must be an http(s) URL',
+      'S3_BUCKET is required',
+      'S3_ACCESS_KEY_ID is required',
+      'S3_SECRET_ACCESS_KEY is required',
     ]);
   });
 });

@@ -40,11 +40,12 @@ jobs:
       - name: Install
         run: npm ci
 
-      # TypedSQL types are generated against a migrated database.
-      - name: Start PostgreSQL 18 and apply migrations
+      # The e2e tests use the whole local stack (PostgreSQL, Redis, MinIO, Mailpit); TypedSQL types
+      # are generated against the migrated database.
+      - name: Start local infrastructure and apply migrations
         run: |
           sed "s/change-me/ci$(openssl rand -hex 16)/g" .env.example > .env
-          docker compose up -d --wait postgres
+          npm run infra:up
           npm run db:migrate
 
       - name: Generate Prisma Client and TypedSQL

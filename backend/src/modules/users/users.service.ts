@@ -1,13 +1,15 @@
 // Profiles and the social graph (Plan task 2.6). Rules live in the procedures; this layer shapes
-// responses (camelCase, media URLs, pages) and will enqueue side effects (push: task 2.10;
-// avatar processing: task 2.7) after the calls commit (SP-09).
+// responses (camelCase, media URLs, pages) and enqueues side effects after the calls commit
+// (SP-09): avatar processing now, push with task 2.10.
 import { Injectable } from '@nestjs/common';
 import type { InputJsonObject } from '@prisma/client/runtime/client';
 import { ApiError } from '../../common/errors/api-error.js';
 import { clampLimit, decodeCursor, type Page, toPage } from '../../common/pagination/cursor.js';
 import { type FollowListRow, UsersProcedures } from '../../infrastructure/db-procedures/users.procedures.js';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service.js';
+import { MediaJobs } from '../../infrastructure/queue/queue.module.js';
 import { MediaUrls } from '../../infrastructure/storage/media-urls.js';
+import { MediaService } from '../media/media.service.js';
 import type { FollowListItem, FollowState, Me, Profile, UpdateMeDto, UserSummary } from './users.dto.js';
 
 @Injectable()
@@ -16,6 +18,8 @@ export class UsersService {
     private readonly procedures: UsersProcedures,
     private readonly prisma: PrismaService,
     private readonly urls: MediaUrls,
+    private readonly media: MediaService,
+    private readonly mediaJobs: MediaJobs,
   ) {}
 
   async me(viewerId: string): Promise<Me> {
@@ -45,8 +49,11 @@ export class UsersService {
 
   async updateMe(viewerId: string, dto: UpdateMeDto): Promise<Me> {
     const patch: InputJsonObject = Object.fromEntries(Object.entries(dto).filter(([, v]) => v !== undefined));
+    const avatarId = typeof dto.avatarMediaId === 'string' ? dto.avatarMediaId : undefined;
+    if (avatarId) await this.media.assertUploaded(viewerId, avatarId);
     await this.procedures.updateProfile(viewerId, patch);
-    // TODO(2.7): enqueue avatar processing when patch.avatarMediaId is set (a no-op if READY).
+    // After commit (SP-09); a no-op for an avatar that is already READY.
+    if (avatarId) await this.mediaJobs.process(avatarId);
     return this.me(viewerId);
   }
 

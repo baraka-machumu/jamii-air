@@ -28,6 +28,9 @@ export class AppConfig {
   readonly smtp: { host: string; port: number; from: string };
   /** Public base for media variant URLs (API-10): the nginx media cache, or MinIO locally. No trailing slash. */
   readonly mediaBaseUrl: string;
+  /** BullMQ queues, rate-limit counters (TRD §12 Redis). */
+  readonly redisUrl: string;
+  readonly s3: S3Config;
 
   constructor(values: Omit<AppConfig, 'isProduction' | 'swaggerEnabled'>) {
     this.nodeEnv = values.nodeEnv;
@@ -39,6 +42,8 @@ export class AppConfig {
     this.authCodeSecret = values.authCodeSecret;
     this.smtp = values.smtp;
     this.mediaBaseUrl = values.mediaBaseUrl;
+    this.redisUrl = values.redisUrl;
+    this.s3 = values.s3;
   }
 
   get isProduction(): boolean {
@@ -49,6 +54,17 @@ export class AppConfig {
   get swaggerEnabled(): boolean {
     return !this.isProduction;
   }
+}
+
+export interface S3Config {
+  /** Where the API and worker reach the object store. */
+  endpoint: string;
+  /** Host put into presigned upload URLs: must be reachable from phones (default: endpoint). */
+  publicEndpoint: string;
+  region: string;
+  bucket: string;
+  accessKeyId: string;
+  secretAccessKey: string;
 }
 
 export class ConfigError extends Error {
@@ -94,9 +110,25 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     .replace(/\/+$/, '');
   if (!/^https?:\/\/.+/.test(mediaBaseUrl)) problems.push('MEDIA_BASE_URL must be an http(s) URL');
 
+  const redisUrl = env.REDIS_URL ?? '';
+  if (!/^rediss?:\/\//.test(redisUrl)) problems.push('REDIS_URL must be a redis:// URL');
+
+  const s3: S3Config = {
+    endpoint: (env.S3_ENDPOINT ?? '').replace(/\/+$/, ''),
+    publicEndpoint: (env.S3_PUBLIC_ENDPOINT || env.S3_ENDPOINT || '').replace(/\/+$/, ''),
+    region: env.S3_REGION ?? 'us-east-1',
+    bucket: env.S3_BUCKET ?? '',
+    accessKeyId: env.S3_ACCESS_KEY_ID ?? '',
+    secretAccessKey: env.S3_SECRET_ACCESS_KEY ?? '',
+  };
+  if (!/^https?:\/\/.+/.test(s3.endpoint)) problems.push('S3_ENDPOINT must be an http(s) URL');
+  for (const [name, value] of [['S3_BUCKET', s3.bucket], ['S3_ACCESS_KEY_ID', s3.accessKeyId], ['S3_SECRET_ACCESS_KEY', s3.secretAccessKey]]) {
+    if (!value) problems.push(`${name} is required`);
+  }
+
   if (problems.length > 0) throw new ConfigError(problems);
   return new AppConfig({
-    nodeEnv, port, databaseUrl, logLevel, requireInvite: requireInvite!, jwtAccessSecret, authCodeSecret, smtp, mediaBaseUrl,
+    nodeEnv, port, databaseUrl, logLevel, requireInvite: requireInvite!, jwtAccessSecret, authCodeSecret, smtp, mediaBaseUrl, redisUrl, s3,
   });
 }
 

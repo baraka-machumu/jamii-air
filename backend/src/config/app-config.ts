@@ -35,6 +35,8 @@ export class AppConfig {
   readonly links: LinksConfig;
   /** Expo Push API (TRD NT-03). */
   readonly push: PushConfig;
+  /** Admin portal (TRD §8). */
+  readonly admin: AdminConfig;
 
   constructor(values: Omit<AppConfig, 'isProduction' | 'swaggerEnabled'>) {
     this.nodeEnv = values.nodeEnv;
@@ -50,6 +52,7 @@ export class AppConfig {
     this.s3 = values.s3;
     this.links = values.links;
     this.push = values.push;
+    this.admin = values.admin;
   }
 
   get isProduction(): boolean {
@@ -93,6 +96,15 @@ export interface PushConfig {
   accessToken: string | null;
 }
 
+export interface AdminConfig {
+  /** HS256 key for admin access and login-challenge tokens; separate from the app's (AU-02). */
+  jwtSecret: string;
+  /** Encrypts TOTP secrets at rest (AES-256-GCM, key = SHA-256 of this). */
+  totpKey: string;
+  /** The admin portal's origin: the only one CORS allows, and only on /api/v1/admin. */
+  origin: string;
+}
+
 export class ConfigError extends Error {
   constructor(readonly problems: string[]) {
     super(`Invalid configuration:\n${problems.map((p) => `  - ${p}`).join('\n')}`);
@@ -123,7 +135,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
   if (jwtAccessSecret.length < 32) problems.push('JWT_ACCESS_SECRET must be at least 32 characters');
   const authCodeSecret = env.AUTH_CODE_SECRET ?? '';
   if (authCodeSecret.length < 32) problems.push('AUTH_CODE_SECRET must be at least 32 characters');
-  if (jwtAccessSecret && jwtAccessSecret === authCodeSecret) problems.push('JWT_ACCESS_SECRET and AUTH_CODE_SECRET must differ');
 
   const smtp = {
     host: env.SMTP_HOST ?? 'localhost',
@@ -171,9 +182,20 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
   };
   if (!/^https?:\/\/.+/.test(push.apiUrl)) problems.push('EXPO_PUSH_API_URL must be an http(s) URL');
 
+  const admin: AdminConfig = {
+    jwtSecret: env.ADMIN_JWT_SECRET ?? '',
+    totpKey: env.ADMIN_TOTP_KEY ?? '',
+    origin: (env.ADMIN_ORIGIN || 'http://localhost:5173').replace(/\/+$/, ''),
+  };
+  if (admin.jwtSecret.length < 32) problems.push('ADMIN_JWT_SECRET must be at least 32 characters');
+  if (admin.totpKey.length < 32) problems.push('ADMIN_TOTP_KEY must be at least 32 characters');
+  const secrets = [jwtAccessSecret, authCodeSecret, admin.jwtSecret, admin.totpKey].filter(Boolean);
+  if (new Set(secrets).size !== secrets.length) problems.push('JWT_ACCESS_SECRET, AUTH_CODE_SECRET, ADMIN_JWT_SECRET and ADMIN_TOTP_KEY must all differ');
+  if (!/^https?:\/\/[^/]+$/.test(admin.origin)) problems.push('ADMIN_ORIGIN must be an origin, e.g. https://admin.example.com');
+
   if (problems.length > 0) throw new ConfigError(problems);
   return new AppConfig({
-    nodeEnv, port, databaseUrl, logLevel, requireInvite: requireInvite!, jwtAccessSecret, authCodeSecret, smtp, mediaBaseUrl, redisUrl, s3, links, push,
+    nodeEnv, port, databaseUrl, logLevel, requireInvite: requireInvite!, jwtAccessSecret, authCodeSecret, smtp, mediaBaseUrl, redisUrl, s3, links, push, admin,
   });
 }
 

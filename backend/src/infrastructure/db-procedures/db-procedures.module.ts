@@ -1,4 +1,6 @@
 import { Global, Module } from '@nestjs/common';
+import { AdminAuthProcedures } from './admin-auth.procedures.js';
+import { AdminProcedures } from './admin.procedures.js';
 import { AuthProcedures } from './auth.procedures.js';
 import { EngagementProcedures } from './engagement.procedures.js';
 import { MediaProcedures } from './media.procedures.js';
@@ -12,7 +14,9 @@ import { UsersProcedures } from './users.procedures.js';
 /** Typed stored-procedure wrappers (TRD §6.5). Services call these, never SQL strings. */
 @Global()
 @Module({
-  providers: [ProcedureRunner, SystemProcedures, AuthProcedures, UsersProcedures, MediaProcedures, PostsProcedures, EngagementProcedures, NotificationsProcedures, SafetyProcedures],
-  exports: [ProcedureRunner, SystemProcedures, AuthProcedures, UsersProcedures, MediaProcedures, PostsProcedures, EngagementProcedures, NotificationsProcedures, SafetyProcedures],
+  providers: [ProcedureRunner, SystemProcedures, AuthProcedures, UsersProcedures, MediaProcedures, PostsProcedures, EngagementProcedures, NotificationsProcedures, SafetyProcedures,
+    AdminAuthProcedures, AdminProcedures],
+  exports: [ProcedureRunner, SystemProcedures, AuthProcedures, UsersProcedures, MediaProcedures, PostsProcedures, EngagementProcedures, NotificationsProcedures, SafetyProcedures,
+    AdminAuthProcedures, AdminProcedures],
 })
 export class DbProceduresModule {}

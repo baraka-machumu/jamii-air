@@ -6,6 +6,8 @@ const valid = {
   MIGRATION_DATABASE_URL: 'postgresql://jamii_owner:secret@localhost:5432/jamii_air',
   JWT_ACCESS_SECRET: 'a'.repeat(32),
   AUTH_CODE_SECRET: 'b'.repeat(32),
+  ADMIN_JWT_SECRET: 'c'.repeat(32),
+  ADMIN_TOTP_KEY: 'd'.repeat(32),
   REDIS_URL: 'redis://:pw@localhost:6379',
   S3_ENDPOINT: 'http://localhost:9000',
   S3_BUCKET: 'jamii-air-media-local',
@@ -50,7 +52,17 @@ describe('loadConfig', () => {
       'S3_BUCKET is required',
       'S3_ACCESS_KEY_ID is required',
       'S3_SECRET_ACCESS_KEY is required',
+      'ADMIN_JWT_SECRET must be at least 32 characters',
+      'ADMIN_TOTP_KEY must be at least 32 characters',
     ]);
+  });
+
+  it('keeps the four secrets apart and the admin origin a bare origin (TRD §8.2)', () => {
+    expect(problems({ ...valid, ADMIN_TOTP_KEY: valid.JWT_ACCESS_SECRET })).toEqual([
+      'JWT_ACCESS_SECRET, AUTH_CODE_SECRET, ADMIN_JWT_SECRET and ADMIN_TOTP_KEY must all differ',
+    ]);
+    expect(problems({ ...valid, ADMIN_ORIGIN: 'https://admin.example.com/portal' })).toHaveLength(1);
+    expect(loadConfig({ ...valid, ADMIN_ORIGIN: 'https://admin.example.com/' }).admin.origin).toBe('https://admin.example.com');
   });
 
   it('builds share links on the API by default and validates app-link identities (SH-01)', () => {

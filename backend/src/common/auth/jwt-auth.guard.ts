@@ -2,6 +2,7 @@ import { type CanActivate, type ExecutionContext, Injectable } from '@nestjs/com
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import type { Request } from 'express';
+import { IS_ADMIN_ROUTE } from '../admin-auth/admin-auth.js';
 import { ApiError } from '../errors/api-error.js';
 import { type AuthUser, IS_PUBLIC } from './auth.decorators.js';
 import { UserStatusCache } from './user-status.cache.js';
@@ -16,7 +17,7 @@ interface AccessClaims {
 /**
  * Global guard for app routes (TRD §7): `Authorization: Bearer <access token>`, a JWT with
  * aud=app (admin tokens, aud=admin, are rejected here), and an ACTIVE account (AU-05).
- * Routes marked @Public() skip it.
+ * Routes marked @Public() skip it; admin routes have their own guard (AdminJwtGuard).
  */
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
@@ -27,8 +28,9 @@ export class JwtAuthGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC, [context.getHandler(), context.getClass()]);
-    if (isPublic) return true;
+    const targets = [context.getHandler(), context.getClass()];
+    if (this.reflector.getAllAndOverride<boolean>(IS_PUBLIC, targets)) return true;
+    if (this.reflector.getAllAndOverride<boolean>(IS_ADMIN_ROUTE, targets)) return true;
 
     const req = context.switchToHttp().getRequest<Request & { user?: AuthUser }>();
     const [scheme, token] = (req.headers.authorization ?? '').split(' ');

@@ -203,7 +203,7 @@ NestJS API and workers on top of the finished procedures. The API layer validate
 | 2.9 | ✅ Engagement: likes, comments; `shareUrl`; landing page for `/p/*`, `/u/*`; `assetlinks.json`, `apple-app-site-association` (identities from env: empty until 0.3 app identifiers exist) |
 | 2.10 | ✅ Notifications module + push worker (Expo Push API, batching, receipts, invalid-token cleanup, localised text) |
 | 2.11 | ✅ Safety: block/unblock, blocked list, reports, account deletion endpoints |
-| 2.12 | **Admin API** (`/api/v1/admin`): admin login + **mandatory TOTP** (enroll/verify, encrypted secret), cookie-based refresh, `AdminJwtGuard`, `AdminRolesGuard`, CORS for the admin origin only; dashboard, reports, users, content, invites, audit log, admins endpoints |
+| 2.12 | ✅ **Admin API** (`/api/v1/admin`): admin login + **mandatory TOTP** (enroll/verify, encrypted secret), cookie-based refresh, `AdminJwtGuard`, `AdminRolesGuard`, CORS for the admin origin only; dashboard, reports, users, content, invites, audit log, admins endpoints |
 | 2.13 | Maintenance worker loops calling the `fn_maint_*` procedures on schedule |
 | 2.14 | OpenAPI spec published as a build artifact for mobile and admin type generation; reviewed against App Flow (doc 03) so every screen has the endpoints it needs |
 | 2.15 | Tests: API e2e for every endpoint; upload security tests (oversized, wrong type, renamed non-image, another user's `mediaId`, expired intent, replayed idempotency key); **authorization sweep** — every endpoint × (owner, other user, blocked, suspended, user token on admin route, moderator on super-admin route) |

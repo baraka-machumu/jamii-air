@@ -1,0 +1,148 @@
+// Jamii Air database schema (Backend Schema Document §4).
+// Prisma owns tables and migrations; CHECK constraints, partial/trigram indexes, triggers,
+// stored procedures and grants are raw SQL in the same migrations (Schema §5–§9).
+// Writes go only through stored procedures (prisma/functions/); the runtime role cannot write tables.
+
+generator client {
+  provider        = "prisma-client" // ESM-native client (backend is "type": "module")
+  output          = "../src/generated/prisma"
+  previewFeatures = ["postgresqlExtensions", "typedSql"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  extensions = [citext, pg_trgm]
+  // URL: prisma.config.ts (MIGRATION_DATABASE_URL, owner role) for the CLI;
+  // DATABASE_URL (runtime role jamii_app) via @prisma/adapter-pg in the app.
+}
+
+// ───────────── Enums ─────────────
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  PENDING_DELETION
+
+  @@map("user_status")
+}
+
+enum MediaKind {
+  IMAGE // VIDEO in R2
+
+  @@map("media_kind")
+}
+
+enum MediaPurpose {
+  POST
+  AVATAR
+
+  @@map("media_purpose")
+}
+
+enum MediaStatus {
+  PENDING_UPLOAD
+  UPLOADED
+  PROCESSING
+  READY
+  FAILED
+  DELETED
+
+  @@map("media_status")
+}
+
+enum MediaVariantType {
+  THUMB
+  FEED
+  AVATAR_S
+  AVATAR_M // POSTER, HLS_* in R2
+
+  @@map("media_variant_type")
+}
+
+enum PostType {
+  PHOTO // REEL in R2
+
+  @@map("post_type")
+}
+
+enum PostStatus {
+  PROCESSING
+  PUBLISHED
+  FAILED
+  HIDDEN
+  DELETED
+
+  @@map("post_status")
+}
+
+enum NotificationType {
+  FOLLOW
+  LIKE
+  COMMENT
+
+  @@map("notification_type")
+}
+
+enum ReportTargetType {
+  USER
+  POST
+  COMMENT
+
+  @@map("report_target_type")
+}
+
+enum ReportReason {
+  SPAM
+  NUDITY
+  HARASSMENT
+  HATE
+  VIOLENCE
+  FALSE_INFORMATION
+  OTHER
+
+  @@map("report_reason")
+}
+
+enum ReportStatus {
+  OPEN
+  REVIEWING
+  RESOLVED
+  DISMISSED
+
+  @@map("report_status")
+}
+
+enum ModerationActionType {
+  HIDE_POST
+  UNHIDE_POST
+  HIDE_COMMENT
+  UNHIDE_COMMENT
+  SUSPEND_USER
+  REINSTATE_USER
+  REVOKE_USER_SESSIONS
+  RESOLVE_REPORT
+  DISMISS_REPORT
+
+  @@map("moderation_action_type")
+}
+
+enum AdminRole {
+  SUPER_ADMIN
+  MODERATOR
+
+  @@map("admin_role")
+}
+
+enum AdminStatus {
+  ACTIVE
+  DISABLED
+
+  @@map("admin_status")
+}
+
+enum Platform {
+  ANDROID
+  IOS
+
+  @@map("platform")
+}

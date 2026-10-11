@@ -29,6 +29,21 @@ The init script runs only when the Postgres volume is empty. After changing role
 
 `docker compose up -d` also works. `docker compose up -d --wait` returns exit code 1 because `minio-init` exits by design, so use `npm run infra:up` instead.
 
+## Database
+
+Prisma 7 with the `pg` driver adapter. The CLI connects as the owner role (`MIGRATION_DATABASE_URL`, see [prisma.config.ts](prisma.config.ts)); the API and worker connect as `jamii_app` (`DATABASE_URL`) and can only read granted columns and call `fn_*` procedures.
+
+```bash
+npm run db:migrate        # apply migrations (prisma migrate deploy)
+npm run db:migrate:dev    # create a migration from schema changes (local only)
+npm run db:generate       # generate the client into src/generated/prisma (git-ignored)
+npm run db:status
+```
+
+- [prisma/schema.prisma](prisma/schema.prisma): tables and enums.
+- [prisma/functions/](prisma/functions/): one file per stored procedure; the source of truth.
+- [prisma/grants.sql](prisma/grants.sql): runtime-role grants. It's idempotent and gets appended to every migration that adds functions.
+
 ## Run
 
 ```bash

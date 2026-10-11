@@ -10,7 +10,9 @@
 \getenv app_pw JAMII_APP_PASSWORD
 \getenv db POSTGRES_DB
 
-CREATE ROLE jamii_owner LOGIN PASSWORD :'owner_pw';
+-- CREATEDB is local-only: `prisma migrate dev` creates a temporary shadow database.
+-- UAT and production create jamii_owner without it.
+CREATE ROLE jamii_owner LOGIN CREATEDB PASSWORD :'owner_pw';
 CREATE ROLE jamii_app   LOGIN PASSWORD :'app_pw';
 
 -- The public schema belongs to pg_database_owner, so this also makes jamii_owner its owner.

@@ -146,3 +146,453 @@ enum Platform {
 
   @@map("platform")
 }
+
+// ───────────── App identity (users_auth, Plan 1.4) ─────────────
+
+model User {
+  id                  String     @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  username            String     @unique @db.Citext
+  email               String     @unique @db.Citext
+  passwordHash        String     @map("password_hash")
+  dateOfBirth         DateTime   @map("date_of_birth") @db.Date // 18+ enforced by CHECK (Schema §5)
+  displayName         String?    @map("display_name") @db.VarChar(50)
+  bio                 String?    @db.VarChar(160)
+  avatarMediaId       String?    @unique @map("avatar_media_id") @db.Uuid
+  status              UserStatus @default(ACTIVE)
+  locale              String     @default("en") @db.VarChar(10)
+  inviteCodeId        String?    @map("invite_code_id") @db.Uuid
+  postCount           Int        @default(0) @map("post_count")
+  followerCount       Int        @default(0) @map("follower_count")
+  followingCount      Int        @default(0) @map("following_count")
+  termsAcceptedAt     DateTime   @map("terms_accepted_at") @db.Timestamptz
+  passwordChangedAt   DateTime?  @map("password_changed_at") @db.Timestamptz
+  suspendedAt         DateTime?  @map("suspended_at") @db.Timestamptz
+  deletionRequestedAt DateTime?  @map("deletion_requested_at") @db.Timestamptz
+  lastActiveAt        DateTime?  @map("last_active_at") @db.Timestamptz
+  createdAt           DateTime   @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime   @default(now()) @map("updated_at") @db.Timestamptz
+
+  inviteCode     InviteCode?         @relation(fields: [inviteCodeId], references: [id], onDelete: SetNull)
+  avatar         MediaAsset?         @relation("UserAvatar", fields: [avatarMediaId], references: [id], onDelete: SetNull)
+  mediaAssets    MediaAsset[]        @relation("MediaOwner")
+  posts          Post[]
+  comments       Comment[]
+  likes          Like[]
+  refreshTokens  RefreshToken[]
+  resetCodes     PasswordResetCode[]
+  devices        DevicePushToken[]
+  following      Follow[]            @relation("Follower")
+  followers      Follow[]            @relation("Following")
+  blocking       Block[]             @relation("Blocker")
+  blockedBy      Block[]             @relation("Blocked")
+  notifications  Notification[]      @relation("NotificationRecipient")
+  actedNotifs    Notification[]      @relation("NotificationActor")
+  reportsFiled   Report[]            @relation("Reporter")
+  reportsAgainst Report[]            @relation("ReportedUser")
+  modTargeted    ModerationAction[]
+
+  @@index([status])
+  @@index([createdAt(sort: Desc), id(sort: Desc)])
+  @@map("users")
+}
+
+model InviteCode {
+  id               String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  code             String    @unique @db.VarChar(32)
+  createdByAdminId String?   @map("created_by_admin_id") @db.Uuid
+  maxUses          Int       @default(1) @map("max_uses")
+  useCount         Int       @default(0) @map("use_count")
+  expiresAt        DateTime? @map("expires_at") @db.Timestamptz
+  revokedAt        DateTime? @map("revoked_at") @db.Timestamptz
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  createdBy AdminUser? @relation(fields: [createdByAdminId], references: [id], onDelete: SetNull)
+  usedBy    User[]
+
+  @@index([createdAt(sort: Desc), id(sort: Desc)])
+  @@map("invite_codes")
+}
+
+model RefreshToken {
+  id           String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  userId       String    @map("user_id") @db.Uuid
+  familyId     String    @map("family_id") @db.Uuid
+  tokenHash    String    @unique @map("token_hash") @db.Char(64)
+  userAgent    String?   @map("user_agent") @db.VarChar(255)
+  expiresAt    DateTime  @map("expires_at") @db.Timestamptz
+  revokedAt    DateTime? @map("revoked_at") @db.Timestamptz
+  replacedById String?   @map("replaced_by_id") @db.Uuid
+  lastUsedAt   DateTime? @map("last_used_at") @db.Timestamptz
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([familyId])
+  @@index([expiresAt])
+  @@index([createdAt])
+  @@map("refresh_tokens")
+}
+
+model PasswordResetCode {
+  id        String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  codeHash  String    @map("code_hash") @db.Char(64)
+  attempts  Int       @default(0)
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz
+  usedAt    DateTime? @map("used_at") @db.Timestamptz
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([createdAt])
+  @@map("password_reset_codes")
+}
+
+model DevicePushToken {
+  installationId String   @id @map("installation_id") @db.VarChar(64)
+  userId         String   @map("user_id") @db.Uuid
+  expoPushToken  String   @map("expo_push_token") @db.VarChar(255)
+  platform       Platform
+  appVersion     String?  @map("app_version") @db.VarChar(20)
+  locale         String?  @db.VarChar(10)
+  lastSeenAt     DateTime @default(now()) @map("last_seen_at") @db.Timestamptz
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expoPushToken])
+  @@map("device_push_tokens")
+}
+
+// ───────────── Social graph (social_graph_search, Plan 1.5) ─────────────
+
+model Follow {
+  followerId  String   @map("follower_id") @db.Uuid
+  followingId String   @map("following_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  follower  User @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@id([followerId, followingId])
+  @@index([followingId, createdAt(sort: Desc)]) // followers list
+  @@index([followerId, createdAt(sort: Desc)]) // following list
+  @@map("follows")
+}
+
+model Block {
+  blockerId String   @map("blocker_id") @db.Uuid
+  blockedId String   @map("blocked_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  blocker User @relation("Blocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked User @relation("Blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@id([blockerId, blockedId])
+  @@index([blockedId])
+  @@index([blockerId, createdAt(sort: Desc)]) // blocked-accounts list
+  @@map("blocks")
+}
+
+// ───────────── Media and posts (media_posts, Plan 1.6) ─────────────
+
+model MediaAsset {
+  id            String       @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  ownerId       String       @map("owner_id") @db.Uuid
+  kind          MediaKind
+  purpose       MediaPurpose
+  status        MediaStatus  @default(PENDING_UPLOAD)
+  originalKey   String       @unique @map("original_key")
+  mimeType      String       @map("mime_type") @db.VarChar(100)
+  byteSize      BigInt       @map("byte_size")
+  width         Int?
+  height        Int?
+  durationMs    Int?         @map("duration_ms") // R2 video
+  blurhash      String?      @db.VarChar(64)
+  failureReason String?      @map("failure_reason") @db.VarChar(255)
+  processedAt   DateTime?    @map("processed_at") @db.Timestamptz
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime     @default(now()) @map("updated_at") @db.Timestamptz
+
+  owner     User           @relation("MediaOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  variants  MediaVariant[]
+  postMedia PostMedia?
+  avatarOf  User?          @relation("UserAvatar")
+
+  @@index([ownerId, createdAt(sort: Desc)])
+  @@index([status, updatedAt])
+  @@map("media_assets")
+}
+
+model MediaVariant {
+  id        String           @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  mediaId   String           @map("media_id") @db.Uuid
+  variant   MediaVariantType
+  objectKey String           @unique @map("object_key")
+  width     Int
+  height    Int
+  mimeType  String           @map("mime_type") @db.VarChar(100)
+  byteSize  Int              @map("byte_size")
+  createdAt DateTime         @default(now()) @map("created_at") @db.Timestamptz
+
+  media MediaAsset @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+
+  @@unique([mediaId, variant])
+  @@map("media_variants")
+}
+
+model Post {
+  id           String     @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  authorId     String     @map("author_id") @db.Uuid
+  type         PostType   @default(PHOTO)
+  caption      String?    @db.VarChar(2200)
+  status       PostStatus @default(PROCESSING)
+  likeCount    Int        @default(0) @map("like_count")
+  commentCount Int        @default(0) @map("comment_count")
+  publishedAt  DateTime?  @map("published_at") @db.Timestamptz
+  hiddenAt     DateTime?  @map("hidden_at") @db.Timestamptz
+  deletedAt    DateTime?  @map("deleted_at") @db.Timestamptz
+  createdAt    DateTime   @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime   @default(now()) @map("updated_at") @db.Timestamptz
+
+  author        User               @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  media         PostMedia[]
+  comments      Comment[]
+  likes         Like[]
+  notifications Notification[]
+  reports       Report[]
+  modActions    ModerationAction[]
+
+  @@index([authorId, createdAt(sort: Desc), id(sort: Desc)]) // own grid incl. PROCESSING
+  @@index([status, updatedAt]) // purge
+  @@map("posts")
+}
+
+model PostMedia {
+  postId   String @map("post_id") @db.Uuid
+  mediaId  String @unique @map("media_id") @db.Uuid
+  position Int    @default(0) @db.SmallInt
+
+  post  Post       @relation(fields: [postId], references: [id], onDelete: Cascade)
+  media MediaAsset @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+
+  @@id([postId, position])
+  @@map("post_media")
+}
+
+// ───────────── Platform ─────────────
+
+model IdempotencyKey {
+  userId       String   @map("user_id") @db.Uuid
+  key          String   @db.VarChar(64)
+  route        String   @db.VarChar(100)
+  requestHash  String   @map("request_hash") @db.Char(64)
+  responseBody Json     @map("response_body")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@id([userId, key])
+  @@index([createdAt])
+  @@map("idempotency_keys")
+}
+
+model PendingObjectDeletion {
+  id        String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  objectKey String    @map("object_key") // exact key, or prefix ending in '/'
+  isPrefix  Boolean   @default(false) @map("is_prefix")
+  claimedAt DateTime? @map("claimed_at") @db.Timestamptz
+  doneAt    DateTime? @map("done_at") @db.Timestamptz
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([doneAt, createdAt])
+  @@map("pending_object_deletions")
+}
+
+// ───────────── Engagement (engagement, Plan 1.8) ─────────────
+
+model Like {
+  userId    String   @map("user_id") @db.Uuid
+  postId    String   @map("post_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@id([userId, postId])
+  @@index([postId, createdAt(sort: Desc)])
+  @@index([createdAt])
+  @@map("likes")
+}
+
+model Comment {
+  id        String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  postId    String    @map("post_id") @db.Uuid
+  authorId  String    @map("author_id") @db.Uuid
+  body      String    @db.VarChar(1000)
+  hiddenAt  DateTime? @map("hidden_at") @db.Timestamptz
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  post          Post               @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author        User               @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  notifications Notification[]
+  reports       Report[]
+  modActions    ModerationAction[]
+
+  @@index([authorId])
+  @@index([createdAt])
+  @@map("comments")
+}
+
+// ───────────── Notifications (notifications, Plan 1.9) ─────────────
+
+model Notification {
+  id          String           @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  recipientId String           @map("recipient_id") @db.Uuid
+  actorId     String           @map("actor_id") @db.Uuid
+  type        NotificationType
+  postId      String?          @map("post_id") @db.Uuid
+  commentId   String?          @map("comment_id") @db.Uuid
+  readAt      DateTime?        @map("read_at") @db.Timestamptz
+  pushedAt    DateTime?        @map("pushed_at") @db.Timestamptz
+  createdAt   DateTime         @default(now()) @map("created_at") @db.Timestamptz
+
+  recipient User     @relation("NotificationRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+  actor     User     @relation("NotificationActor", fields: [actorId], references: [id], onDelete: Cascade)
+  post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  comment   Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@index([recipientId, createdAt(sort: Desc), id(sort: Desc)])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+// ───────────── Safety, moderation and admin portal (moderation_admin, Plan 1.10) ─────────────
+
+model Report {
+  id              String           @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  reporterId      String           @map("reporter_id") @db.Uuid
+  targetType      ReportTargetType @map("target_type")
+  targetPostId    String?          @map("target_post_id") @db.Uuid
+  targetCommentId String?          @map("target_comment_id") @db.Uuid
+  reportedUserId  String           @map("reported_user_id") @db.Uuid
+  reason          ReportReason
+  details         String?          @db.VarChar(1000)
+  status          ReportStatus     @default(OPEN)
+  resolvedById    String?          @map("resolved_by_id") @db.Uuid // admin_users.id
+  resolvedAt      DateTime?        @map("resolved_at") @db.Timestamptz
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime         @default(now()) @map("updated_at") @db.Timestamptz
+
+  reporter      User               @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  reportedUser  User               @relation("ReportedUser", fields: [reportedUserId], references: [id], onDelete: Cascade)
+  resolvedBy    AdminUser?         @relation(fields: [resolvedById], references: [id], onDelete: SetNull)
+  targetPost    Post?              @relation(fields: [targetPostId], references: [id], onDelete: SetNull)
+  targetComment Comment?           @relation(fields: [targetCommentId], references: [id], onDelete: SetNull)
+  actions       ModerationAction[]
+
+  @@index([status, createdAt])
+  @@index([reportedUserId, createdAt(sort: Desc)])
+  @@index([targetPostId])
+  @@index([targetCommentId])
+  @@map("reports")
+}
+
+model ModerationAction {
+  id              String               @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  adminId         String               @map("admin_id") @db.Uuid
+  action          ModerationActionType
+  reportId        String?              @map("report_id") @db.Uuid
+  targetUserId    String?              @map("target_user_id") @db.Uuid
+  targetPostId    String?              @map("target_post_id") @db.Uuid
+  targetCommentId String?              @map("target_comment_id") @db.Uuid
+  note            String               @db.VarChar(500)
+  createdAt       DateTime             @default(now()) @map("created_at") @db.Timestamptz
+
+  admin         AdminUser @relation(fields: [adminId], references: [id], onDelete: Restrict)
+  report        Report?   @relation(fields: [reportId], references: [id], onDelete: SetNull)
+  targetUser    User?     @relation(fields: [targetUserId], references: [id], onDelete: SetNull)
+  targetPost    Post?     @relation(fields: [targetPostId], references: [id], onDelete: SetNull)
+  targetComment Comment?  @relation(fields: [targetCommentId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt(sort: Desc), id(sort: Desc)])
+  @@index([targetUserId])
+  @@index([targetPostId])
+  @@map("moderation_actions")
+}
+
+model AdminUser {
+  id               String      @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  email            String      @unique @db.Citext
+  displayName      String      @map("display_name") @db.VarChar(80)
+  passwordHash     String      @map("password_hash")
+  role             AdminRole   @default(MODERATOR)
+  status           AdminStatus @default(ACTIVE)
+  totpSecretEnc    Bytes?      @map("totp_secret_enc") // AES-256-GCM ciphertext; key outside the DB
+  totpEnabledAt    DateTime?   @map("totp_enabled_at") @db.Timestamptz
+  failedLoginCount Int         @default(0) @map("failed_login_count")
+  lockedAt         DateTime?   @map("locked_at") @db.Timestamptz
+  lastLoginAt      DateTime?   @map("last_login_at") @db.Timestamptz
+  createdById      String?     @map("created_by_id") @db.Uuid
+  createdAt        DateTime    @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime    @default(now()) @map("updated_at") @db.Timestamptz
+
+  createdBy  AdminUser?         @relation("AdminCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  created    AdminUser[]        @relation("AdminCreatedBy")
+  sessions   AdminSession[]
+  invites    InviteCode[]
+  modActions ModerationAction[]
+  auditLog   AdminAuditLog[]
+  resolved   Report[]
+
+  @@map("admin_users")
+}
+
+model AdminSession {
+  id                String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  adminId           String    @map("admin_id") @db.Uuid
+  familyId          String    @map("family_id") @db.Uuid
+  tokenHash         String    @unique @map("token_hash") @db.Char(64)
+  userAgent         String?   @map("user_agent") @db.VarChar(255)
+  idleExpiresAt     DateTime  @map("idle_expires_at") @db.Timestamptz // now() + 30 min, extended on use
+  absoluteExpiresAt DateTime  @map("absolute_expires_at") @db.Timestamptz // login + 12 h
+  revokedAt         DateTime? @map("revoked_at") @db.Timestamptz
+  replacedById      String?   @map("replaced_by_id") @db.Uuid
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  admin AdminUser @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([adminId])
+  @@index([familyId])
+  @@index([absoluteExpiresAt])
+  @@map("admin_sessions")
+}
+
+model AdminAuditLog {
+  id         String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  adminId    String?  @map("admin_id") @db.Uuid // null for a failed login of an unknown email
+  action     String   @db.VarChar(50) // LOGIN_SUCCESS, LOGIN_FAILED, TOTP_ENABLED, ADMIN_CREATED, …
+  targetType String?  @map("target_type") @db.VarChar(30)
+  targetId   String?  @map("target_id") @db.Uuid
+  details    Json?
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  admin AdminUser? @relation(fields: [adminId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt(sort: Desc), id(sort: Desc)])
+  @@index([adminId, createdAt(sort: Desc)])
+  @@map("admin_audit_log")
+}
+
+// ───────────── Metrics (metrics_maintenance, Plan 1.11) ─────────────
+
+model DailyMetric {
+  day    DateTime @db.Date
+  metric String   @db.VarChar(50)
+  value  Decimal  @db.Decimal(14, 4)
+
+  @@id([day, metric])
+  @@map("daily_metrics")
+}

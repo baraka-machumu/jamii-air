@@ -1,5 +1,5 @@
 // Worker process (TRD DP-01: same image as the API, `node dist/worker.js`). No HTTP server.
-// The queue processors (media 2.7, push 2.10, maintenance 2.13) register in WorkerModule.
+// The queue processors (media, push, maintenance schedule) register in WorkerModule.
 import { NestFactory } from '@nestjs/core';
 import { Logger } from 'nestjs-pino';
 import { WorkerModule } from './worker.module.js';

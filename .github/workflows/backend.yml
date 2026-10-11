@@ -43,7 +43,7 @@ jobs:
       # TypedSQL types are generated against a migrated database.
       - name: Start PostgreSQL 18 and apply migrations
         run: |
-          sed "s/change-me/ci$(openssl rand -hex 12)/g" .env.example > .env
+          sed "s/change-me/ci$(openssl rand -hex 16)/g" .env.example > .env
           docker compose up -d --wait postgres
           npm run db:migrate
 

@@ -127,6 +127,10 @@ services:
       LOG_LEVEL: ${LOG_LEVEL:-info}
       REQUIRE_INVITE: ${REQUIRE_INVITE:-true}
       DATABASE_URL: postgresql://jamii_app:${JAMII_APP_PASSWORD}@postgres:5432/${POSTGRES_DB:-jamii_air}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?set in backend/.env}
+      AUTH_CODE_SECRET: ${AUTH_CODE_SECRET:?set in backend/.env}
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025
     ports:
       - "127.0.0.1:${API_PORT:-3000}:3000"
     depends_on:

@@ -1,9 +1,11 @@
 import { Controller, Get, HttpCode, ServiceUnavailableException } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Public } from '../common/auth/auth.decorators.js';
 import { PrismaService } from '../infrastructure/prisma/prisma.service.js';
 
 /** Liveness and readiness for Docker / the load balancer (TRD §5.1). Public. */
 @ApiTags('health')
+@Public()
 @Controller('health')
 export class HealthController {
   constructor(private readonly prisma: PrismaService) {}

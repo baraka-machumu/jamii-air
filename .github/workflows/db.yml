@@ -72,7 +72,7 @@ jobs:
       # the drift check against the result.
       - name: Start PostgreSQL 18
         run: |
-          sed "s/change-me/ci$(openssl rand -hex 12)/g" .env.example > .env
+          sed "s/change-me/ci$(openssl rand -hex 16)/g" .env.example > .env
           docker compose up -d --wait postgres
 
       - name: Apply migrations to a fresh database

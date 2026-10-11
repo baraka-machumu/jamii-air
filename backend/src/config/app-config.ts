@@ -21,6 +21,11 @@ export class AppConfig {
   readonly logLevel: LogLevel;
   /** Pilot gate (BR-AC-02): registration needs an invite code. */
   readonly requireInvite: boolean;
+  /** HS256 key for user access tokens (AU-02). */
+  readonly jwtAccessSecret: string;
+  /** HMAC key for password-reset codes (stored as HMAC, never plaintext: SR-05). */
+  readonly authCodeSecret: string;
+  readonly smtp: { host: string; port: number; from: string };
 
   constructor(values: Omit<AppConfig, 'isProduction' | 'swaggerEnabled'>) {
     this.nodeEnv = values.nodeEnv;
@@ -28,6 +33,9 @@ export class AppConfig {
     this.databaseUrl = values.databaseUrl;
     this.logLevel = values.logLevel;
     this.requireInvite = values.requireInvite;
+    this.jwtAccessSecret = values.jwtAccessSecret;
+    this.authCodeSecret = values.authCodeSecret;
+    this.smtp = values.smtp;
   }
 
   get isProduction(): boolean {
@@ -66,8 +74,23 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
   const requireInvite = parseBoolean(env.REQUIRE_INVITE ?? 'true');
   if (requireInvite === undefined) problems.push('REQUIRE_INVITE must be true or false');
 
+  const jwtAccessSecret = env.JWT_ACCESS_SECRET ?? '';
+  if (jwtAccessSecret.length < 32) problems.push('JWT_ACCESS_SECRET must be at least 32 characters');
+  const authCodeSecret = env.AUTH_CODE_SECRET ?? '';
+  if (authCodeSecret.length < 32) problems.push('AUTH_CODE_SECRET must be at least 32 characters');
+  if (jwtAccessSecret && jwtAccessSecret === authCodeSecret) problems.push('JWT_ACCESS_SECRET and AUTH_CODE_SECRET must differ');
+
+  const smtp = {
+    host: env.SMTP_HOST ?? 'localhost',
+    port: Number(env.SMTP_PORT ?? 1025),
+    from: env.MAIL_FROM ?? 'Jamii Air <no-reply@jamii-air.local>',
+  };
+  if (!Number.isInteger(smtp.port) || smtp.port < 1 || smtp.port > 65535) problems.push('SMTP_PORT must be an integer 1–65535');
+
   if (problems.length > 0) throw new ConfigError(problems);
-  return new AppConfig({ nodeEnv, port, databaseUrl, logLevel, requireInvite: requireInvite! });
+  return new AppConfig({
+    nodeEnv, port, databaseUrl, logLevel, requireInvite: requireInvite!, jwtAccessSecret, authCodeSecret, smtp,
+  });
 }
 
 function checkDatabaseUrl(value: string, migrationUrl: string | undefined): string[] {

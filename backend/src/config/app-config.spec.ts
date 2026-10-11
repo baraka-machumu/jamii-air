@@ -4,6 +4,8 @@ const valid = {
   NODE_ENV: 'development',
   DATABASE_URL: 'postgresql://jamii_app:secret@localhost:5432/jamii_air',
   MIGRATION_DATABASE_URL: 'postgresql://jamii_owner:secret@localhost:5432/jamii_air',
+  JWT_ACCESS_SECRET: 'a'.repeat(32),
+  AUTH_CODE_SECRET: 'b'.repeat(32),
 };
 
 function problems(env: NodeJS.ProcessEnv): string[] {
@@ -36,6 +38,8 @@ describe('loadConfig', () => {
       'PORT must be an integer 1–65535',
       'DATABASE_URL is required',
       'REQUIRE_INVITE must be true or false',
+      'JWT_ACCESS_SECRET must be at least 32 characters',
+      'AUTH_CODE_SECRET must be at least 32 characters',
     ]);
   });
 });

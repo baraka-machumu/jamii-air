@@ -43,9 +43,14 @@ Visual design (Design Brief, doc 04) is produced by the engineer with Claude Cod
 
 **Status (2026-10-11):**
 - **Phase 0:** complete.
-- **Phase 1, iteration E0 Foundation:** in progress.
-  - E0-01 (1.1), E0-02 (1.2) and E0-03 (part of 1.3) are built and verified locally, and are waiting for review. Story-level tracking: [backlog](backlog/phase-1-database-E0-E1.md#status).
-  - The GitHub board and issues have not been created yet: the `gh` CLI is not installed on the engineer's machine.
+- **Phase 1, Database:** every task is built and tested locally and waiting for review (Review column). Story-level tracking: [backlog](backlog/phase-1-database-E0-E1.md#status).
+  - 9 migrations and 92 functions. They apply cleanly to a fresh PostgreSQL 18, and the drift check passes.
+  - 116 tests pass in `npm run test:db` (Testcontainers), including the authorization matrix and the SR-01/03/04 security checks.
+  - Task 1.13: every measured procedure's P95 is under 50 ms at 10k users / 1M posts (feed 27 ms; numbers in task 1.13).
+  - **Open before the phase gate:**
+    - review and merge
+    - make the "Database" CI check required in `main`'s branch protection
+    - create the GitHub board (the `gh` CLI is not installed on the engineer's machine)
 - **Repository:** one repository, `jamii-air`, on GitHub at [`baraka-machumu/jamii-air`](https://github.com/baraka-machumu/jamii-air). Docs and the app scaffolds are committed: the backend (2.1), the Expo app (3.1, partly) and an admin placeholder.
 
 ## 2. Agile delivery model
@@ -165,18 +170,18 @@ The whole data layer from the Schema document (doc 05): every table, constraint,
 |---|---|
 | 1.1 | ✅ `docker-compose.yml` at `backend/`: **PostgreSQL 18**, Redis 7, MinIO (+ bucket init), Mailpit; init script creating roles `jamii_owner`, `jamii_app` |
 | 1.2 | ✅ Prisma setup (ESM client, TypedSQL enabled); migration `init` (extensions, enums, `fn__touch_updated_at`, helper functions, grants script) |
-| 1.3 | **Stored-procedure framework:** ✅ `prisma/functions/` layout; ✅ `npm run db:fn-migration` script; **drift check** (fresh DB → compare `pg_get_functiondef` with source files); Testcontainers harness that calls functions as `jamii_app`; security checks from TRD §13.1 (SR-01 direct-write test, SR-03 `search_path` check, SR-04 `EXECUTE` grep); sample `fn_ping(p_viewer_id)` raising `JA404` |
-| 1.4 | Migration `users_auth`: users (DOB + **18+ CHECK**), invite_codes, refresh_tokens, password_reset_codes, device_push_tokens. Procedures: `fn_register_user` (age ≥ 18, invite, first session), `fn_get_login_candidate`, `fn_create_session`, `fn_rotate_refresh_token` (reuse detection), `fn_revoke_session`, `fn_update_profile`, `fn_get_profile`, `fn_create_password_reset` (S), `fn_reset_password` (S) |
-| 1.5 | Migration `social_graph_search`: follows, blocks, trigram indexes. Procedures: `fn_follow_user`, `fn_unfollow_user`, `fn_get_followers`, `fn_get_following`, `fn_search_users` |
-| 1.6 | Migration `media_posts`: media_assets, media_variants, posts, post_media, idempotency_keys, pending_object_deletions. Procedures: `fn_create_upload_intent`, `fn_create_post` (ownership, idempotency), `fn_complete_media_processing`, `fn_fail_media_processing`, `fn_get_post`, `fn_delete_post`, `fn_update_post_caption` (C) |
-| 1.7 | Feed procedures `fn_get_home_feed`, `fn_get_profile_posts` + index tuning |
-| 1.8 | Migration `engagement`: likes, comments. Procedures: `fn_like_post`, `fn_unlike_post`, `fn_add_comment`, `fn_delete_comment`, `fn_get_post_comments` |
-| 1.9 | Migration `notifications`; notification inserts in like/comment/follow procedures (dedupe, no self); procedures `fn_get_notifications`, `fn_get_unread_count`, `fn_mark_notifications_read`, device-token functions, `fn_get_push_payload`, `fn_mark_notification_pushed` |
-| 1.10 | Migration `moderation_admin`: reports, moderation_actions, admin_users, admin_sessions, admin_audit_log. Procedures: `fn_block_user`, `fn_unblock_user`, `fn_get_blocked_users` (+ block filtering in **every** read procedure), `fn_submit_report`, `fn_request_account_deletion`, all `fn_admin_*` (auth, dashboard, reports, users, content, invites, audit, admins) |
-| 1.11 | Migration `metrics_maintenance`: daily_metrics; all `fn_maint_*` (upload-intent cleanup, stuck-media requeue, object-deletion claim/complete, idempotency purge, content/account purges, counter reconciliation, daily metrics); final grants |
-| 1.12 | Procedure test suite: under-18 rejected by the CHECK; duplicate username in any letter case; refresh-token reuse revokes the family; follow/like counters correct under parallel calls; blocked users invisible in every read; authorization matrix per procedure |
-| 1.13 | Seed 10k users / 1M posts in a scratch DB; measure with `auto_explain` (plans inside functions) |
-| 1.14 | GitHub Actions CI for the database: migrations on a fresh PG 18, procedure tests, drift check |
+| 1.3 | ✅ **Stored-procedure framework:** ✅ `prisma/functions/` layout; ✅ `npm run db:fn-migration` script; ✅ **drift check** (fresh DB → compare `pg_get_functiondef` with source files); Testcontainers harness that calls functions as `jamii_app`; security checks from TRD §13.1 (SR-01 direct-write test, SR-03 `search_path` check, SR-04 `EXECUTE` grep); sample `fn_ping(p_viewer_id)` raising `JA404` |
+| 1.4 | ✅ Migration `users_auth`: users (DOB + **18+ CHECK**), invite_codes, refresh_tokens, password_reset_codes, device_push_tokens. Procedures: `fn_register_user` (age ≥ 18, invite, first session), `fn_get_login_candidate`, `fn_create_session`, `fn_rotate_refresh_token` (reuse detection), `fn_revoke_session`, `fn_update_profile`, `fn_get_profile`, `fn_create_password_reset` (S), `fn_reset_password` (S) |
+| 1.5 | ✅ Migration `social_graph_search`: follows, blocks, trigram indexes. Procedures: `fn_follow_user`, `fn_unfollow_user`, `fn_get_followers`, `fn_get_following`, `fn_search_users` |
+| 1.6 | ✅ Migration `media_posts`: media_assets, media_variants, posts, post_media, idempotency_keys, pending_object_deletions. Procedures: `fn_create_upload_intent`, `fn_create_post` (ownership, idempotency), `fn_complete_media_processing`, `fn_fail_media_processing`, `fn_get_post`, `fn_delete_post`, `fn_update_post_caption` (C) |
+| 1.7 | ✅ Feed procedures `fn_get_home_feed`, `fn_get_profile_posts` + index tuning |
+| 1.8 | ✅ Migration `engagement`: likes, comments. Procedures: `fn_like_post`, `fn_unlike_post`, `fn_add_comment`, `fn_delete_comment`, `fn_get_post_comments` |
+| 1.9 | ✅ Migration `notifications`; notification inserts in like/comment/follow procedures (dedupe, no self); procedures `fn_get_notifications`, `fn_get_unread_count`, `fn_mark_notifications_read`, device-token functions, `fn_get_push_payload`, `fn_mark_notification_pushed` |
+| 1.10 | ✅ Migration `moderation_admin`: reports, moderation_actions, admin_users, admin_sessions, admin_audit_log. Procedures: `fn_block_user`, `fn_unblock_user`, `fn_get_blocked_users` (+ block filtering in **every** read procedure), `fn_submit_report`, `fn_request_account_deletion`, all `fn_admin_*` (auth, dashboard, reports, users, content, invites, audit, admins) |
+| 1.11 | ✅ Migration `metrics_maintenance`: daily_metrics; all `fn_maint_*` (upload-intent cleanup, stuck-media requeue, object-deletion claim/complete, idempotency purge, content/account purges, counter reconciliation, daily metrics); final grants |
+| 1.12 | ✅ Procedure test suite: under-18 rejected by the CHECK; duplicate username in any letter case; refresh-token reuse revokes the family; follow/like counters correct under parallel calls; blocked users invisible in every read; authorization matrix per procedure |
+| 1.13 | ✅ Seed 10k users / 1M posts in a scratch DB; measure with `auto_explain` (plans inside functions). `npm run db:perf`; results: 10k users, 1M posts, 1.47M follows, 3M likes, 300 viewers, as jamii_app, local Docker. P95: feed 27 ms (page 2: 17), grid 6, comments 3, notifications 8, unread 4, profile 3, search 8. The Schema v1.1 feed query measured 124 ms; it was replaced by a per-author top-N (Schema §16) |
+| 1.14 | ✅ GitHub Actions CI for the database: migrations on a fresh PG 18, procedure tests, drift check (`.github/workflows/db.yml`; branch protection still to be set on GitHub) |
 
 **Exit:** all migrations apply cleanly to a fresh PostgreSQL 18; every procedure in Schema doc §8 exists and passes its tests; the drift check fails when a function file is edited without a migration; `jamii_app` has **no** table write privileges; feed procedure P95 < 50 ms on 1M posts.
 
@@ -329,6 +334,9 @@ If priorities change, these stories are dropped first, in this order: 1) Caption
 2. Create the board and the E0 + E1 issues from [`docs/backlog/phase-1-database-E0-E1.md`](backlog/phase-1-database-E0-E1.md) (§2.3).
    - This needs the GitHub CLI: `winget install GitHub.cli`, then `gh auth login` and `gh auth refresh -s project`.
    - Then move E0-01 … E0-03 to **Review**.
-3. 🔄 First iteration: **Phase 1 · E0 Foundation** (stories E0-01 … E0-07), run and tested locally.
-   - Built: E0-01 … E0-03.
-   - Next: E0-04 (drift check), E0-05 (test harness + `fn_ping`), E0-06 (security checks), E0-07 (DB CI). Then E1 (E1-01 … E1-07), then one iteration per epic: E2 → … → E8.
+3. ✅ **Phase 1 · Database** built and tested locally: tasks 1.1 … 1.14, E0 … E8.
+4. Phase 1 gate:
+   - review the Phase 1 work, then merge
+   - require the "Database" check on `main`
+   - confirm the exit criteria (§4 Phase 1)
+5. Then **Phase 2 · Backend**, starting with E0 (2.2–2.4, 2.16).

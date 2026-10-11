@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Document** | 05 — Backend Schema |
-| **Version** | 1.1 (decisions D-1…D-6 applied — stored procedures, admin portal, 18+, no ML) |
+| **Version** | 1.2 (Phase 1 implementation: aligned with what was built and tested; see §16) |
 | **Status** | **Approved** — 2026-10-11 |
 | **Date** | 2026-10-09 |
 | **Scope** | PostgreSQL schema (Prisma), stored procedures, grants, object storage layout, Redis, retention |
@@ -561,7 +561,8 @@ model DailyMetric {
 
 ```sql
 -- 5.1 CHECK constraints
-ALTER TABLE users ADD CONSTRAINT users_username_format CHECK (username::text ~ '^[a-z0-9._]{3,30}$');
+-- Letter case is kept for display; uniqueness ignores it (citext).
+ALTER TABLE users ADD CONSTRAINT users_username_format CHECK (username::text ~ '^[A-Za-z0-9._]{3,30}$');
 ALTER TABLE users ADD CONSTRAINT users_min_age_18
   CHECK (date_of_birth <= ((created_at AT TIME ZONE 'UTC')::date - INTERVAL '18 years'));
 ALTER TABLE users ADD CONSTRAINT users_counts_nonneg
@@ -581,6 +582,11 @@ ALTER TABLE reports ADD CONSTRAINT reports_target CHECK (
   (target_type = 'POST'    AND target_comment_id IS NULL) OR
   (target_type = 'COMMENT' AND target_post_id IS NULL));
 ALTER TABLE moderation_actions ADD CONSTRAINT moderation_note_len CHECK (length(btrim(note)) >= 3);
+-- Also in the migrations (Phase 1): users.locale IN ('en','sw'); password hashes must be Argon2id
+-- ('$argon2id$%', users and admin_users); token, reset-code and request hashes must be 64 hex
+-- characters (SR-05: plaintext can never be stored); status / timestamp consistency on users,
+-- posts and reports; media type and size limits (MD-01) and the object-key layout (§10) on
+-- media_assets; invite max_uses 1–1000 and code format; admin_sessions idle ≤ absolute expiry.
 
 -- 5.2 Partial indexes (hot paths)
 CREATE INDEX posts_published_author_created_idx
@@ -588,7 +594,11 @@ CREATE INDEX posts_published_author_created_idx
 CREATE INDEX comments_visible_post_created_idx
   ON comments (post_id, created_at, id) WHERE deleted_at IS NULL AND hidden_at IS NULL;
 CREATE INDEX notifications_unread_idx ON notifications (recipient_id) WHERE read_at IS NULL;
-CREATE INDEX reports_open_idx ON reports (created_at) WHERE status IN ('OPEN', 'REVIEWING');
+CREATE INDEX reports_open_idx ON reports (created_at, id) WHERE status IN ('OPEN', 'REVIEWING');
+-- One open report per reporter and target (fn_submit_report returns the existing one).
+CREATE UNIQUE INDEX reports_open_dedupe ON reports
+  (reporter_id, target_type, COALESCE(target_post_id, target_comment_id, reported_user_id))
+  WHERE status IN ('OPEN', 'REVIEWING');
 
 -- 5.3 Notification de-duplication (used with ON CONFLICT DO NOTHING)
 CREATE UNIQUE INDEX notifications_like_dedupe   ON notifications (recipient_id, actor_id, post_id) WHERE type = 'LIKE';
@@ -597,6 +607,9 @@ CREATE UNIQUE INDEX notifications_follow_dedupe ON notifications (recipient_id, 
 -- 5.4 Search (gin_trgm_ops is defined for text, so index text expressions)
 CREATE INDEX users_username_trgm_idx     ON users USING gin ((lower(username::text)) gin_trgm_ops);
 CREATE INDEX users_display_name_trgm_idx ON users USING gin ((lower(display_name)) gin_trgm_ops);
+-- Prefix matches (ranked first) read a btree.
+CREATE INDEX users_username_prefix_idx     ON users ((lower(username::text)) text_pattern_ops);
+CREATE INDEX users_display_name_prefix_idx ON users ((lower(display_name)) text_pattern_ops);
 
 -- 5.5 updated_at trigger
 CREATE OR REPLACE FUNCTION fn__touch_updated_at() RETURNS trigger
@@ -628,12 +641,12 @@ Full rules are in [TRD §6](02-technical-requirements-document.md). In short:
 
 | SQLSTATE | Message (API `error.code`) |
 |---|---|
-| `JA400` | `INVITE_INVALID`, `INVALID_CURSOR`, `MEDIA_NOT_ATTACHABLE`, `CAPTION_TOO_LONG` |
+| `JA400` | `INVITE_INVALID`, `INVALID_CURSOR`, `MEDIA_NOT_ATTACHABLE`, `CAPTION_TOO_LONG`, `INVALID_VARIANT_KEY` (worker) |
 | `JA401` | `ACCOUNT_NOT_ACTIVE` |
 | `JA403` | `ACCOUNT_SUSPENDED`, `NOT_OWNER`, `BLOCKED`, `ADMIN_FORBIDDEN` |
-| `JA404` | `USER_NOT_FOUND`, `POST_NOT_FOUND`, `COMMENT_NOT_FOUND`, `MEDIA_NOT_FOUND`, `REPORT_NOT_FOUND` |
-| `JA409` | `USERNAME_TAKEN`, `EMAIL_TAKEN`, `IDEMPOTENCY_KEY_REUSED`, `REPORT_ALREADY_HANDLED`, `INVALID_STATE` |
-| `JA422` | `UNDER_MINIMUM_AGE`, `NOTE_REQUIRED`, `CANNOT_FOLLOW_SELF`, `CANNOT_BLOCK_SELF` |
+| `JA404` | `USER_NOT_FOUND`, `POST_NOT_FOUND`, `COMMENT_NOT_FOUND`, `MEDIA_NOT_FOUND`, `REPORT_NOT_FOUND`, `INVITE_NOT_FOUND`, `ADMIN_NOT_FOUND` |
+| `JA409` | `USERNAME_TAKEN`, `EMAIL_TAKEN` (users and admins), `IDEMPOTENCY_KEY_REUSED`, `REPORT_ALREADY_HANDLED`, `INVALID_STATE` |
+| `JA422` | `UNDER_MINIMUM_AGE`, `NOTE_REQUIRED`, `CANNOT_FOLLOW_SELF`, `CANNOT_BLOCK_SELF`, `CANNOT_REPORT_SELF` |
 
 ## 7. Stored-procedure catalogue (R1)
 
@@ -646,7 +659,11 @@ Full rules are in [TRD §6](02-technical-requirements-document.md). In short:
 | `fn__assert_active_user(user_id)` | Raises `JA401 ACCOUNT_NOT_ACTIVE` / `JA403 ACCOUNT_SUSPENDED`. |
 | `fn__is_blocked_either_way(a, b) → boolean` | Block check in both directions. |
 | `fn__assert_admin(admin_id, roles admin_role[])` | Admin exists, ACTIVE, has one of the roles; else `JA403 ADMIN_FORBIDDEN`. |
-| `fn__cursor(time, id) → record` | Applies the sentinel for a missing cursor. |
+| `fn__cursor(time, id, limit) → (cursor_time, cursor_id, page_limit)` | Applies the sentinel for a missing cursor; clamps the page size to 1–50 (default 20) and adds 1. |
+| `fn__resolve_profile(viewer, username) → (target_id, blocked_by_me)` | Profile lookup for reads: `JA404` if unknown, not ACTIVE, or the target blocked the viewer. |
+| `fn__assert_post_visible(viewer, post_id) → author_id` | PUBLISHED, author ACTIVE, no block either way; else `JA404 POST_NOT_FOUND`. |
+| `fn__queue_media_deletion(media_ids)` | Media → DELETED and their object prefixes into `pending_object_deletions`. |
+| `fn__admin_audit(…)` · `fn__require_note(note)` · `fn__close_report(report_id, admin_id)` | Admin audit row; `JA422 NOTE_REQUIRED`; resolve the report an action was taken from. |
 | `fn__touch_updated_at()` | Trigger (§5.5). |
 
 ### 7.2 Auth & account
@@ -660,7 +677,7 @@ Full rules are in [TRD §6](02-technical-requirements-document.md). In short:
 | `fn_revoke_session(refresh_hash, installation_id)` | W | `revoked` | Also removes the device push token. |
 | `fn_create_password_reset(email, code_hash, expires_at)` | W | `user_id, email, locale` (0 rows if unknown) | Node sends email only if a row is returned; API always answers the same. |
 | `fn_reset_password(email, code_hash, new_password_hash)` | W | `outcome` | Max 5 attempts; revokes all sessions on success. |
-| `fn_update_profile(viewer, patch jsonb)` | W | profile row | Only keys present in `patch` change; avatar media must be READY, owned, purpose AVATAR. |
+| `fn_update_profile(viewer, patch jsonb)` | W | profile row | Only keys present in `patch` change. The avatar must be the viewer's own media with purpose AVATAR that has not failed; a just-uploaded one is marked UPLOADED and the API enqueues its processing (a no-op if already READY). The replaced avatar is queued for deletion. |
 | `fn_request_account_deletion(viewer)` | W | `deletion_due_at` | Password checked in Node first; revokes sessions and device tokens. |
 
 ### 7.3 Users & social graph
@@ -722,13 +739,15 @@ Full rules are in [TRD §6](02-technical-requirements-document.md). In short:
 | `fn_admin_list_invites` · `fn_admin_create_invite(admin_id, max_uses, expires_at)` · `fn_admin_revoke_invite` | R / W | any |
 | `fn_admin_list_audit(admin_id, filters, cursor)` | R | any |
 | `fn_admin_list_admins` · `fn_admin_create_admin` · `fn_admin_update_admin(role, status)` · `fn_admin_reset_admin_totp` | R / W | SUPER_ADMIN |
+| `fn_admin_bootstrap_super_admin(email, display_name, hash)` | W | — (only while `admin_users` is empty; a deployment step) |
+| `fn_admin_change_password(admin_id, hash)` | W | self (ends the admin's sessions) |
 
 ### 7.7 Maintenance (worker, called in a loop until `0`)
 
 | Function | Schedule | Does |
 |---|---|---|
 | `fn_maint_cleanup_upload_intents(batch)` | hourly | PENDING_UPLOAD > 24 h → DELETED + object deletion rows |
-| `fn_maint_requeue_stuck_media()` | every 10 min | returns media UPLOADED/PROCESSING > 10 min for re-enqueue |
+| `fn_maint_requeue_stuck_media(batch)` | every 10 min | returns media UPLOADED/PROCESSING > 10 min for re-enqueue; fails media stuck > 24 h |
 | `fn_maint_claim_object_deletions(batch)` · `fn_maint_complete_object_deletions(ids)` | every 5 min | worker deletes from S3 between the two calls |
 | `fn_maint_purge_deleted_content(batch)` | daily 03:00 | hard-delete posts/comments soft-deleted > 30 days |
 | `fn_maint_purge_deleted_accounts(batch)` | daily 03:30 | users PENDING_DELETION > 30 days: fix counters, queue prefix deletion, delete |
@@ -954,9 +973,13 @@ END $$;
 | `jamii_readonly` | Engineers for debugging (R1.1) | `SELECT` excluding secret columns. |
 
 ```sql
--- applied in the last migration of each phase (idempotent)
-REVOKE ALL ON ALL TABLES    IN SCHEMA public FROM PUBLIC, jamii_app;
-REVOKE ALL ON ALL FUNCTIONS IN SCHEMA public FROM PUBLIC;
+-- prisma/grants.sql, appended to every migration that adds functions (idempotent).
+-- Table column grants live in the migration that adds the table (below).
+REVOKE ALL ON SCHEMA public FROM PUBLIC;
+GRANT USAGE ON SCHEMA public TO jamii_app;
+-- Only our fn_* lose PUBLIC EXECUTE: citext / pg_trgm functions keep theirs (jamii_app's simple
+-- reads need the citext operators).
+ALTER DEFAULT PRIVILEGES FOR ROLE jamii_owner IN SCHEMA public REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC;
 
 -- simple Prisma reads — never password_hash, date_of_birth, totp_secret_enc
 GRANT SELECT (id, username, email, display_name, bio, avatar_media_id, status, locale,
@@ -1020,7 +1043,7 @@ All Redis state is reconstructable from PostgreSQL.
 
 ## 13. Migration plan (Plan Phase 1 — Database design)
 
-Prisma prefixes migration folders with timestamps; names below are descriptive. The left column is the Plan task number; all migrations are written, in this order, during Plan Phase 1. Each migration that adds tables also adds that module's **stored procedures and grants**.
+Prisma prefixes migration folders with timestamps; names below are descriptive. A procedure is first created in the migration where every table it uses exists. A later migration that adds a capability replaces it: for example, `fn_follow_user`, `fn_like_post` and `fn_add_comment` get their notification inserts in `notifications`, and `fn_update_profile` gets avatars in `media_posts`. The left column is the Plan task number; all migrations are written, in this order, during Plan Phase 1. Each migration that adds tables also adds that module's **stored procedures and grants**.
 
 ```text
 1.2   init                    extensions, enums, fn__touch_updated_at, roles, helper functions
@@ -1029,8 +1052,9 @@ Prisma prefixes migration folders with timestamps; names below are descriptive. 
 1.5   social_graph_search     follows, blocks, trigram indexes + social/search procedures
 1.6   media_posts             media_assets, media_variants, posts, post_media, idempotency_keys,
                               pending_object_deletions + media/post procedures
-1.7   feed                    fn_get_home_feed, fn_get_profile_posts (+ index tuning)
 1.8   engagement              likes, comments + engagement procedures
+1.7   feed                    fn_get_home_feed, fn_get_post, fn_get_profile_posts
+                              (after engagement: the feed reads likes for liked_by_me; same epic E4)
 1.9   notifications           notifications + notification procedures
 1.10  moderation_admin        reports, moderation_actions, admin_users, admin_sessions,
                               admin_audit_log + admin procedures
@@ -1050,3 +1074,18 @@ Prisma prefixes migration folders with timestamps; names below are descriptive. 
 | Hashtags / mentions (R3) | Raw caption stored | New tables + procedures; MENTION notification |
 | AI/ML (future, separate doc) | Interaction tables with timestamps | Defined in its own design document |
 | Private accounts / DMs (R4) | — | New tables and modules |
+
+## 16. Changes in version 1.2 (Phase 1 implementation)
+
+| Area | Change | Why |
+|---|---|---|
+| Username format | The CHECK allows upper-case letters (`[A-Za-z0-9._]`); uniqueness stays case-insensitive. | v1.1's lower-case-only CHECK would have rejected `Amina`, making `citext` pointless (BR-AC-03). |
+| Avatar flow | `fn_update_profile` accepts a not-yet-processed AVATAR upload and marks it UPLOADED; keys appear once the worker finishes. | No endpoint marks an avatar upload complete (TRD §5.1), so "must be READY" could never be met. |
+| Refresh rotation | A revoked token that was never rotated (logout, suspension) returns `INVALID`, not `REUSE_DETECTED`. | Only a rotated token presented again indicates theft. |
+| Comments order | `fn_get_post_comments` pages newest first; the app shows each page oldest → newest. | Same keyset rule as every list; App Flow §7.2 loads older comments on scroll up. |
+| Profile of a blocked user | The blocker still gets the profile header with `is_blocked_by_me = true` (to unblock); grid and lists are empty. A user who blocked the viewer is `JA404`. | With "404 if blocked either way", `is_blocked_by_me` could never be true. |
+| New procedures | `fn_ping`, `fn_admin_bootstrap_super_admin`, `fn_admin_change_password`; the helpers in §7.1. | Test harness (E0-05); creating the first admin; admins changing their password. |
+| Feed query | Per-author top-N (`LATERAL … LIMIT`) through `posts_published_author_created_idx`, then the newest page. | Cost bounded by follows × page size, not by post history (task 1.13). |
+| Search | Prefix stages through btree `text_pattern_ops` indexes; substring and similarity stage through the trigram indexes, for queries of 3+ characters. | Keeps search within the 50 ms budget at 10k users (task 1.13). |
+| Error codes | `INVALID_VARIANT_KEY`, `CANNOT_REPORT_SELF`, `INVITE_NOT_FOUND`, `ADMIN_NOT_FOUND`; `EMAIL_TAKEN` also for admins. | New checks. |
+| Daily metrics | Days are East Africa Time (`Africa/Dar_es_Salaam`). DAU = refresh-token rotations, new sessions and content written that day. | `last_active_at` alone cannot give retention for past days. |

@@ -78,6 +78,59 @@ npm run start:dev
 ## Test
 
 ```bash
-npm run test        # unit
+npm run test        # unit (includes the migration generator)
+npm run test:db     # stored procedures and database security checks (needs Docker)
 npm run test:e2e    # end-to-end
 ```
+
+### Database tests
+
+`npm run test:db` starts a throw-away PostgreSQL 18 with Testcontainers ([test/db/global-setup.ts](test/db/global-setup.ts)). The container uses the same roles script as local Docker. The setup applies every migration as `jamii_owner`, and the tests call procedures as `jamii_app`, the way the API will. [test/db/helpers.ts](test/db/helpers.ts) has helpers to create users, posts, avatars and admins, to assert a `JA` error code and message, and to run a test inside a rolled-back transaction.
+
+What the suite covers:
+
+- every procedure's behaviour, including concurrency (parallel registrations with one invite, parallel token rotation, parallel likes and follows)
+- **authorization matrix** ([authz.db-spec.ts](test/db/authz.db-spec.ts)), which finds procedures in the catalogue:
+  - every `fn_*` taking `p_viewer_id` rejects unknown, suspended and pending-deletion viewers
+  - every `fn_admin_*` taking `p_admin_id` rejects unknown and disabled admins
+  - the super-admin procedures also reject moderators
+- blocked users are invisible to each other in every read
+- **security checks** ([security.db-spec.ts](test/db/security.db-spec.ts)):
+  - SR-01: `jamii_app` cannot write any table or read secret columns
+  - SR-03: every function sets `search_path`
+  - SR-04: no `EXECUTE` in function sources
+- the drift check ([drift.db-spec.ts](test/db/drift.db-spec.ts))
+
+### Drift check
+
+```bash
+npm run db:drift-check    # uses MIGRATION_DATABASE_URL
+```
+
+This checks that every `fn_*` and `fn__*` function in the database matches its file in `prisma/functions/`. It fails, and names the function, when:
+- a file was edited without a migration
+- a function has no source file
+- a source file was never migrated
+
+It runs each source's `CREATE OR REPLACE` inside a transaction that is always rolled back, and compares `pg_get_functiondef()` before and after. So it changes nothing.
+
+### Performance check (Plan task 1.13)
+
+```bash
+npm run db:perf                    # 10k users, 1M posts in jamii_air_perf, then latency per procedure
+npm run db:perf -- --measure-only  # measure the existing jamii_air_perf again
+npm run db:perf -- --explain       # also print fn_get_home_feed's inner plan (auto_explain)
+```
+
+This uses the local Docker PostgreSQL. It drops and re-creates `jamii_air_perf`, and refuses to touch any database whose name does not end in `_perf`. The bulk seed is in [scripts/db/perf-seed.sql](scripts/db/perf-seed.sql). Calls run as `jamii_app`. The check fails when any measured procedure's P95 is 50 ms or more (TRD §14).
+
+### CI
+
+[`.github/workflows/db.yml`](../.github/workflows/db.yml) runs on every PR that touches the database. It runs:
+- lint and type-check
+- the generator unit tests
+- `npm run test:db`
+- `prisma migrate deploy` on a fresh Compose PostgreSQL 18
+- `npm run db:drift-check`
+
+Make the **Database** check required in `main`'s branch protection.

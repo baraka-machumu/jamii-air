@@ -1,7 +1,7 @@
 // /api/v1/admin/auth (TRD §8.2). The refresh token lives only in an HttpOnly, Secure,
 // SameSite=Strict cookie scoped to this path; refresh and logout also need `X-Admin-Client: 1`
 // (a header a cross-site form cannot send).
-import { Body, Controller, Headers, HttpCode, Post, Req, Res } from '@nestjs/common';
+import { Body, Controller, HttpCode, Post, Req, Res } from '@nestjs/common';
 import { ApiBearerAuth, ApiHeader, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
@@ -10,6 +10,7 @@ import { ApiError } from '../../common/errors/api-error.js';
 import { API_PREFIX } from '../../app.setup.js';
 import { AdminChangePasswordDto, AdminLoginDto, AdminLoginStep, AdminSessionResponse, AdminTotpDto } from './admin.dto.js';
 import { ADMIN_ABSOLUTE_MS, AdminAuthService, type AdminSession } from './admin-auth.service.js';
+import { UserAgent } from '../../common/http/request-headers.js';
 
 export const ADMIN_REFRESH_COOKIE = 'ja_admin_rt';
 const COOKIE_PATH = `/${API_PREFIX}/admin/auth`;
@@ -26,7 +27,7 @@ export class AdminAuthController {
   @Throttle({ default: { limit: 5, ttl: FIFTEEN_MIN } }) // AP-07
   @ApiOperation({ summary: 'Step 1: email + password → TOTP challenge (or first-time enrollment)' })
   @ApiResponse({ status: 200, type: AdminLoginStep })
-  login(@Body() dto: AdminLoginDto, @Headers('user-agent') ua?: string): Promise<AdminLoginStep> {
+  login(@Body() dto: AdminLoginDto, @UserAgent() ua?: string): Promise<AdminLoginStep> {
     return this.auth.login(dto.email, dto.password, ua ?? null);
   }
 
@@ -36,7 +37,7 @@ export class AdminAuthController {
   @Throttle({ default: { limit: 10, ttl: FIFTEEN_MIN } })
   @ApiOperation({ summary: 'Step 2 (first login): confirm the authenticator with a code → session' })
   @ApiResponse({ status: 200, type: AdminSessionResponse })
-  async enroll(@Body() dto: AdminTotpDto, @Res({ passthrough: true }) res: Response, @Headers('user-agent') ua?: string) {
+  async enroll(@Body() dto: AdminTotpDto, @Res({ passthrough: true }) res: Response, @UserAgent() ua?: string) {
     return this.respond(res, await this.auth.enroll(dto.challengeToken, dto.code, ua ?? null));
   }
 
@@ -46,7 +47,7 @@ export class AdminAuthController {
   @Throttle({ default: { limit: 10, ttl: FIFTEEN_MIN } })
   @ApiOperation({ summary: 'Step 2: 6-digit code → session' })
   @ApiResponse({ status: 200, type: AdminSessionResponse })
-  async verify(@Body() dto: AdminTotpDto, @Res({ passthrough: true }) res: Response, @Headers('user-agent') ua?: string) {
+  async verify(@Body() dto: AdminTotpDto, @Res({ passthrough: true }) res: Response, @UserAgent() ua?: string) {
     return this.respond(res, await this.auth.verify(dto.challengeToken, dto.code, ua ?? null));
   }
 

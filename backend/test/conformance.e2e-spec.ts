@@ -70,6 +70,10 @@ describe('API responses match the OpenAPI spec (e2e)', () => {
     ok('BlockState', (await as(app, me).delete(`/api/v1/users/${fan.id}/block`).expect(200)).body);
     ok('AccountDeletion', (await as(app, fan).delete('/api/v1/me').send({ password: fan.password }).expect(200)).body);
     ok('HealthStatus', (await http.get('/api/v1/health/live').expect(200)).body);
+    // Errors use the published envelope, with a code from the published enum.
+    ok('ApiErrorBody', (await as(app, me).get(`/api/v1/posts/${me.id}`).expect(404)).body);
+    ok('ApiErrorBody', (await http.get('/api/v1/me').expect(401)).body);
+    ok('ApiErrorBody', (await as(app, me).post('/api/v1/reports').send({}).expect(400)).body);
   });
 
   it('admin routes', async () => {

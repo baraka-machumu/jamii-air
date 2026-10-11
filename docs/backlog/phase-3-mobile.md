@@ -12,7 +12,7 @@ The GitHub board does not exist yet (the `gh` CLI is not installed), so this tab
 |---|---|---|---|
 | Designs (first increment, Design Brief §12) | **Done** (approved 2026-10-11) | — | [Design canvas](https://claude.ai/artifact/U9EUjyBSEbuL8as26BwFtw), private to the owner: brand and components, 38 mobile screens with click-through, the share landing page, 8 admin portal screens |
 | 3.1 Foundation | Review | see git log | Expo Router, TanStack Query, Zustand, i18next (en/sw), theme tokens (light/dark), FlashList, expo-image, react-native-svg. Sentry deferred (no DSN; local dev only) |
-| 3.2 API client | Backlog | | Types from `npm run openapi` in `backend/` |
+| 3.2 API client | Review | see git log | `openapi-fetch` + generated types; 15 s / 30 s timeouts; token, `X-App-Version`, `X-Platform`; error code → en/sw message. Found and fixed 2 backend spec bugs (below) |
 | 3.3 EAS builds | Backlog | | Expo account `bmachumu` exists; Android dev build on the reference device |
 | 3.4 Auth screens | Backlog | | |
 | 3.5 Profile and Settings | Backlog | | Persist the language and theme choice on the device |
@@ -33,3 +33,6 @@ The GitHub board does not exist yet (the `gh` CLI is not installed), so this tab
 | Display font | Nunito ExtraBold, logo and onboarding headlines only | The brief asks for one rounded display face; proposed on the design canvas and approved |
 | Tests | jest-expo + React Native Testing Library 13 (Expo Router's `renderRouter` needs the synchronous `render` of v13) | Contrast of every text pair, translation parity and the routing guards are tested from task 3.1 |
 | Sentry | Deferred until a DSN exists | Same as the backend (task 2.16): local development only for now |
+| API client | `openapi-fetch` with types from `openapi-typescript`; the spec copy (`src/api/openapi.json`) and the types (`src/api/schema.d.ts`) are committed and refreshed with `npm run api:sync` | The app builds without the backend; a changed route or field is a compile error. The generator runs pinned through npx (it needs TypeScript 5, the app uses 6) |
+| Error codes | The backend publishes every error code as the enum of `ApiErrorBody` (`ERROR_CODES`); a backend test scans the sources so none is missed, a mobile test checks each has English and Swahili text | Users see a translated message for every failure the API can report (App Flow §13) |
+| Spec fixes found by the client | `User-Agent` and `Idempotency-Key` were published as *required* headers (Nest's `@Headers`); now read with custom decorators. The dashboard's `MetricPoint` schema was referenced but not registered. Both now have backend tests | Generated clients would have demanded headers a phone never sets by hand, and refused to generate |

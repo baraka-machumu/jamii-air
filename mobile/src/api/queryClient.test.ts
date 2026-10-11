@@ -3,6 +3,7 @@ import { shouldRetry } from './queryClient';
 describe('query retries (App Flow §13)', () => {
   it('retries network and server errors twice', () => {
     expect(shouldRetry(0, new TypeError('Network request failed'))).toBe(true);
+    expect(shouldRetry(0, { status: 0, code: 'TIMEOUT' })).toBe(true);
     expect(shouldRetry(1, { status: 503 })).toBe(true);
     expect(shouldRetry(2, { status: 500 })).toBe(false);
   });

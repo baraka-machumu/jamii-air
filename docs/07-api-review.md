@@ -74,7 +74,15 @@ This record maps every screen in the App Flow (doc 03) to the endpoints it needs
 
 The database changes (1, 4–8) are in migration `api_review_fixes`, with procedure tests in `test/db/api-review.db-spec.ts`.
 
-## 4. Not covered by the API (by design)
+## 4. Found later by the generated mobile client (task 3.2)
+
+| # | Gap | Fix |
+|---|---|---|
+| 11 | `User-Agent` and `Idempotency-Key` appeared as *required* header parameters (Nest's `@Headers` decorator), so the generated client demanded them | Read through custom decorators that Swagger ignores; `Idempotency-Key` stays documented as optional. Test: no required header except `X-Admin-Client` |
+| 12 | `AdminDashboard.metrics` referenced `MetricPoint`, which was not in the spec, so type generation failed | Registered as an extra model. Test: every `$ref` resolves |
+| 13 | Error codes were not in the spec, so clients could not know which to translate | `ApiErrorBody` with the enum of all codes; tests keep the list complete (backend) and translated (mobile) |
+
+## 5. Not covered by the API (by design)
 
 - **Recent searches, drafts, theme:** stored on the device (App Flow §8.1, §6, §11).
 - **Post status after create:** short polling of `GET /posts/:id`, not push (App Flow §6.1 step 6).

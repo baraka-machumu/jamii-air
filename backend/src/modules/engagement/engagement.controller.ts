@@ -1,11 +1,12 @@
 // /api/v1/posts/:id/like, /posts/:id/comments and /comments/:id (TRD §5.1). User token required.
-import { Body, Controller, Delete, Get, Headers, Param, ParseUUIDPipe, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Post, Put, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiHeader, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { type AuthUser, CurrentUser } from '../../common/auth/auth.decorators.js';
 import { PageQuery } from '../users/users.dto.js';
 import { CommentPage, CreateCommentDto, CreatedComment, DeletedComment, LikeState } from './engagement.dto.js';
 import { EngagementService } from './engagement.service.js';
+import { IdempotencyKey } from '../../common/http/request-headers.js';
 
 const HOUR = 3_600_000;
 
@@ -47,7 +48,7 @@ export class EngagementController {
     @CurrentUser() user: AuthUser,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: CreateCommentDto,
-    @Headers('idempotency-key') idempotencyKey?: string,
+    @IdempotencyKey() idempotencyKey?: string,
   ): Promise<CreatedComment> {
     return this.engagement.addComment(user.id, id, dto.body, idempotencyKey);
   }

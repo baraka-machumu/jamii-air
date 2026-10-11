@@ -107,7 +107,10 @@ This works only while there are no admins; it prints a one-time password. Sign i
 npm run openapi     # builds, then writes openapi.json (git-ignored)
 ```
 
-This is built from the route metadata alone, so no services are needed. CI uploads it as the `openapi` artifact for the mobile and admin type generators (Plan 3.2, 4.x).
+This is built from the route metadata alone, so no services are needed. CI uploads it as the `openapi` artifact for the mobile and admin type generators (Plan 3.2, 4.x); the app copies it with `npm run api:sync` in `mobile/`.
+
+- **Error codes:** every `error.code` is listed in `src/common/errors/error-codes.ts` and published as the enum of `ApiErrorBody`. A unit test scans `src/` and the procedures and fails on an unlisted code.
+- **Optional headers:** read them with `@UserAgent()` / `@IdempotencyKey()` (`src/common/http/request-headers.ts`), not `@Headers('…')`, which publishes the header as *required*. `test/openapi.e2e-spec.ts` checks this and that every `$ref` resolves.
 
 ## Run
 

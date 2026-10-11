@@ -88,9 +88,8 @@ type OpenApi = { paths: Record<string, Record<string, unknown>>; components: { s
 
 /** The OpenAPI document of this app, exactly as `npm run openapi` builds it (Plan task 2.14). */
 export async function openApiDocument(app: INestApplication<App>): Promise<OpenApi> {
-  const { SwaggerModule } = await import('@nestjs/swagger');
-  const { openApiConfig } = await import('../src/app.setup.js');
-  return SwaggerModule.createDocument(app, openApiConfig()) as unknown as OpenApi;
+  const { buildOpenApiDocument } = await import('../src/app.setup.js');
+  return buildOpenApiDocument(app) as unknown as OpenApi;
 }
 
 /**

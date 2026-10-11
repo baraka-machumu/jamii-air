@@ -42,6 +42,22 @@ describe('OpenAPI spec (e2e)', () => {
     expect(operations).toBeGreaterThanOrEqual(65);
   });
 
+  it('resolves every $ref (type generators reject a dangling one)', async () => {
+    const doc = await openApiDocument(app);
+    const refs = [...JSON.stringify(doc).matchAll(/"\$ref":"#\/components\/schemas\/([^"]+)"/g)].map((m) => m[1]!);
+    const schemas = (doc as unknown as { components: { schemas: Record<string, unknown> } }).components.schemas;
+    expect([...new Set(refs)].filter((name) => !schemas[name])).toEqual([]);
+  });
+
+  it('requires no header a client cannot be expected to send by hand (only X-Admin-Client)', async () => {
+    const doc = await openApiDocument(app);
+    const required = Object.entries(doc.paths).flatMap(([path, ops]) => Object.entries(ops).flatMap(([method, op]) =>
+      ((op as { parameters?: { in: string; name: string; required?: boolean }[] }).parameters ?? [])
+        .filter((p) => p.in === 'header' && p.required && p.name !== 'X-Admin-Client')
+        .map((p) => `${method.toUpperCase()} ${path}: ${p.name}`)));
+    expect(required).toEqual([]);
+  });
+
   it('keeps the share-link pages out of the API spec', async () => {
     const doc = await openApiDocument(app);
     expect(Object.keys(doc.paths).every((p) => p.startsWith('/api/v1/'))).toBe(true);

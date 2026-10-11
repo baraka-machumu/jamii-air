@@ -12,7 +12,8 @@ function statusOf(error: unknown): number | undefined {
 
 export function shouldRetry(failureCount: number, error: unknown): boolean {
   const status = statusOf(error);
-  if (status !== undefined && status < 500) return false;
+  // 0 = no answer (offline, timeout): worth retrying, like a 5xx.
+  if (status !== undefined && status > 0 && status < 500) return false;
   return failureCount < 2;
 }
 

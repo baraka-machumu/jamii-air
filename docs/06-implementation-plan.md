@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Document** | 06 — Implementation Plan |
-| **Version** | 1.9 (Phase 3 started: designs approved, mobile foundation 3.1 built) |
+| **Version** | 1.10 (Phase 3: designs approved; 3.1 foundation and 3.2 typed API client built) |
 | **Status** | **Approved** — 2026-10-11 |
 | **Date** | 2026-10-10 |
 | **Team** | 1 engineer building with Claude Code; Product (stakeholder) as product owner |
@@ -48,7 +48,7 @@ Visual design (Design Brief, doc 04) is produced by the engineer with Claude Cod
 | 0 Docs | ✅ Complete | §4 Phase 0 |
 | 1 Database design | Built and tested locally; in **Review** | [Phase 1 backlog](backlog/phase-1-database-E0-E1.md#status) |
 | 2 Backend | Built and tested locally; exit gate met locally (UAT deferred); in **Review** | [Phase 2 backlog](backlog/phase-2-backend.md#status) |
-| 3 Mobile | **In progress.** Designs approved; 3.1 foundation built (Review) | [Phase 3 backlog](backlog/phase-3-mobile.md#status) |
+| 3 Mobile | **In progress.** Designs approved; 3.1 foundation and 3.2 API client built (Review) | [Phase 3 backlog](backlog/phase-3-mobile.md#status) |
 | 4 Admin portal | Not started; the admin API it needs is done (2.12) | §4 Phase 4 |
 | 5–6 Release, pilot | Not started | §4 Phases 5–6 |
 
@@ -227,7 +227,7 @@ The Expo app in `mobile/`, built screen by screen against the finished UAT API. 
 | # | Task |
 |---|---|
 | 3.1 | ✅ Foundation (TS strict, Expo SDK 57): **Expo Router** (built on React Navigation; auth stack + tabs separated by `Stack.Protected`), TanStack Query, Zustand, i18next (`en`, `sw`), theme tokens from doc 04 (light/dark), FlashList, expo-image, react-native-svg; jest-expo tests. **Deferred:** Sentry (no DSN yet, local dev only) |
-| 3.2 | API client (timeouts, auth header, `X-App-Version`, error code → localised message) with types generated from the OpenAPI spec |
+| 3.2 | ✅ API client (timeouts, auth header, `X-App-Version`, error code → localised message) with types generated from the OpenAPI spec (`openapi-fetch`; `npm run api:sync`; every published error code has en/sw text, enforced by tests on both sides) |
 | 3.3 | ✅ Expo account exists (`bmachumu`). EAS build profiles (project owner `bmachumu`); Android dev build on the reference device; Android push credentials (FCM via EAS). iOS builds and APNs wait for the Apple account (5.0) |
 | 3.4 | Auth: Welcome, Sign up (**date-of-birth picker + under-18 message**, invite code), Log in, Forgot password; secure token storage; single-flight silent refresh; session restore |
 | 3.5 | Profile: My profile, Edit profile, avatar upload, Settings, language & theme |
@@ -348,5 +348,6 @@ If priorities change, these stories are dropped first, in this order: 1) Caption
    - review the Phase 1 and 2 commits, then make both checks required in `main`'s branch protection;
    - create the board: `winget install GitHub.cli`, `gh auth login`, `gh auth refresh -s project`, then `node docs/backlog/create-github-issues.mjs <backlog file>`. Until then the backlog files are the tracker.
 5. ✅ **Phase 3 started:** designs approved ([design canvas](https://claude.ai/artifact/U9EUjyBSEbuL8as26BwFtw)); 3.1 foundation built.
-6. **Next in Phase 3:** 3.2 (API client with types generated from `npm run openapi`), then 3.3 (EAS builds and the Android dev build on the reference device), then 3.4 (auth screens). Tracker: [`docs/backlog/phase-3-mobile.md`](backlog/phase-3-mobile.md).
+6. ✅ 3.2 typed API client built.
+7. **Next in Phase 3:** 3.3 (EAS builds and the Android dev build on the reference device), then 3.4 (auth screens). Tracker: [`docs/backlog/phase-3-mobile.md`](backlog/phase-3-mobile.md).
 

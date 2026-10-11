@@ -1,0 +1,5523 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/v1/health/live": {
+      "get": {
+        "operationId": "HealthController_live",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthStatus"
+                }
+              }
+            }
+          }
+        },
+        "summary": "The process is up",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/api/v1/health/ready": {
+      "get": {
+        "operationId": "HealthController_ready",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthStatus"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Database unreachable"
+          }
+        },
+        "summary": "The API can serve requests (database reachable)",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/api/v1/auth/register": {
+      "post": {
+        "operationId": "AuthController_register",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Create an account (18+, invite code during the pilot)",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "operationId": "AuthController_login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Log in with username or email",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "operationId": "AuthController_refresh",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Rotate the refresh token; a reused token ends the session family",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "operationId": "AuthController_logout",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LogoutDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "End this device's session and remove its push token",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/password/forgot": {
+      "post": {
+        "operationId": "AuthController_forgotPassword",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForgotPasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": ""
+          }
+        },
+        "summary": "Email a reset code (same answer whether or not the email exists)",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/password/change": {
+      "post": {
+        "operationId": "AuthController_changePassword",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Change your password (current one re-entered); signs out every other device",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/password/reset": {
+      "post": {
+        "operationId": "AuthController_resetPassword",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Set a new password with the emailed code; ends every session",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/me": {
+      "get": {
+        "operationId": "UsersController_me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Me"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "The current user",
+        "tags": [
+          "users"
+        ]
+      },
+      "patch": {
+        "operationId": "UsersController_updateMe",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Me"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Edit display name, bio, username, avatar or language; only the fields sent change",
+        "tags": [
+          "users"
+        ]
+      },
+      "delete": {
+        "operationId": "SafetyController_deleteAccount",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteAccountDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountDeletion"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete my account: content disappears now, erased after 30 days; logging in before then cancels",
+        "tags": [
+          "safety"
+        ]
+      }
+    },
+    "/api/v1/users/search": {
+      "get": {
+        "operationId": "UsersController_search",
+        "parameters": [
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Username or display name; empty = newest users",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserSearchResult"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Search by username or display name",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/api/v1/users/{username}": {
+      "get": {
+        "operationId": "UsersController_profile",
+        "parameters": [
+          {
+            "name": "username",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Profile"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "A profile (404 if unknown, inactive, or they blocked you)",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/api/v1/users/{username}/followers": {
+      "get": {
+        "operationId": "UsersController_followers",
+        "parameters": [
+          {
+            "name": "username",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "description": "nextCursor of the previous page",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FollowListPage"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Followers, newest first",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/api/v1/users/{username}/following": {
+      "get": {
+        "operationId": "UsersController_following",
+        "parameters": [
+          {
+            "name": "username",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "description": "nextCursor of the previous page",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FollowListPage"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Accounts this user follows, newest first",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/api/v1/users/{id}/follow": {
+      "put": {
+        "operationId": "UsersController_follow",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FollowState"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Follow (idempotent)",
+        "tags": [
+          "users"
+        ]
+      },
+      "delete": {
+        "operationId": "UsersController_unfollow",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FollowState"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Unfollow (idempotent)",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/api/v1/media/uploads": {
+      "post": {
+        "operationId": "MediaController_createUpload",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUploadDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadIntent"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Upload intent: a presigned PUT URL for one photo (15 min)",
+        "tags": [
+          "media"
+        ]
+      }
+    },
+    "/api/v1/media/{id}": {
+      "get": {
+        "operationId": "MediaController_status",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaStatus"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Processing status of your own upload",
+        "tags": [
+          "media"
+        ]
+      }
+    },
+    "/api/v1/posts": {
+      "post": {
+        "operationId": "PostsController_create",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "description": "Retry-safe create: a repeat within 24 h returns the original post",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePostDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Post"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a post from uploaded photos; it stays PROCESSING until its media is ready",
+        "tags": [
+          "posts"
+        ]
+      }
+    },
+    "/api/v1/posts/{id}": {
+      "get": {
+        "operationId": "PostsController_get",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Post"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Post detail (404 if hidden, deleted, or a block either way)",
+        "tags": [
+          "posts"
+        ]
+      },
+      "patch": {
+        "operationId": "PostsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePostDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Post"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Edit the caption of your own post",
+        "tags": [
+          "posts"
+        ]
+      },
+      "delete": {
+        "operationId": "PostsController_delete",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete your own post (idempotent)",
+        "tags": [
+          "posts"
+        ]
+      }
+    },
+    "/api/v1/feed": {
+      "get": {
+        "operationId": "PostsController_feed",
+        "parameters": [
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "description": "nextCursor of the previous page",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedPage"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Home feed: you and the people you follow, newest first",
+        "tags": [
+          "posts"
+        ]
+      }
+    },
+    "/api/v1/users/{username}/posts": {
+      "get": {
+        "operationId": "PostsController_profileGrid",
+        "parameters": [
+          {
+            "name": "username",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "description": "nextCursor of the previous page",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GridPage"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Profile grid, newest first (your own also shows PROCESSING, FAILED and HIDDEN posts)",
+        "tags": [
+          "posts"
+        ]
+      }
+    },
+    "/api/v1/posts/{id}/like": {
+      "put": {
+        "operationId": "EngagementController_like",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LikeState"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Like (idempotent)",
+        "tags": [
+          "engagement"
+        ]
+      },
+      "delete": {
+        "operationId": "EngagementController_unlike",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LikeState"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Unlike (idempotent)",
+        "tags": [
+          "engagement"
+        ]
+      }
+    },
+    "/api/v1/posts/{id}/comments": {
+      "get": {
+        "operationId": "EngagementController_comments",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "description": "nextCursor of the previous page",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommentPage"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Comments, newest first",
+        "tags": [
+          "engagement"
+        ]
+      },
+      "post": {
+        "operationId": "EngagementController_addComment",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "description": "Retry-safe: a repeat within 24 h returns the original comment",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCommentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreatedComment"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Add a comment",
+        "tags": [
+          "engagement"
+        ]
+      }
+    },
+    "/api/v1/comments/{id}": {
+      "delete": {
+        "operationId": "EngagementController_deleteComment",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeletedComment"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a comment (yours, or any on your own post)",
+        "tags": [
+          "engagement"
+        ]
+      }
+    },
+    "/api/v1/notifications": {
+      "get": {
+        "operationId": "NotificationsController_list",
+        "parameters": [
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "description": "nextCursor of the previous page",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationPage"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Activity list, newest first",
+        "tags": [
+          "notifications"
+        ]
+      }
+    },
+    "/api/v1/notifications/unread-count": {
+      "get": {
+        "operationId": "NotificationsController_unreadCount",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnreadCount"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Tab badge: on app foreground, on push receipt, after visiting Activity",
+        "tags": [
+          "notifications"
+        ]
+      }
+    },
+    "/api/v1/notifications/read": {
+      "post": {
+        "operationId": "NotificationsController_markRead",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarkReadDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarkReadResult"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Mark read: { ids } or { all: true }",
+        "tags": [
+          "notifications"
+        ]
+      }
+    },
+    "/api/v1/me/devices/{installationId}": {
+      "put": {
+        "operationId": "NotificationsController_registerDevice",
+        "parameters": [
+          {
+            "name": "installationId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterDeviceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Register this phone for push (after the OS permission is granted)",
+        "tags": [
+          "notifications"
+        ]
+      },
+      "delete": {
+        "operationId": "NotificationsController_removeDevice",
+        "parameters": [
+          {
+            "name": "installationId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Stop push on this phone (idempotent)",
+        "tags": [
+          "notifications"
+        ]
+      }
+    },
+    "/api/v1/users/{id}/block": {
+      "put": {
+        "operationId": "SafetyController_block",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BlockState"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Block (idempotent): removes follows both ways; they are not told",
+        "tags": [
+          "safety"
+        ]
+      },
+      "delete": {
+        "operationId": "SafetyController_unblock",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BlockState"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Unblock (idempotent); earlier follows are not restored",
+        "tags": [
+          "safety"
+        ]
+      }
+    },
+    "/api/v1/me/blocks": {
+      "get": {
+        "operationId": "SafetyController_blocked",
+        "parameters": [
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "description": "nextCursor of the previous page",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BlockedUserPage"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Blocked accounts, most recent first",
+        "tags": [
+          "safety"
+        ]
+      }
+    },
+    "/api/v1/reports": {
+      "post": {
+        "operationId": "SafetyController_report",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReportDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportReceipt"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Report a user, post or comment",
+        "tags": [
+          "safety"
+        ]
+      }
+    },
+    "/api/v1/admin/auth/login": {
+      "post": {
+        "operationId": "AdminAuthController_login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminLoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminLoginStep"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Step 1: email + password → TOTP challenge (or first-time enrollment)",
+        "tags": [
+          "admin auth"
+        ]
+      }
+    },
+    "/api/v1/admin/auth/totp/enroll": {
+      "post": {
+        "operationId": "AdminAuthController_enroll",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminTotpDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminSessionResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Step 2 (first login): confirm the authenticator with a code → session",
+        "tags": [
+          "admin auth"
+        ]
+      }
+    },
+    "/api/v1/admin/auth/totp/verify": {
+      "post": {
+        "operationId": "AdminAuthController_verify",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminTotpDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminSessionResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Step 2: 6-digit code → session",
+        "tags": [
+          "admin auth"
+        ]
+      }
+    },
+    "/api/v1/admin/auth/refresh": {
+      "post": {
+        "operationId": "AdminAuthController_refresh",
+        "parameters": [
+          {
+            "name": "X-Admin-Client",
+            "in": "header",
+            "description": "1",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminSessionResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Rotate the session cookie (extends the 30-minute idle timeout, never past 12 h)",
+        "tags": [
+          "admin auth"
+        ]
+      }
+    },
+    "/api/v1/admin/auth/logout": {
+      "post": {
+        "operationId": "AdminAuthController_logout",
+        "parameters": [
+          {
+            "name": "X-Admin-Client",
+            "in": "header",
+            "description": "1",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "End this session",
+        "tags": [
+          "admin auth"
+        ]
+      }
+    },
+    "/api/v1/admin/auth/password": {
+      "post": {
+        "operationId": "AdminAuthController_changePassword",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminChangePasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Change your password (ends every session: sign in again)",
+        "tags": [
+          "admin auth"
+        ]
+      }
+    },
+    "/api/v1/admin/dashboard": {
+      "get": {
+        "operationId": "AdminController_dashboard",
+        "parameters": [
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Default: 30 days before `to`",
+            "schema": {
+              "example": "2026-09-11",
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "Default: today",
+            "schema": {
+              "example": "2026-10-11",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminDashboard"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "KPIs per day (BR-DI-01) + open reports, suspended users, invites remaining",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/reports": {
+      "get": {
+        "operationId": "AdminController_reports",
+        "parameters": [
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "description": "nextCursor of the previous page",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "Comma-separated statuses; default OPEN,REVIEWING",
+            "schema": {
+              "example": "OPEN,REVIEWING",
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "USER",
+                "POST",
+                "COMMENT"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminReportPage"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Moderation queue, oldest first (default: OPEN and REVIEWING)",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/reports/{id}": {
+      "get": {
+        "operationId": "AdminController_report",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminReportDetail"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Report + target preview + other reports + user history (opening moves OPEN → REVIEWING)",
+        "tags": [
+          "admin"
+        ]
+      },
+      "patch": {
+        "operationId": "AdminController_updateReport",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateReportDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportState"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "REVIEWING, or close as RESOLVED / DISMISSED with a note (409 if already closed)",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/users": {
+      "get": {
+        "operationId": "AdminController_users",
+        "parameters": [
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "description": "nextCursor of the previous page",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Username, display name, email (contains) or exact user id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ACTIVE",
+                "SUSPENDED",
+                "PENDING_DELETION"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminUserPage"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Search users (every status)",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/users/{id}": {
+      "get": {
+        "operationId": "AdminController_user",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminUserDetail"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "User detail: account, recent posts, reports against, moderation history",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/users/{id}/suspend": {
+      "post": {
+        "operationId": "AdminController_suspend",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModerationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserState"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Suspend: signs them out, hides their content",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/users/{id}/reinstate": {
+      "post": {
+        "operationId": "AdminController_reinstate",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModerationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserState"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Reinstate a suspended user",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/users/{id}/revoke-sessions": {
+      "post": {
+        "operationId": "AdminController_revokeSessions",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NoteDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevokedSessions"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Sign a user out everywhere without suspending",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/posts/{id}": {
+      "get": {
+        "operationId": "AdminController_post",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminPost"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Any post, including hidden and deleted",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/posts/{id}/hide": {
+      "post": {
+        "operationId": "AdminController_hidePost",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModerationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PostState"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Hide a post for every app user",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/posts/{id}/unhide": {
+      "post": {
+        "operationId": "AdminController_unhidePost",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModerationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PostState"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Restore a hidden post",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/comments/{id}/hide": {
+      "post": {
+        "operationId": "AdminController_hideComment",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModerationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommentState"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Hide a comment",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/comments/{id}/unhide": {
+      "post": {
+        "operationId": "AdminController_unhideComment",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModerationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommentState"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Restore a hidden comment",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/invites": {
+      "get": {
+        "operationId": "AdminController_invites",
+        "parameters": [
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "description": "nextCursor of the previous page",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvitePage"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Invite codes, newest first",
+        "tags": [
+          "admin"
+        ]
+      },
+      "post": {
+        "operationId": "AdminController_createInvite",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateInviteDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreatedInvite"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create an invite code (XXXX-XXXX-XXXX)",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/invites/{id}": {
+      "delete": {
+        "operationId": "AdminController_revokeInvite",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RevokeInviteDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevokedInvite"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Revoke an invite code (idempotent; registered users keep their accounts)",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/audit-log": {
+      "get": {
+        "operationId": "AdminController_audit",
+        "parameters": [
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "description": "nextCursor of the previous page",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "adminId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "action",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "HIDE_POST",
+              "type": "string"
+            }
+          },
+          {
+            "name": "targetId",
+            "required": false,
+            "in": "query",
+            "description": "A user, post, comment, report, admin or invite id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "ISO date-time, inclusive",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "ISO date-time, exclusive",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditPage"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Moderation actions and admin events, newest first",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/admins": {
+      "get": {
+        "operationId": "AdminController_admins",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminAccountList"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "👑 Admin accounts",
+        "tags": [
+          "admin"
+        ]
+      },
+      "post": {
+        "operationId": "AdminController_createAdmin",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAdminDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreatedAdmin"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "👑 Create an admin: returns a temporary password once; 2FA is set up at first sign-in",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/admins/{id}": {
+      "patch": {
+        "operationId": "AdminController_updateAdmin",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAdminDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminAccountState"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "👑 Change role and / or status (you cannot demote or disable yourself)",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/admins/{id}/reset-2fa": {
+      "post": {
+        "operationId": "AdminController_resetTotp",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NoteDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "👑 Reset 2FA: ends their sessions, forces re-enrollment",
+        "tags": [
+          "admin"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Jamii Air API",
+    "description": "Mobile app routes and, under /api/v1/admin, the admin portal (separate auth: tags \"admin\" and \"admin auth\").",
+    "version": "1",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    },
+    "schemas": {
+      "HealthStatus": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok"
+            ]
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "RegisterDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "amina@example.com"
+          },
+          "username": {
+            "type": "string",
+            "example": "amina_shop",
+            "description": "3–30 letters, digits, \".\" or \"_\""
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 128
+          },
+          "dateOfBirth": {
+            "type": "string",
+            "example": "1999-05-14",
+            "description": "YYYY-MM-DD; the user must be 18 or older"
+          },
+          "inviteCode": {
+            "type": "string",
+            "description": "Required during the pilot (BR-AC-02)"
+          },
+          "acceptTerms": {
+            "type": "boolean",
+            "description": "Terms of Service and Privacy Policy accepted (BR-AC-06)"
+          },
+          "locale": {
+            "type": "string",
+            "enum": [
+              "en",
+              "sw"
+            ]
+          }
+        },
+        "required": [
+          "email",
+          "username",
+          "password",
+          "dateOfBirth",
+          "acceptTerms"
+        ]
+      },
+      "SessionResponse": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string",
+            "description": "JWT, 15 minutes; keep in memory"
+          },
+          "refreshToken": {
+            "type": "string",
+            "description": "Opaque, 30 days, rotated on every refresh; keep in secure storage"
+          },
+          "expiresIn": {
+            "type": "number",
+            "example": 900
+          },
+          "user": {
+            "type": "object",
+            "example": {
+              "id": "01a1…",
+              "username": "amina_shop"
+            }
+          }
+        },
+        "required": [
+          "accessToken",
+          "refreshToken",
+          "expiresIn",
+          "user"
+        ]
+      },
+      "LoginDto": {
+        "type": "object",
+        "properties": {
+          "identifier": {
+            "type": "string",
+            "description": "Username or email"
+          },
+          "password": {
+            "type": "string"
+          },
+          "cancelDeletion": {
+            "type": "boolean",
+            "description": "Restore an account scheduled for deletion (BR-AC-08)"
+          }
+        },
+        "required": [
+          "identifier",
+          "password"
+        ]
+      },
+      "RefreshDto": {
+        "type": "object",
+        "properties": {
+          "refreshToken": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "refreshToken"
+        ]
+      },
+      "LogoutDto": {
+        "type": "object",
+        "properties": {
+          "refreshToken": {
+            "type": "string"
+          },
+          "installationId": {
+            "type": "string",
+            "description": "This installation; its push token is removed"
+          }
+        },
+        "required": [
+          "refreshToken"
+        ]
+      },
+      "ForgotPasswordDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
+      "ChangePasswordDto": {
+        "type": "object",
+        "properties": {
+          "currentPassword": {
+            "type": "string"
+          },
+          "newPassword": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 128
+          },
+          "installationId": {
+            "type": "string",
+            "description": "This installation: its push registration is kept, every other one removed"
+          }
+        },
+        "required": [
+          "currentPassword",
+          "newPassword"
+        ]
+      },
+      "ResetPasswordDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string",
+            "example": "123456"
+          },
+          "newPassword": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 128
+          }
+        },
+        "required": [
+          "email",
+          "code",
+          "newPassword"
+        ]
+      },
+      "Me": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string",
+            "nullable": true
+          },
+          "bio": {
+            "type": "string",
+            "nullable": true
+          },
+          "avatarMediaId": {
+            "type": "string",
+            "nullable": true
+          },
+          "avatarUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "avatarLargeUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "locale": {
+            "type": "string",
+            "enum": [
+              "en",
+              "sw"
+            ]
+          },
+          "postCount": {
+            "type": "number"
+          },
+          "followerCount": {
+            "type": "number"
+          },
+          "followingCount": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "username",
+          "email",
+          "displayName",
+          "bio",
+          "avatarMediaId",
+          "avatarUrl",
+          "avatarLargeUrl",
+          "locale",
+          "postCount",
+          "followerCount",
+          "followingCount"
+        ]
+      },
+      "UpdateMeDto": {
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "type": "object",
+            "nullable": true,
+            "maxLength": 50
+          },
+          "bio": {
+            "type": "object",
+            "nullable": true,
+            "maxLength": 160
+          },
+          "username": {
+            "type": "string"
+          },
+          "avatarMediaId": {
+            "type": "object",
+            "nullable": true,
+            "description": "An AVATAR upload (POST /media/uploads); null removes the avatar"
+          },
+          "locale": {
+            "type": "string",
+            "enum": [
+              "en",
+              "sw"
+            ]
+          }
+        }
+      },
+      "UserSummary": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string",
+            "nullable": true
+          },
+          "avatarUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "isFollowing": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "username",
+          "displayName",
+          "avatarUrl",
+          "isFollowing"
+        ]
+      },
+      "UserSearchResult": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserSummary"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "Profile": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string",
+            "nullable": true
+          },
+          "bio": {
+            "type": "string",
+            "nullable": true
+          },
+          "avatarUrl": {
+            "type": "string",
+            "nullable": true,
+            "description": "150 px"
+          },
+          "avatarLargeUrl": {
+            "type": "string",
+            "nullable": true,
+            "description": "320 px"
+          },
+          "postCount": {
+            "type": "number"
+          },
+          "followerCount": {
+            "type": "number"
+          },
+          "followingCount": {
+            "type": "number"
+          },
+          "isMe": {
+            "type": "boolean"
+          },
+          "isFollowing": {
+            "type": "boolean"
+          },
+          "followsMe": {
+            "type": "boolean"
+          },
+          "isBlockedByMe": {
+            "type": "boolean",
+            "description": "You blocked this user: show Unblock; posts and lists stay empty"
+          },
+          "shareUrl": {
+            "type": "string",
+            "description": "\"Copy profile link\": opens the profile in the app, else a landing page"
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "username",
+          "displayName",
+          "bio",
+          "avatarUrl",
+          "avatarLargeUrl",
+          "postCount",
+          "followerCount",
+          "followingCount",
+          "isMe",
+          "isFollowing",
+          "followsMe",
+          "isBlockedByMe",
+          "shareUrl",
+          "createdAt"
+        ]
+      },
+      "FollowListItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string",
+            "nullable": true
+          },
+          "avatarUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "isFollowing": {
+            "type": "boolean"
+          },
+          "isMe": {
+            "type": "boolean"
+          },
+          "followedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "username",
+          "displayName",
+          "avatarUrl",
+          "isFollowing",
+          "isMe",
+          "followedAt"
+        ]
+      },
+      "FollowListPage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FollowListItem"
+            }
+          },
+          "nextCursor": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor"
+        ]
+      },
+      "FollowState": {
+        "type": "object",
+        "properties": {
+          "following": {
+            "type": "boolean"
+          },
+          "followerCount": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "following",
+          "followerCount"
+        ]
+      },
+      "CreateUploadDto": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "IMAGE"
+            ],
+            "description": "VIDEO arrives with Reels (R2)"
+          },
+          "purpose": {
+            "type": "string",
+            "enum": [
+              "POST",
+              "AVATAR"
+            ]
+          },
+          "mimeType": {
+            "type": "string",
+            "enum": [
+              "image/jpeg",
+              "image/png",
+              "image/heic",
+              "image/heif",
+              "image/webp"
+            ],
+            "description": "The app sends JPEG after downscaling (HEIC is converted on the phone)"
+          },
+          "byteSize": {
+            "type": "number",
+            "maximum": 15728640
+          }
+        },
+        "required": [
+          "kind",
+          "purpose",
+          "mimeType",
+          "byteSize"
+        ]
+      },
+      "UploadIntent": {
+        "type": "object",
+        "properties": {
+          "mediaId": {
+            "type": "string"
+          },
+          "uploadUrl": {
+            "type": "string",
+            "description": "PUT the file here, before expiresAt"
+          },
+          "headers": {
+            "type": "object",
+            "description": "Send exactly these headers with the PUT (they are signed)",
+            "example": {
+              "Content-Type": "image/jpeg",
+              "Content-Length": "123456"
+            }
+          },
+          "expiresAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "mediaId",
+          "uploadUrl",
+          "headers",
+          "expiresAt"
+        ]
+      },
+      "MediaStatus": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "purpose": {
+            "type": "string",
+            "enum": [
+              "POST",
+              "AVATAR"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING_UPLOAD",
+              "UPLOADED",
+              "PROCESSING",
+              "READY",
+              "FAILED",
+              "DELETED"
+            ]
+          },
+          "width": {
+            "type": "number",
+            "nullable": true
+          },
+          "height": {
+            "type": "number",
+            "nullable": true
+          },
+          "blurhash": {
+            "type": "string",
+            "nullable": true
+          },
+          "failureReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "purpose",
+          "status",
+          "width",
+          "height",
+          "blurhash",
+          "failureReason",
+          "createdAt"
+        ]
+      },
+      "CreatePostDto": {
+        "type": "object",
+        "properties": {
+          "mediaIds": {
+            "minItems": 1,
+            "maxItems": 10,
+            "description": "POST uploads (POST /media/uploads). R1 posts take exactly one photo",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "caption": {
+            "type": "object",
+            "nullable": true,
+            "maxLength": 2200
+          }
+        },
+        "required": [
+          "mediaIds"
+        ]
+      },
+      "PostAuthor": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string",
+            "nullable": true
+          },
+          "avatarUrl": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "username",
+          "displayName",
+          "avatarUrl"
+        ]
+      },
+      "PostMedia": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "IMAGE"
+            ]
+          },
+          "blurhash": {
+            "type": "string",
+            "nullable": true,
+            "description": "Placeholder while the image loads"
+          },
+          "url": {
+            "type": "string",
+            "nullable": true,
+            "description": "Feed image (≤ 1080 wide); null until processed"
+          },
+          "thumbUrl": {
+            "type": "string",
+            "nullable": true,
+            "description": "320 × 320"
+          },
+          "width": {
+            "type": "number",
+            "nullable": true,
+            "description": "Of the feed image: reserve the aspect ratio"
+          },
+          "height": {
+            "type": "number",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "blurhash",
+          "url",
+          "thumbUrl",
+          "width",
+          "height"
+        ]
+      },
+      "Post": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PROCESSING",
+              "PUBLISHED",
+              "FAILED"
+            ],
+            "description": "Only the author ever sees PROCESSING or FAILED"
+          },
+          "caption": {
+            "type": "string",
+            "nullable": true
+          },
+          "likeCount": {
+            "type": "number"
+          },
+          "commentCount": {
+            "type": "number"
+          },
+          "likedByMe": {
+            "type": "boolean"
+          },
+          "isMine": {
+            "type": "boolean"
+          },
+          "author": {
+            "$ref": "#/components/schemas/PostAuthor"
+          },
+          "media": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PostMedia"
+            }
+          },
+          "shareUrl": {
+            "type": "string",
+            "description": "Opens the post in the app, else a landing page with store links"
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "caption",
+          "likeCount",
+          "commentCount",
+          "likedByMe",
+          "isMine",
+          "author",
+          "media",
+          "shareUrl",
+          "createdAt"
+        ]
+      },
+      "UpdatePostDto": {
+        "type": "object",
+        "properties": {
+          "caption": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 2200,
+            "description": "null or empty removes the caption"
+          }
+        },
+        "required": [
+          "caption"
+        ]
+      },
+      "FeedPage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Post"
+            }
+          },
+          "nextCursor": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor"
+        ]
+      },
+      "GridItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PROCESSING",
+              "PUBLISHED",
+              "FAILED",
+              "HIDDEN"
+            ],
+            "description": "Your own grid only: PROCESSING, FAILED, and HIDDEN (\"Removed for violating Community Guidelines\")"
+          },
+          "thumbUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "blurhash": {
+            "type": "string",
+            "nullable": true
+          },
+          "mediaCount": {
+            "type": "number",
+            "description": "> 1 shows the carousel badge"
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "thumbUrl",
+          "blurhash",
+          "mediaCount",
+          "createdAt"
+        ]
+      },
+      "GridPage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GridItem"
+            }
+          },
+          "nextCursor": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor"
+        ]
+      },
+      "LikeState": {
+        "type": "object",
+        "properties": {
+          "liked": {
+            "type": "boolean"
+          },
+          "likeCount": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "liked",
+          "likeCount"
+        ]
+      },
+      "Comment": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "author": {
+            "$ref": "#/components/schemas/PostAuthor"
+          },
+          "canDelete": {
+            "type": "boolean",
+            "description": "You wrote it or own the post"
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "body",
+          "author",
+          "canDelete",
+          "createdAt"
+        ]
+      },
+      "CommentPage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "description": "Newest first; the app shows them oldest → newest and loads older pages on scroll up",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Comment"
+            }
+          },
+          "nextCursor": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor"
+        ]
+      },
+      "CreateCommentDto": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          }
+        },
+        "required": [
+          "body"
+        ]
+      },
+      "CreatedComment": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "postId": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "commentCount": {
+            "type": "number",
+            "description": "The post's new comment count"
+          }
+        },
+        "required": [
+          "id",
+          "postId",
+          "body",
+          "createdAt",
+          "commentCount"
+        ]
+      },
+      "DeletedComment": {
+        "type": "object",
+        "properties": {
+          "deleted": {
+            "type": "boolean"
+          },
+          "commentCount": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "deleted",
+          "commentCount"
+        ]
+      },
+      "NotificationActor": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string",
+            "nullable": true
+          },
+          "avatarUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "isFollowing": {
+            "type": "boolean",
+            "description": "Hide \"Follow back\" when true"
+          }
+        },
+        "required": [
+          "id",
+          "username",
+          "displayName",
+          "avatarUrl",
+          "isFollowing"
+        ]
+      },
+      "Notification": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "FOLLOW",
+              "LIKE",
+              "COMMENT"
+            ]
+          },
+          "actor": {
+            "$ref": "#/components/schemas/NotificationActor"
+          },
+          "postId": {
+            "type": "string",
+            "nullable": true
+          },
+          "postThumbUrl": {
+            "type": "string",
+            "nullable": true,
+            "description": "320 × 320; null when the post is gone"
+          },
+          "commentId": {
+            "type": "string",
+            "nullable": true
+          },
+          "commentExcerpt": {
+            "type": "string",
+            "nullable": true,
+            "description": "First 100 characters of the comment"
+          },
+          "targetAvailable": {
+            "type": "boolean",
+            "description": "false: the post or comment was deleted or hidden (\"no longer available\")"
+          },
+          "read": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "actor",
+          "postId",
+          "postThumbUrl",
+          "commentId",
+          "commentExcerpt",
+          "targetAvailable",
+          "read",
+          "createdAt"
+        ]
+      },
+      "NotificationPage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Notification"
+            }
+          },
+          "nextCursor": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor"
+        ]
+      },
+      "UnreadCount": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "number",
+            "maximum": 100,
+            "description": "Capped at 100: show \"99+\""
+          }
+        },
+        "required": [
+          "count"
+        ]
+      },
+      "MarkReadDto": {
+        "type": "object",
+        "properties": {
+          "ids": {
+            "maxItems": 100,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "all": {
+            "type": "boolean",
+            "description": "Mark every notification read (Activity tab opened)"
+          }
+        }
+      },
+      "MarkReadResult": {
+        "type": "object",
+        "properties": {
+          "updated": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "updated"
+        ]
+      },
+      "RegisterDeviceDto": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "example": "ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]"
+          },
+          "platform": {
+            "type": "string",
+            "enum": [
+              "ANDROID",
+              "IOS"
+            ]
+          },
+          "appVersion": {
+            "type": "string",
+            "example": "1.0.0"
+          },
+          "locale": {
+            "type": "string",
+            "enum": [
+              "en",
+              "sw"
+            ],
+            "description": "The app language on this phone: push text uses it"
+          }
+        },
+        "required": [
+          "token",
+          "platform"
+        ]
+      },
+      "BlockState": {
+        "type": "object",
+        "properties": {
+          "blocked": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "blocked"
+        ]
+      },
+      "BlockedUser": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string",
+            "nullable": true
+          },
+          "avatarUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "blockedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "username",
+          "displayName",
+          "avatarUrl",
+          "blockedAt"
+        ]
+      },
+      "BlockedUserPage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BlockedUser"
+            }
+          },
+          "nextCursor": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor"
+        ]
+      },
+      "CreateReportDto": {
+        "type": "object",
+        "properties": {
+          "targetType": {
+            "type": "string",
+            "enum": [
+              "USER",
+              "POST",
+              "COMMENT"
+            ]
+          },
+          "targetId": {
+            "type": "string",
+            "description": "The user, post or comment id"
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "SPAM",
+              "NUDITY",
+              "HARASSMENT",
+              "HATE",
+              "VIOLENCE",
+              "FALSE_INFORMATION",
+              "OTHER"
+            ]
+          },
+          "details": {
+            "type": "string",
+            "maxLength": 1000
+          }
+        },
+        "required": [
+          "targetType",
+          "targetId",
+          "reason"
+        ]
+      },
+      "ReportReceipt": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "DeleteAccountDto": {
+        "type": "object",
+        "properties": {
+          "password": {
+            "type": "string",
+            "description": "The current password, re-entered"
+          }
+        },
+        "required": [
+          "password"
+        ]
+      },
+      "AccountDeletion": {
+        "type": "object",
+        "properties": {
+          "deletionDueAt": {
+            "type": "string",
+            "description": "Logging in before this cancels the deletion"
+          }
+        },
+        "required": [
+          "deletionDueAt"
+        ]
+      },
+      "AdminLoginDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "TotpEnrollment": {
+        "type": "object",
+        "properties": {
+          "secret": {
+            "type": "string",
+            "description": "Manual-entry key (base32)"
+          },
+          "otpauthUrl": {
+            "type": "string",
+            "description": "Encode as the QR code"
+          }
+        },
+        "required": [
+          "secret",
+          "otpauthUrl"
+        ]
+      },
+      "AdminLoginStep": {
+        "type": "object",
+        "properties": {
+          "totpRequired": {
+            "type": "boolean"
+          },
+          "enrollmentRequired": {
+            "type": "boolean",
+            "description": "First login: set up the authenticator (enrollment), then POST /totp/enroll"
+          },
+          "challengeToken": {
+            "type": "string",
+            "description": "Valid 5 minutes"
+          },
+          "enrollment": {
+            "$ref": "#/components/schemas/TotpEnrollment"
+          }
+        },
+        "required": [
+          "totpRequired",
+          "enrollmentRequired",
+          "challengeToken"
+        ]
+      },
+      "AdminTotpDto": {
+        "type": "object",
+        "properties": {
+          "challengeToken": {
+            "type": "string",
+            "description": "From POST /admin/auth/login"
+          },
+          "code": {
+            "type": "string",
+            "example": "123456"
+          }
+        },
+        "required": [
+          "challengeToken",
+          "code"
+        ]
+      },
+      "AdminIdentity": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "For the top bar"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "SUPER_ADMIN",
+              "MODERATOR"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "displayName",
+          "role"
+        ]
+      },
+      "AdminSessionResponse": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string",
+            "description": "Keep in memory only; the refresh token is an HttpOnly cookie"
+          },
+          "expiresIn": {
+            "type": "number",
+            "description": "Seconds"
+          },
+          "admin": {
+            "$ref": "#/components/schemas/AdminIdentity"
+          }
+        },
+        "required": [
+          "accessToken",
+          "expiresIn",
+          "admin"
+        ]
+      },
+      "AdminChangePasswordDto": {
+        "type": "object",
+        "properties": {
+          "currentPassword": {
+            "type": "string"
+          },
+          "newPassword": {
+            "type": "string",
+            "minLength": 12
+          }
+        },
+        "required": [
+          "currentPassword",
+          "newPassword"
+        ]
+      },
+      "AdminDashboard": {
+        "type": "object",
+        "properties": {
+          "openReports": {
+            "type": "number"
+          },
+          "oldestOpenReportAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "suspendedUsers": {
+            "type": "number"
+          },
+          "invitesRemaining": {
+            "type": "number"
+          },
+          "registeredUsers": {
+            "type": "number"
+          },
+          "metrics": {
+            "type": "object",
+            "description": "Daily series per KPI (camelCase names: registeredUsers, newSignups, dau, posts, likes, comments, follows, retentionD1, retentionD7, retentionD30, newUserFollowPct, newUserPostPct)",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/MetricPoint"
+              }
+            }
+          }
+        },
+        "required": [
+          "openReports",
+          "oldestOpenReportAt",
+          "suspendedUsers",
+          "invitesRemaining",
+          "registeredUsers",
+          "metrics"
+        ]
+      },
+      "AdminReportItem": {
+        "type": "object",
+        "properties": {
+          "reportId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "targetType": {
+            "type": "string",
+            "enum": [
+              "USER",
+              "POST",
+              "COMMENT"
+            ]
+          },
+          "reason": {
+            "type": "string"
+          },
+          "details": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "reporterId": {
+            "type": "string"
+          },
+          "reporterUsername": {
+            "type": "string"
+          },
+          "reportedUserId": {
+            "type": "string"
+          },
+          "reportedUsername": {
+            "type": "string"
+          },
+          "reportedUserStatus": {
+            "type": "string"
+          },
+          "targetPostId": {
+            "type": "string",
+            "nullable": true
+          },
+          "targetCommentId": {
+            "type": "string",
+            "nullable": true
+          },
+          "targetPreview": {
+            "type": "string",
+            "nullable": true,
+            "description": "Caption or comment excerpt"
+          },
+          "targetThumbUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "openReportsOnTarget": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "reportId",
+          "status",
+          "targetType",
+          "reason",
+          "details",
+          "createdAt",
+          "reporterId",
+          "reporterUsername",
+          "reportedUserId",
+          "reportedUsername",
+          "reportedUserStatus",
+          "targetPostId",
+          "targetCommentId",
+          "targetPreview",
+          "targetThumbUrl",
+          "openReportsOnTarget"
+        ]
+      },
+      "AdminReportPage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminReportItem"
+            }
+          },
+          "nextCursor": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor"
+        ]
+      },
+      "ReportTarget": {
+        "type": "object",
+        "properties": {
+          "postId": {
+            "type": "string"
+          },
+          "commentId": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "caption": {
+            "type": "string",
+            "nullable": true
+          },
+          "body": {
+            "type": "string"
+          },
+          "bio": {
+            "type": "string",
+            "nullable": true
+          },
+          "postCount": {
+            "type": "number"
+          },
+          "feedUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "thumbUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "hiddenAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "deletedAt": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "ReportRef": {
+        "type": "object",
+        "properties": {
+          "reportId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "OPEN",
+              "REVIEWING",
+              "RESOLVED",
+              "DISMISSED"
+            ]
+          },
+          "reason": {
+            "type": "string"
+          },
+          "reporterUsername": {
+            "type": "string"
+          },
+          "targetType": {
+            "type": "string",
+            "enum": [
+              "USER",
+              "POST",
+              "COMMENT"
+            ]
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "reportId",
+          "status",
+          "reason",
+          "createdAt"
+        ]
+      },
+      "ModerationEntry": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "example": "HIDE_POST"
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          },
+          "adminName": {
+            "type": "string",
+            "nullable": true
+          },
+          "postId": {
+            "type": "string",
+            "nullable": true
+          },
+          "commentId": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "note",
+          "adminName",
+          "createdAt"
+        ]
+      },
+      "AdminReportDetail": {
+        "type": "object",
+        "properties": {
+          "reportId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "targetType": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "details": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "resolvedAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "resolvedByName": {
+            "type": "string",
+            "nullable": true
+          },
+          "reporterId": {
+            "type": "string"
+          },
+          "reporterUsername": {
+            "type": "string"
+          },
+          "reportedUserId": {
+            "type": "string"
+          },
+          "reportedUsername": {
+            "type": "string"
+          },
+          "reportedDisplayName": {
+            "type": "string",
+            "nullable": true
+          },
+          "reportedUserStatus": {
+            "type": "string"
+          },
+          "reportedAvatarUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "target": {
+            "description": "Post (with image), comment, or user — including hidden or deleted content",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ReportTarget"
+              }
+            ]
+          },
+          "otherReports": {
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReportRef"
+            }
+          },
+          "userHistory": {
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ModerationEntry"
+            }
+          }
+        },
+        "required": [
+          "reportId",
+          "status",
+          "targetType",
+          "reason",
+          "details",
+          "createdAt",
+          "resolvedAt",
+          "resolvedByName",
+          "reporterId",
+          "reporterUsername",
+          "reportedUserId",
+          "reportedUsername",
+          "reportedDisplayName",
+          "reportedUserStatus",
+          "reportedAvatarUrl",
+          "target",
+          "otherReports",
+          "userHistory"
+        ]
+      },
+      "UpdateReportDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "REVIEWING",
+              "RESOLVED",
+              "DISMISSED"
+            ]
+          },
+          "note": {
+            "type": "string",
+            "description": "Required to resolve or dismiss"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "ReportState": {
+        "type": "object",
+        "properties": {
+          "reportId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "reportId",
+          "status"
+        ]
+      },
+      "AdminUserItem": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "SUSPENDED",
+              "PENDING_DELETION"
+            ]
+          },
+          "avatarUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "postCount": {
+            "type": "number"
+          },
+          "followerCount": {
+            "type": "number"
+          },
+          "openReports": {
+            "type": "number"
+          },
+          "lastActiveAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "userId",
+          "username",
+          "displayName",
+          "email",
+          "status",
+          "avatarUrl",
+          "postCount",
+          "followerCount",
+          "openReports",
+          "lastActiveAt",
+          "createdAt"
+        ]
+      },
+      "AdminUserPage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminUserItem"
+            }
+          },
+          "nextCursor": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor"
+        ]
+      },
+      "AdminRecentPost": {
+        "type": "object",
+        "properties": {
+          "postId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "caption": {
+            "type": "string",
+            "nullable": true
+          },
+          "thumbUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "likeCount": {
+            "type": "number"
+          },
+          "commentCount": {
+            "type": "number"
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "postId",
+          "status",
+          "caption",
+          "thumbUrl",
+          "likeCount",
+          "commentCount",
+          "createdAt"
+        ]
+      },
+      "AdminUserDetail": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string",
+            "nullable": true
+          },
+          "bio": {
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "avatarUrl": {
+            "type": "string",
+            "nullable": true,
+            "description": "320 px"
+          },
+          "locale": {
+            "type": "string"
+          },
+          "postCount": {
+            "type": "number"
+          },
+          "followerCount": {
+            "type": "number"
+          },
+          "followingCount": {
+            "type": "number"
+          },
+          "inviteCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "suspendedAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "deletionRequestedAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "lastActiveAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "reportsFiled": {
+            "type": "number"
+          },
+          "activeSessions": {
+            "type": "number",
+            "description": "Signed-in devices (live refresh-token families)"
+          },
+          "recentPosts": {
+            "nullable": true,
+            "description": "Any status, hidden ones badged",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminRecentPost"
+            }
+          },
+          "reportsAgainst": {
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReportRef"
+            }
+          },
+          "moderationHistory": {
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ModerationEntry"
+            }
+          }
+        },
+        "required": [
+          "userId",
+          "username",
+          "displayName",
+          "bio",
+          "email",
+          "status",
+          "avatarUrl",
+          "locale",
+          "postCount",
+          "followerCount",
+          "followingCount",
+          "inviteCode",
+          "suspendedAt",
+          "deletionRequestedAt",
+          "lastActiveAt",
+          "createdAt",
+          "reportsFiled",
+          "activeSessions",
+          "recentPosts",
+          "reportsAgainst",
+          "moderationHistory"
+        ]
+      },
+      "ModerationDto": {
+        "type": "object",
+        "properties": {
+          "note": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 500,
+            "description": "Why (audit log)"
+          },
+          "reportId": {
+            "type": "string",
+            "description": "Resolve this report in the same action"
+          }
+        },
+        "required": [
+          "note"
+        ]
+      },
+      "UserState": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "SUSPENDED",
+              "PENDING_DELETION"
+            ]
+          }
+        },
+        "required": [
+          "userId",
+          "status"
+        ]
+      },
+      "NoteDto": {
+        "type": "object",
+        "properties": {
+          "note": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 500,
+            "description": "Why (audit log)"
+          }
+        },
+        "required": [
+          "note"
+        ]
+      },
+      "RevokedSessions": {
+        "type": "object",
+        "properties": {
+          "revokedSessions": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "revokedSessions"
+        ]
+      },
+      "AdminPostMedia": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "blurhash": {
+            "type": "string",
+            "nullable": true
+          },
+          "feedUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "thumbUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "width": {
+            "type": "number",
+            "nullable": true
+          },
+          "height": {
+            "type": "number",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "blurhash",
+          "feedUrl",
+          "thumbUrl",
+          "width",
+          "height"
+        ]
+      },
+      "AdminPost": {
+        "type": "object",
+        "properties": {
+          "postId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PROCESSING",
+              "PUBLISHED",
+              "FAILED",
+              "HIDDEN",
+              "DELETED"
+            ]
+          },
+          "caption": {
+            "type": "string",
+            "nullable": true
+          },
+          "likeCount": {
+            "type": "number"
+          },
+          "commentCount": {
+            "type": "number"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "publishedAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "hiddenAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "deletedAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "authorId": {
+            "type": "string"
+          },
+          "authorUsername": {
+            "type": "string"
+          },
+          "authorStatus": {
+            "type": "string"
+          },
+          "media": {
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminPostMedia"
+            }
+          },
+          "reports": {
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReportRef"
+            }
+          },
+          "moderationHistory": {
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ModerationEntry"
+            }
+          }
+        },
+        "required": [
+          "postId",
+          "status",
+          "caption",
+          "likeCount",
+          "commentCount",
+          "createdAt",
+          "publishedAt",
+          "hiddenAt",
+          "deletedAt",
+          "authorId",
+          "authorUsername",
+          "authorStatus",
+          "media",
+          "reports",
+          "moderationHistory"
+        ]
+      },
+      "PostState": {
+        "type": "object",
+        "properties": {
+          "postId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PUBLISHED",
+              "HIDDEN"
+            ]
+          }
+        },
+        "required": [
+          "postId",
+          "status"
+        ]
+      },
+      "CommentState": {
+        "type": "object",
+        "properties": {
+          "commentId": {
+            "type": "string"
+          },
+          "hidden": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "commentId",
+          "hidden"
+        ]
+      },
+      "InviteUse": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Registered at"
+          }
+        },
+        "required": [
+          "userId",
+          "username",
+          "status",
+          "createdAt"
+        ]
+      },
+      "InviteItem": {
+        "type": "object",
+        "properties": {
+          "inviteId": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string",
+            "example": "A1B2-C3D4-E5F6"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "USED_UP",
+              "EXPIRED",
+              "REVOKED"
+            ]
+          },
+          "maxUses": {
+            "type": "number"
+          },
+          "useCount": {
+            "type": "number"
+          },
+          "expiresAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "revokedAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdByName": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "usedBy": {
+            "description": "Accounts registered with this code",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InviteUse"
+            }
+          }
+        },
+        "required": [
+          "inviteId",
+          "code",
+          "state",
+          "maxUses",
+          "useCount",
+          "expiresAt",
+          "revokedAt",
+          "createdByName",
+          "createdAt",
+          "usedBy"
+        ]
+      },
+      "InvitePage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InviteItem"
+            }
+          },
+          "nextCursor": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor"
+        ]
+      },
+      "CreateInviteDto": {
+        "type": "object",
+        "properties": {
+          "maxUses": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 1
+          },
+          "expiresAt": {
+            "type": "string",
+            "description": "ISO date-time; none = no expiry"
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 500
+          }
+        }
+      },
+      "CreatedInvite": {
+        "type": "object",
+        "properties": {
+          "inviteId": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string",
+            "example": "A1B2-C3D4-E5F6"
+          },
+          "maxUses": {
+            "type": "number"
+          },
+          "expiresAt": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "inviteId",
+          "code",
+          "maxUses",
+          "expiresAt"
+        ]
+      },
+      "RevokeInviteDto": {
+        "type": "object",
+        "properties": {
+          "note": {
+            "type": "string",
+            "maxLength": 500
+          }
+        }
+      },
+      "RevokedInvite": {
+        "type": "object",
+        "properties": {
+          "inviteId": {
+            "type": "string"
+          },
+          "revokedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "inviteId",
+          "revokedAt"
+        ]
+      },
+      "AuditEntry": {
+        "type": "object",
+        "properties": {
+          "entryId": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "MODERATION",
+              "ADMIN"
+            ],
+            "description": "moderation_actions or admin_audit_log"
+          },
+          "action": {
+            "type": "string",
+            "example": "SUSPEND_USER"
+          },
+          "adminId": {
+            "type": "string",
+            "nullable": true
+          },
+          "adminName": {
+            "type": "string",
+            "nullable": true
+          },
+          "targetType": {
+            "type": "string",
+            "nullable": true
+          },
+          "targetId": {
+            "type": "string",
+            "nullable": true
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          },
+          "details": {
+            "type": "object",
+            "nullable": true,
+            "additionalProperties": true
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "entryId",
+          "source",
+          "action",
+          "adminId",
+          "adminName",
+          "targetType",
+          "targetId",
+          "note",
+          "details",
+          "createdAt"
+        ]
+      },
+      "AuditPage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuditEntry"
+            }
+          },
+          "nextCursor": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor"
+        ]
+      },
+      "AdminAccount": {
+        "type": "object",
+        "properties": {
+          "adminId": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "SUPER_ADMIN",
+              "MODERATOR"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "DISABLED"
+            ]
+          },
+          "totpEnabled": {
+            "type": "boolean"
+          },
+          "locked": {
+            "type": "boolean"
+          },
+          "lastLoginAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "adminId",
+          "email",
+          "displayName",
+          "role",
+          "status",
+          "totpEnabled",
+          "locked",
+          "lastLoginAt",
+          "createdAt"
+        ]
+      },
+      "AdminAccountList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminAccount"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "CreateAdminDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string",
+            "maxLength": 80
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "SUPER_ADMIN",
+              "MODERATOR"
+            ]
+          }
+        },
+        "required": [
+          "email",
+          "displayName",
+          "role"
+        ]
+      },
+      "CreatedAdmin": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "temporaryPassword": {
+            "type": "string",
+            "description": "Shown once: give it to the new admin, who sets up 2FA at first sign-in and then changes it"
+          }
+        },
+        "required": [
+          "id",
+          "temporaryPassword"
+        ]
+      },
+      "UpdateAdminDto": {
+        "type": "object",
+        "properties": {
+          "note": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 500,
+            "description": "Why (audit log)"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "SUPER_ADMIN",
+              "MODERATOR"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "DISABLED"
+            ],
+            "description": "ACTIVE also unlocks a locked account"
+          }
+        },
+        "required": [
+          "note"
+        ]
+      },
+      "AdminAccountState": {
+        "type": "object",
+        "properties": {
+          "adminId": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "locked": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "adminId",
+          "role",
+          "status",
+          "locked"
+        ]
+      },
+      "ApiErrorDetail": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "ACCOUNT_NOT_ACTIVE",
+              "ACCOUNT_PENDING_DELETION",
+              "ACCOUNT_SUSPENDED",
+              "ADMIN_FORBIDDEN",
+              "ADMIN_LOCKED",
+              "ADMIN_NOT_FOUND",
+              "APP_VERSION_UNSUPPORTED",
+              "BLOCKED",
+              "CANNOT_BLOCK_SELF",
+              "CANNOT_FOLLOW_SELF",
+              "CANNOT_REPORT_SELF",
+              "CAPTION_TOO_LONG",
+              "CHALLENGE_EXPIRED",
+              "COMMENT_NOT_FOUND",
+              "CSRF_CHECK_FAILED",
+              "EMAIL_TAKEN",
+              "FORBIDDEN",
+              "IDEMPOTENCY_KEY_REUSED",
+              "INTERNAL_ERROR",
+              "INVALID_CREDENTIALS",
+              "INVALID_CURSOR",
+              "INVALID_IDEMPOTENCY_KEY",
+              "INVALID_PASSWORD",
+              "INVALID_STATE",
+              "INVALID_TOTP",
+              "INVALID_VARIANT_KEY",
+              "INVITE_INVALID",
+              "INVITE_NOT_FOUND",
+              "MEDIA_NOT_ATTACHABLE",
+              "MEDIA_NOT_FOUND",
+              "MEDIA_NOT_UPLOADED",
+              "NOT_FOUND",
+              "NOT_OWNER",
+              "NOTE_REQUIRED",
+              "PASSWORD_TOO_COMMON",
+              "PASSWORD_TOO_SHORT",
+              "PAYLOAD_TOO_LARGE",
+              "POST_NOT_FOUND",
+              "RATE_LIMITED",
+              "REPORT_ALREADY_HANDLED",
+              "REPORT_NOT_FOUND",
+              "RESET_CODE_EXPIRED",
+              "RESET_CODE_INVALID",
+              "RESET_CODE_LOCKED",
+              "SERVICE_UNAVAILABLE",
+              "SESSION_EXPIRED",
+              "SESSION_INVALID",
+              "SESSION_REUSE_DETECTED",
+              "TOKEN_INVALID",
+              "UNAUTHORIZED",
+              "UNDER_MINIMUM_AGE",
+              "USER_NOT_FOUND",
+              "USERNAME_TAKEN",
+              "VALIDATION_FAILED"
+            ],
+            "description": "Stable: translate this, not `message`"
+          },
+          "message": {
+            "type": "string",
+            "description": "English, for developers"
+          },
+          "details": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "e.g. { fields: [...] } for VALIDATION_FAILED, { minVersion } for APP_VERSION_UNSUPPORTED"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ]
+      },
+      "ApiErrorBody": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/ApiErrorDetail"
+          },
+          "requestId": {
+            "type": "string",
+            "description": "Same as the X-Request-Id header"
+          }
+        },
+        "required": [
+          "error",
+          "requestId"
+        ]
+      },
+      "MetricPoint": {
+        "type": "object",
+        "properties": {
+          "day": {
+            "type": "string",
+            "example": "2026-10-10"
+          },
+          "value": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "day",
+          "value"
+        ]
+      }
+    }
+  }
+}

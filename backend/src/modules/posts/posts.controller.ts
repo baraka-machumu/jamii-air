@@ -1,11 +1,12 @@
 // /api/v1/posts, /api/v1/feed and the profile grid (TRD §5.1). All routes need a user access token.
-import { Body, Controller, Delete, Get, Headers, HttpCode, Param, ParseUUIDPipe, Patch, Post as HttpPost, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, ParseUUIDPipe, Patch, Post as HttpPost, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiHeader, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { type AuthUser, CurrentUser } from '../../common/auth/auth.decorators.js';
 import { PageQuery } from '../users/users.dto.js';
 import { CreatePostDto, FeedPage, GridPage, Post, UpdatePostDto } from './posts.dto.js';
 import { PostsService } from './posts.service.js';
+import { IdempotencyKey } from '../../common/http/request-headers.js';
 
 const HOUR = 3_600_000;
 
@@ -20,7 +21,7 @@ export class PostsController {
   @ApiOperation({ summary: 'Create a post from uploaded photos; it stays PROCESSING until its media is ready' })
   @ApiHeader({ name: 'Idempotency-Key', required: false, description: 'Retry-safe create: a repeat within 24 h returns the original post' })
   @ApiResponse({ status: 201, type: Post })
-  create(@CurrentUser() user: AuthUser, @Body() dto: CreatePostDto, @Headers('idempotency-key') idempotencyKey?: string): Promise<Post> {
+  create(@CurrentUser() user: AuthUser, @Body() dto: CreatePostDto, @IdempotencyKey() idempotencyKey?: string): Promise<Post> {
     return this.posts.create(user.id, dto, idempotencyKey);
   }
 

@@ -7,6 +7,8 @@ import { DocumentBuilder, type OpenAPIObject, SwaggerModule } from '@nestjs/swag
 import helmet from 'helmet';
 import { Logger } from 'nestjs-pino';
 import { AllExceptionsFilter } from './common/errors/all-exceptions.filter.js';
+import { ApiErrorBody } from './common/errors/error-codes.js';
+import { MetricPoint } from './modules/admin/admin.responses.js';
 import { AppConfig } from './config/app-config.js';
 import { LINK_ROUTES } from './modules/links/links.controller.js';
 
@@ -14,7 +16,16 @@ export const API_PREFIX = 'api/v1';
 /** Routes served at the root, outside /api/v1. */
 export const LINK_EXCLUDE = LINK_ROUTES;
 
-/** Shared by the served docs and `npm run openapi` (Plan task 2.14). */
+/**
+ * The OpenAPI document, built the same way for the served docs, `npm run openapi` and the tests
+ * (Plan task 2.14). ApiErrorBody carries the enum of every error code (the apps translate them).
+ */
+export function buildOpenApiDocument(app: INestApplication): OpenAPIObject {
+  // Models referenced only by $ref (not by a decorator type) must be registered here.
+  return SwaggerModule.createDocument(app, openApiConfig(), { extraModels: [ApiErrorBody, MetricPoint] });
+}
+
+/** Title, description and auth scheme of the OpenAPI document. */
 export function openApiConfig(): Omit<OpenAPIObject, 'paths'> {
   return new DocumentBuilder()
     .setTitle('Jamii Air API')
@@ -41,7 +52,7 @@ export function configureApp(app: INestApplication): void {
   app.enableShutdownHooks();
 
   if (config.swaggerEnabled) {
-    const document = SwaggerModule.createDocument(app, openApiConfig());
+    const document = buildOpenApiDocument(app);
     SwaggerModule.setup(`${API_PREFIX}/docs`, app, document, { jsonDocumentUrl: `${API_PREFIX}/openapi.json` });
   }
 }

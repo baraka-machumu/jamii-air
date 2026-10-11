@@ -1,5 +1,5 @@
 // /api/v1/auth (TRD §5.1). Rate limits per client IP, as in the endpoint catalogue.
-import { Body, Controller, Headers, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { type AuthUser, CurrentUser, Public } from '../../common/auth/auth.decorators.js';
@@ -7,6 +7,7 @@ import {
   ChangePasswordDto, ForgotPasswordDto, LoginDto, LogoutDto, RefreshDto, RegisterDto, ResetPasswordDto, SessionResponse,
 } from './auth.dto.js';
 import { AuthService } from './auth.service.js';
+import { UserAgent } from '../../common/http/request-headers.js';
 
 const HOUR = 3_600_000;
 const userAgentOf = (ua: string | undefined) => (ua ? ua.slice(0, 255) : null);
@@ -21,7 +22,7 @@ export class AuthController {
   @Throttle({ default: { limit: 5, ttl: HOUR } })
   @ApiOperation({ summary: 'Create an account (18+, invite code during the pilot)' })
   @ApiResponse({ status: 201, type: SessionResponse })
-  register(@Body() dto: RegisterDto, @Headers('user-agent') ua?: string): Promise<SessionResponse> {
+  register(@Body() dto: RegisterDto, @UserAgent() ua?: string): Promise<SessionResponse> {
     return this.auth.register(dto, userAgentOf(ua));
   }
 
@@ -31,7 +32,7 @@ export class AuthController {
   @Throttle({ default: { limit: 10, ttl: 15 * 60_000 } })
   @ApiOperation({ summary: 'Log in with username or email' })
   @ApiResponse({ status: 200, type: SessionResponse })
-  login(@Body() dto: LoginDto, @Headers('user-agent') ua?: string): Promise<SessionResponse> {
+  login(@Body() dto: LoginDto, @UserAgent() ua?: string): Promise<SessionResponse> {
     return this.auth.login(dto, userAgentOf(ua));
   }
 

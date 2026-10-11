@@ -4,14 +4,13 @@
 // connection is opened, so it runs in CI without the local stack.
 import { writeFileSync } from 'node:fs';
 import { NestFactory } from '@nestjs/core';
-import { SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module.js';
-import { API_PREFIX, LINK_EXCLUDE, openApiConfig } from './app.setup.js';
+import { API_PREFIX, buildOpenApiDocument, LINK_EXCLUDE } from './app.setup.js';
 
 async function main() {
   const app = await NestFactory.create(AppModule, { preview: true, logger: false, abortOnError: false });
   app.setGlobalPrefix(API_PREFIX, { exclude: LINK_EXCLUDE });
-  const document = SwaggerModule.createDocument(app, openApiConfig());
+  const document = buildOpenApiDocument(app);
   const out = process.argv[2] ?? 'openapi.json';
   writeFileSync(out, `${JSON.stringify(document, null, 2)}\n`);
   console.log(`${out}: ${Object.keys(document.paths).length} paths`);

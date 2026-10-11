@@ -176,7 +176,7 @@ admin/src/
 | API-02 | JSON, `camelCase` fields, ISO-8601 UTC timestamps, UUID string IDs. |
 | API-03 | Mobile auth: `Authorization: Bearer <accessToken>`. Admin auth: §8.2. |
 | API-04 | Lists: `?limit=` (default 20, max 50) and `?cursor=`; response `{ "items": [...], "nextCursor": "..." \| null }`. Cursors are opaque base64url. Admin tables may also use `?page=` for small, bounded result sets. |
-| API-05 | Error envelope: `{ "error": { "code": "POST_NOT_FOUND", "message": "…", "details": {…} }, "requestId": "…" }`. Codes raised inside stored procedures pass through unchanged (§6.4). |
+| API-05 | Error envelope: `{ "error": { "code": "POST_NOT_FOUND", "message": "…", "details": {…} }, "requestId": "…" }`. Codes raised inside stored procedures pass through unchanged (§6.4). Every code is published in the OpenAPI spec (schema `ApiErrorBody`, list `ERROR_CODES` in `backend/src/common/errors/error-codes.ts`); the apps translate `code`, never show `message`. |
 | API-06 | Every response carries `X-Request-Id`. |
 | API-07 | Mobile sends `X-App-Version` and `X-Platform`; server can return `426 APP_VERSION_UNSUPPORTED` (`details.minVersion`) when the version is below `MIN_APP_VERSION`. |
 | API-08 | `POST /posts` and `POST /posts/:id/comments` accept `Idempotency-Key`; duplicates within 24 h return the original result. |

@@ -228,7 +228,7 @@ The Expo app in `mobile/`, built screen by screen against the finished UAT API. 
 |---|---|
 | 3.1 | ✅ Foundation (TS strict, Expo SDK 57): **Expo Router** (built on React Navigation; auth stack + tabs separated by `Stack.Protected`), TanStack Query, Zustand, i18next (`en`, `sw`), theme tokens from doc 04 (light/dark), FlashList, expo-image, react-native-svg; jest-expo tests. **Deferred:** Sentry (no DSN yet, local dev only) |
 | 3.2 | ✅ API client (timeouts, auth header, `X-App-Version`, error code → localised message) with types generated from the OpenAPI spec (`openapi-fetch`; `npm run api:sync`; every published error code has en/sw text, enforced by tests on both sides) |
-| 3.3 | ✅ Expo account exists (`bmachumu`). EAS build profiles (project owner `bmachumu`); Android dev build on the reference device; Android push credentials (FCM via EAS). iOS builds and APNs wait for the Apple account (5.0) |
+| 3.3 | EAS build profiles (✅ Expo account `bmachumu` exists, project owner); Android dev build on the reference device; Android push credentials (FCM via EAS). iOS builds and APNs wait for the Apple account (5.0) |
 | 3.4 | Auth: Welcome, Sign up (**date-of-birth picker + under-18 message**, invite code), Log in, Forgot password; secure token storage; single-flight silent refresh; session restore |
 | 3.5 | Profile: My profile, Edit profile, avatar upload, Settings, language & theme |
 | 3.6 | People: Search (debounce, cancel, recent searches), User profile with optimistic Follow, follower/following lists, Onboarding "Find people" |

@@ -3,6 +3,7 @@ export interface StubRequest {
   url: string;
   path: string;
   method: string;
+  headers: Record<string, string>;
   body: Record<string, unknown>;
 }
 
@@ -19,6 +20,7 @@ export function stubApi(handler: (req: StubRequest) => Response | Promise<Respon
       url,
       path: url.replace(/^https?:\/\/[^/]+/, '').split('?')[0]!,
       method: init?.method ?? 'GET',
+      headers: (init?.headers ?? {}) as Record<string, string>,
       body: typeof init?.body === 'string' ? JSON.parse(init.body) as Record<string, unknown> : {},
     };
     requests.push(req);

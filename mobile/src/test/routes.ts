@@ -11,6 +11,8 @@ import Home from '@/app/(tabs)/index';
 import Profile from '@/app/(tabs)/profile';
 import Search from '@/app/(tabs)/search';
 import RootLayout from '@/app/_layout';
+import Caption from '@/app/compose/caption';
+import Crop from '@/app/compose/crop';
 import EditProfile from '@/app/edit-profile';
 import Onboarding from '@/app/onboarding/index';
 import FindPeople from '@/app/onboarding/people';
@@ -39,4 +41,6 @@ export const routes = {
   'onboarding/people': FindPeople,
   'u/[username]/index': UserProfile,
   'u/[username]/[list]': FollowListScreen,
+  'compose/crop': Crop,
+  'compose/caption': Caption,
 };

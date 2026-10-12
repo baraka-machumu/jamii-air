@@ -64,7 +64,6 @@
   },
   "placeholder": {
     "home": "Your feed arrives in task 3.8.",
-    "create": "Posting a photo arrives in task 3.7.",
     "activity": "Activity arrives in task 3.10."
   },
   "settings": {
@@ -219,5 +218,33 @@
     "followsYou": "Follows you",
     "noFollowers": "No followers yet",
     "noFollowing": "Not following anyone yet"
+  },
+  "create": {
+    "intro": "Share a photo with your people.",
+    "cantOpen": "This photo couldn't be opened",
+    "discardTitle": "Discard this post?",
+    "discard": "Discard",
+    "unfinished": "You have an unfinished post",
+    "continue": "Continue",
+    "cropTitle": "Crop",
+    "next": "Next",
+    "cropHint": "Drag the photo to choose what's in the frame",
+    "shape": "Shape",
+    "square": "Square",
+    "portrait": "Portrait",
+    "original": "Original",
+    "captionTitle": "New post",
+    "preview": "Your photo",
+    "caption": "Caption",
+    "captionPlaceholder": "Write a caption…",
+    "share": "Share",
+    "failed": "Couldn't post",
+    "posting": "Posting… {{percent}}%",
+    "postingShort": "Posting…",
+    "processing": "Processing…",
+    "failures": {
+      "INTERRUPTED": "Your post was interrupted.",
+      "PROCESSING_FAILED": "We couldn't process this photo. Retry, or try another one."
+    }
   }
 }

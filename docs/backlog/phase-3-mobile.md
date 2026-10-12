@@ -19,7 +19,7 @@ The GitHub board does not exist yet (the `gh` CLI is not installed), so this tab
 | 3.4 Auth screens | Review | see git log | Sign up, Log in, Forgot password; session layer in `src/auth/` (secure store, one refresh at a time, restore at launch). 66 jest tests pass, plus 2 live tests against the local API. Checked on the reference Android (3.4.h). Local API for testing: `REQUIRE_INVITE=false npm run start:dev` in `backend/` (works since `c0d837c`) |
 | 3.5 Profile and Settings | Review | see git log | My profile, Edit profile (photo, name, username, bio, discard prompt), Settings (account, change password, language and theme saved on the phone, version, log out with confirm), onboarding step 1. Avatar upload end to end against the local stack (API, worker, MinIO). Found and fixed untyped spec properties (`5642da6`). Needs a new dev build (new native modules) for the phone check (3.5.g) |
 | 3.6 People | Review | see git log | Search (300 ms debounce, cancels the previous request, recent searches), user profile `/u/:username` with optimistic Follow and "Unfollow @x?", follower / following lists, onboarding step 2 Find people. Live test against the local API (search, follow, profile, followers). No new native modules: the current dev build runs it. Phone check: 3.6.e |
-| 3.7 Create flow | Backlog | | HEIC → JPEG on the phone (backend task 2.7) |
+| 3.7 Create flow | Review | see git log | Create tab (library / camera, unfinished post first), crop (square / 4:5 / original, drag), caption (≤ 2,200), Share → Home with the Posting… % / Processing… / Couldn't post card; draft saved on the phone; Retry resumes from the failed step. End to end against the local stack: upload, create with Idempotency-Key (a repeat returns the same post), worker publishes, grid shows it. No new native modules. Phone check: 3.7.h |
 | 3.8 Feed | Backlog | | |
 | 3.9 Engagement and deep links | Backlog | | `/p/:id`, `/u/:username` map onto Expo Router routes |
 | 3.10 Notifications | Backlog | | Create the Android channel `default` (backend task 2.10) |
@@ -62,13 +62,14 @@ The Phase 3 tasks broken into trackable items. Tick an item (☐ → ✅) in the
 | 3.6.c | 3.6 People | Follower and following lists | ✅ |
 | 3.6.d | 3.6 People | Onboarding "Find people" | ✅ |
 | 3.6.e | 3.6 People | Check on the reference Android with a second account: search, recent searches, follow / unfollow, lists, Find people after sign-up | ☐ |
-| 3.7.a | 3.7 Create flow | Permissions, picker and camera | ☐ |
-| 3.7.b | 3.7 Create flow | Crop | ☐ |
-| 3.7.c | 3.7 Create flow | Downscale and HEIC → JPEG on the phone | ☐ |
-| 3.7.d | 3.7 Create flow | Caption | ☐ |
-| 3.7.e | 3.7 Create flow | Upload with progress and retry | ☐ |
-| 3.7.f | 3.7 Create flow | Draft persistence | ☐ |
-| 3.7.g | 3.7 Create flow | Posting / processing / failed card | ☐ |
+| 3.7.a | 3.7 Create flow | Permissions, picker and camera | ✅ |
+| 3.7.b | 3.7 Create flow | Crop | ✅ |
+| 3.7.c | 3.7 Create flow | Downscale and HEIC → JPEG on the phone | ✅ |
+| 3.7.d | 3.7 Create flow | Caption | ✅ |
+| 3.7.e | 3.7 Create flow | Upload with progress and retry | ✅ |
+| 3.7.f | 3.7 Create flow | Draft persistence | ✅ |
+| 3.7.g | 3.7 Create flow | Posting / processing / failed card | ✅ |
+| 3.7.h | 3.7 Create flow | Check on the reference Android: library and camera photos (incl. a portrait and a panorama), each crop shape, a long caption, airplane mode mid-upload → Couldn't post → Retry, kill the app mid-post → Retry on relaunch | ☐ |
 | 3.8.a | 3.8 Feed | Home feed: FlashList, reserved aspect ratio, blurhash, memoised card | ☐ |
 | 3.8.b | 3.8 Feed | Infinite scroll, pull-to-refresh, all states (loading, empty, error, offline) | ☐ |
 | 3.8.c | 3.8 Feed | Profile grid | ☐ |
@@ -110,6 +111,8 @@ The Phase 3 tasks broken into trackable items. Tick an item (☐ → ✅) in the
 | After sign-up (3.4–3.6) | Sign-up opens onboarding: step 1 photo and bio (3.5), step 2 Find people (3.6, the newest accounts from `GET /users/search` with an empty query); Continue then opens Home until Notifications (3.10) becomes step 3. The onboarding flag is set with the sign-in (one state update, no flash of the tabs) and is not saved: an app kill mid-onboarding lands on Home | App Flow §4.2: first session only |
 | Profile and Settings (3.5) | Settings saved with AsyncStorage (zustand `persist`); the language also goes to the account (`PATCH /me { locale }`, best effort) for push and email text. A new photo applies at once (upload → `PATCH /me { avatarMediaId }`), the text fields on Save; the local photo shows until the server's sizes are READY. Avatars are downscaled to 1080 px (shown at ≤ 320). Settings rows still to come: Notifications (3.10), Blocked accounts and Delete account (3.11), Terms / Privacy / Contact support (when the pages exist, Plan 5) | Ship what works now; no dead rows |
 | People (3.6) | Follow is optimistic through one small store of the user's latest choices (`src/people/follow.ts`) that every screen reads before the cached server value, so search, lists and profiles agree without patching each cache; a failure rolls back and says so; one request per account at a time. Recent searches are the accounts opened from Search (saved on the phone, max 10), cleared on log out with the follow choices. People lists use `FlatList` (short pages of rows); FlashList stays for the feed and grid (3.8). The user profile lives at `/u/[username]`, the share-link path (3.9). The ⋯ menu (Report, Block, Copy link) waits for 3.9 / 3.11 and the posts grid for 3.8 | App Flow §8.1–8.2 |
+| Create flow (3.7) | The system photo picker instead of an in-app gallery grid (App Flow §6 draws one): no photo-library permission on Android, no new native module (`expo-media-library`). Crop by dragging only (no pinch zoom: no gesture library in the app yet). A picked photo is first made an upright JPEG ≤ 2048 px (HEIC and EXIF rotation handled), then cropped and saved at quality 85 for upload. One post at a time; the draft (with its Idempotency-Key) is saved on the phone and survives an app kill; uploading or creating when the app stopped becomes "interrupted" with Retry. Retry continues from the failed step (an uploaded photo is not sent again, the post is created with the same key); a server processing failure starts over with a new upload and key. After 5 polls without PUBLISHED the card goes away: the post exists and appears by itself. The draft's files live in the app cache (the OS may clear them under storage pressure) | App Flow §6, §6.1; TRD API-08 |
+| Going back to Home | `router.navigate('/(tabs)')`, not `'/'`: Welcome (`(auth)/index`) has the same path and the guarded one wins nothing | Found by the Create screen test |
 | Cancelling requests (3.6) | The API client honours the caller's abort signal (`CANCELLED`, never sent if already cancelled), so TanStack Query cancels a superseded search | App Flow §8.1: "previous request cancelled" |
 | Photos from the phone in development | MinIO's port can be opened to the Wi-Fi (`MINIO_BIND=0.0.0.0`, default stays localhost) and the API given `S3_PUBLIC_ENDPOINT` / `MEDIA_BASE_URL` at the laptop's address; the worker must run | Presigned uploads and photo URLs go to storage directly, not through the API |
 | Not in 3.4 | The dev-only "Continue without an account" button is gone (real sign-in replaces it). Suspension mid-session (`403 ACCOUNT_SUSPENDED` → explanation screen) is part of 3.11. The web preview keeps the refresh token in `localStorage` (no secure store on web; development only) | Keep each task to its own screens |

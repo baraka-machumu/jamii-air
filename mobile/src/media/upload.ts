@@ -26,25 +26,67 @@ export function fitWithin(width: number, height: number, maxEdge = MAX_EDGE): { 
   return width >= height ? { width: maxEdge } : { height: maxEdge };
 }
 
-export async function prepareImage(uri: string, width: number, height: number, maxEdge = MAX_EDGE): Promise<PreparedImage> {
+export interface CropRect { originX: number; originY: number; width: number; height: number }
+
+/** Crops (optional), downscales to `maxEdge` and saves as JPEG quality 85: the file that is uploaded. */
+export async function prepareImage(uri: string, width: number, height: number, maxEdge = MAX_EDGE, crop?: CropRect): Promise<PreparedImage> {
   const context = ImageManipulator.manipulate(uri);
-  const size = fitWithin(width, height, maxEdge);
+  if (crop) context.crop(crop);
+  const size = fitWithin(crop?.width ?? width, crop?.height ?? height, maxEdge);
   if (size) context.resize(size);
   const image = await context.renderAsync();
   const saved = await image.saveAsync({ format: SaveFormat.JPEG, compress: JPEG_QUALITY });
   return { uri: saved.uri, width: saved.width, height: saved.height };
 }
 
+/**
+ * A picked photo as an upright JPEG ≤ 2048 px (HEIC and EXIF rotation handled), saved at high
+ * quality: the source the crop screen works from, with its true size.
+ */
+export async function normalizeImage(uri: string): Promise<PreparedImage> {
+  const rendered = await ImageManipulator.manipulate(uri).renderAsync();
+  const size = fitWithin(rendered.width, rendered.height);
+  const context = ImageManipulator.manipulate(uri);
+  if (size) context.resize(size);
+  const image = size ? await context.renderAsync() : rendered;
+  const saved = await image.saveAsync({ format: SaveFormat.JPEG, compress: 0.95 });
+  return { uri: saved.uri, width: saved.width, height: saved.height };
+}
+
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+export type OnProgress = (fraction: number) => void;
+
+/**
+ * One PUT with upload progress: fetch cannot report it, XMLHttpRequest can (posts show
+ * "Posting… 45%"). Resolves with the HTTP status; rejects on a network failure.
+ */
+export function putWithProgress(url: string, headers: Record<string, string>, body: Blob, onProgress: OnProgress): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('PUT', url);
+    for (const [name, value] of Object.entries(headers)) {
+      if (name.toLowerCase() !== 'content-length') xhr.setRequestHeader(name, value); // the platform sets it
+    }
+    xhr.upload.onprogress = (event) => { if (event.lengthComputable) onProgress(event.loaded / event.total); };
+    xhr.onload = () => resolve(xhr.status);
+    xhr.onerror = () => reject(new TypeError('Network request failed'));
+    xhr.ontimeout = () => reject(new TypeError('Upload timed out'));
+    xhr.timeout = 60_000; // App Flow §13: an upload chunk over 60 s counts as a network error
+    xhr.send(body);
+  });
+}
+
 /** PUT to storage; true when stored, false when the URL was refused (expired). Retries network errors. */
-async function put(url: string, headers: Record<string, string>, body: Blob): Promise<boolean> {
+async function put(url: string, headers: Record<string, string>, body: Blob, onProgress?: OnProgress): Promise<boolean> {
   for (let attempt = 0; ; attempt++) {
     try {
-      const response = await fetch(url, { method: 'PUT', headers, body });
-      if (response.ok) return true;
-      if (response.status === 403) return false;
-      if (response.status < 500) throw new ApiError(response.status, 'UPLOAD_FAILED', `Storage answered ${response.status}`);
+      const status = onProgress
+        ? await putWithProgress(url, headers, body, onProgress)
+        : (await fetch(url, { method: 'PUT', headers, body })).status;
+      if (status >= 200 && status < 300) return true;
+      if (status === 403) return false;
+      if (status < 500) throw new ApiError(status, 'UPLOAD_FAILED', `Storage answered ${status}`);
     } catch (error) {
       if (error instanceof ApiError) throw error;
     }
@@ -54,7 +96,7 @@ async function put(url: string, headers: Record<string, string>, body: Blob): Pr
 }
 
 /** Uploads a prepared JPEG and returns its mediaId (still to be attached: PATCH /me or POST /posts). */
-export async function uploadImage(image: PreparedImage, purpose: UploadPurpose): Promise<string> {
+export async function uploadImage(image: PreparedImage, purpose: UploadPurpose, { onProgress }: { onProgress?: OnProgress } = {}): Promise<string> {
   const body = await (await fetch(image.uri)).blob();
   if (body.size > MAX_BYTES) throw new ApiError(413, 'PAYLOAD_TOO_LARGE', 'Photo larger than 15 MB');
 
@@ -62,7 +104,7 @@ export async function uploadImage(image: PreparedImage, purpose: UploadPurpose):
     const intent = await call(api.POST('/api/v1/media/uploads', {
       body: { kind: 'IMAGE', purpose, mimeType: 'image/jpeg', byteSize: body.size },
     }));
-    if (await put(intent.uploadUrl, intent.headers, body)) return intent.mediaId;
+    if (await put(intent.uploadUrl, intent.headers, body, onProgress)) return intent.mediaId;
   }
   throw new ApiError(403, 'UPLOAD_FAILED', 'Storage refused the upload');
 }

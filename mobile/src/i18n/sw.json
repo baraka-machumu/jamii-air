@@ -64,7 +64,6 @@
   },
   "placeholder": {
     "home": "Habari zako zinakuja katika kazi 3.8.",
-    "create": "Kuchapisha picha kunakuja katika kazi 3.7.",
     "activity": "Shughuli zinakuja katika kazi 3.10."
   },
   "settings": {
@@ -219,5 +218,33 @@
     "followsYou": "Anakufuata",
     "noFollowers": "Bado hakuna wafuasi",
     "noFollowing": "Bado hakuna anayefuatwa"
+  },
+  "create": {
+    "intro": "Shiriki picha na watu wako.",
+    "cantOpen": "Picha hii haikuweza kufunguliwa",
+    "discardTitle": "Uachane na chapisho hili?",
+    "discard": "Achana nalo",
+    "unfinished": "Una chapisho ambalo halijakamilika",
+    "continue": "Endelea",
+    "cropTitle": "Kata picha",
+    "next": "Ifuatayo",
+    "cropHint": "Buruta picha kuchagua kinachoonekana",
+    "shape": "Umbo",
+    "square": "Mraba",
+    "portrait": "Wima",
+    "original": "Asili",
+    "captionTitle": "Chapisho jipya",
+    "preview": "Picha yako",
+    "caption": "Maelezo",
+    "captionPlaceholder": "Andika maelezo…",
+    "share": "Shiriki",
+    "failed": "Haikuchapishwa",
+    "posting": "Inachapisha… {{percent}}%",
+    "postingShort": "Inachapisha…",
+    "processing": "Inashughulikiwa…",
+    "failures": {
+      "INTERRUPTED": "Chapisho lako lilikatizwa.",
+      "PROCESSING_FAILED": "Hatukuweza kushughulikia picha hii. Jaribu tena, au chagua nyingine."
+    }
   }
 }

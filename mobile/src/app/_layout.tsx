@@ -12,6 +12,8 @@ import { createQueryClient } from '@/api/queryClient';
 import { restoreSession } from '@/auth/session';
 import { useFollowStore } from '@/people/follow';
 import { useRecentSearches } from '@/people/recentSearches';
+import { runPosting } from '@/posting/run';
+import { usePosting } from '@/posting/store';
 import i18n, { resolveLanguage } from '@/i18n';
 import { useSession } from '@/stores/session';
 import { useSettings } from '@/stores/settings';
@@ -39,6 +41,17 @@ export default function RootLayout() {
     // Another account may sign in on this phone next: forget this one's follows and searches.
     useFollowStore.setState({ chosen: {}, pending: {} });
     useRecentSearches.getState().clear();
+    usePosting.getState().discard();
+  }, [status, queryClient]);
+
+  // A post that was processing when the app closed: keep checking it (App Flow §6.1).
+  useEffect(() => {
+    if (status !== 'signedIn') return;
+    const resume = () => {
+      if (usePosting.getState().draft?.phase === 'processing') void runPosting(queryClient);
+    };
+    if (usePosting.persist.hasHydrated()) resume();
+    return usePosting.persist.onFinishHydration(resume);
   }, [status, queryClient]);
 
   // The splash screen stays up until the brand font is ready (a few ms, bundled) and the saved
@@ -71,6 +84,8 @@ function RootStack() {
           <Stack.Screen name="settings/password" />
           <Stack.Screen name="u/[username]/index" />
           <Stack.Screen name="u/[username]/[list]" />
+          <Stack.Screen name="compose/crop" />
+          <Stack.Screen name="compose/caption" />
         </Stack.Protected>
         <Stack.Protected guard={signedIn && onboarding}>
           <Stack.Screen name="onboarding/index" />

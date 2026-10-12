@@ -60,6 +60,38 @@ describe('uploadImage (App Flow §6.1)', () => {
   });
 });
 
+describe('putWithProgress', () => {
+  it('reports progress, lets the platform set Content-Length, and resolves with the status', async () => {
+    const sentHeaders: Record<string, string> = {};
+    class FakeXhr {
+      upload: { onprogress?: (e: { lengthComputable: boolean; loaded: number; total: number }) => void } = {};
+      onload?: () => void;
+      status = 0;
+      timeout = 0;
+      open() {}
+      setRequestHeader(name: string, value: string) { sentHeaders[name] = value; }
+      send() {
+        this.upload.onprogress?.({ lengthComputable: true, loaded: 25, total: 100 });
+        this.upload.onprogress?.({ lengthComputable: true, loaded: 100, total: 100 });
+        this.status = 200;
+        this.onload?.();
+      }
+    }
+    const original = global.XMLHttpRequest;
+    global.XMLHttpRequest = FakeXhr as unknown as typeof XMLHttpRequest;
+    const seen: number[] = [];
+    try {
+      const { putWithProgress } = jest.requireActual<typeof import('./upload')>('./upload');
+      await expect(putWithProgress('http://storage.test/put', { 'Content-Type': 'image/jpeg', 'Content-Length': '100' }, new Blob(['x']), (p) => seen.push(p)))
+        .resolves.toBe(200);
+    } finally {
+      global.XMLHttpRequest = original;
+    }
+    expect(seen).toEqual([0.25, 1]);
+    expect(sentHeaders).toEqual({ 'Content-Type': 'image/jpeg' });
+  });
+});
+
 describe('waitUntilProcessed', () => {
   it('polls GET /media/:id until READY', async () => {
     let polls = 0;

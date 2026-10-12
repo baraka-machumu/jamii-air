@@ -24,6 +24,12 @@ Write-Host "Network: $network   Address: $ip" -ForegroundColor Cyan
 Get-CimInstance Win32_Process -Filter "Name='node.exe'" |
   Where-Object { $_.CommandLine -match 'jamii-air[\\/]backend[\\/]dist[\\/](main|worker)|dist[\\/](main|worker)\.js|jamii-air[\\/]mobile.*expo.*\bstart\b' } |
   ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue; Write-Host "Stopped old process $($_.ProcessId)" }
+# ...and close the windows the last run opened (their process ids are kept in a temp file).
+$pidFile = Join-Path $env:TEMP 'jamii-dev-phone.pids'
+if (Test-Path $pidFile) {
+  Get-Content $pidFile | ForEach-Object { Stop-Process -Id ([int]$_) -Force -ErrorAction SilentlyContinue }
+  Remove-Item $pidFile -ErrorAction SilentlyContinue
+}
 Start-Sleep -Seconds 1
 
 Push-Location $backend
@@ -37,7 +43,8 @@ $storage = "http://${ip}:9000"
 $media = "$storage/jamii-air-media-local"
 function Start-Window($title, $dir, $command) {
   $script = "`$Host.UI.RawUI.WindowTitle = '$title'; Set-Location '$dir'; $command"
-  Start-Process powershell -ArgumentList '-NoExit', '-Command', $script | Out-Null
+  $window = Start-Process powershell -ArgumentList '-NoExit', '-Command', $script -PassThru
+  Add-Content -Path $pidFile -Value $window.Id
 }
 Start-Window 'Jamii API :3000' $backend "`$env:REQUIRE_INVITE='false'; `$env:S3_PUBLIC_ENDPOINT='$storage'; `$env:MEDIA_BASE_URL='$media'; node --enable-source-maps dist/main.js"
 Start-Window 'Jamii worker' $backend "`$env:S3_PUBLIC_ENDPOINT='$storage'; `$env:MEDIA_BASE_URL='$media'; node --enable-source-maps dist/worker.js"

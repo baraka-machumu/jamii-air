@@ -5,7 +5,8 @@
 //   const post = await call(api.GET('/api/v1/posts/{id}', { params: { path: { id } } }));
 //
 // Every request carries the access token (when signed in), X-App-Version and X-Platform
-// (TRD API-03, API-07) and gives up after 15 s (reads) or 30 s (writes) (App Flow §13).
+// (TRD API-03, API-07) and gives up after 15 s (reads) or 30 s (writes) (App Flow §13). A 401 on
+// any other route refreshes the session once (shared by all requests) and sends the request again.
 // Photo bytes never go through here: they are PUT straight to storage (task 3.7).
 import Constants from 'expo-constants';
 import createClient from 'openapi-fetch';
@@ -33,21 +34,32 @@ export function apiBaseUrl(
 
 export const appVersion = Constants.expoConfig?.version ?? '0.0.0';
 
+/** A request as plain parts, so it can be sent again after a token refresh. */
+interface Outgoing {
+  url: string;
+  method: string;
+  headers: Record<string, string>;
+  body?: string;
+}
+
 /**
- * fetch with a timeout; a timed-out or failed request becomes an ApiError with status 0.
  * The request is passed on as URL + init (not the Request object): Request and fetch may come
  * from different implementations (React Native's polyfill vs. the runtime's), and the JSON bodies
  * this client sends are plain text anyway.
  */
-export async function fetchWithTimeout(request: Request, baseFetch: typeof fetch = fetch): Promise<Response> {
+async function toOutgoing(request: Request): Promise<Outgoing> {
+  const headers: Record<string, string> = {};
+  request.headers.forEach((value, key) => { headers[key] = value; });
+  const body = request.method === 'GET' || request.method === 'HEAD' ? undefined : await request.text();
+  return { url: request.url, method: request.method, headers, body: body || undefined };
+}
+
+async function send(out: Outgoing, baseFetch: typeof fetch): Promise<Response> {
   const controller = new AbortController();
-  const ms = request.method === 'GET' ? READ_TIMEOUT_MS : WRITE_TIMEOUT_MS;
+  const ms = out.method === 'GET' ? READ_TIMEOUT_MS : WRITE_TIMEOUT_MS;
   const timer = setTimeout(() => controller.abort(), ms);
   try {
-    const headers: Record<string, string> = {};
-    request.headers.forEach((value, key) => { headers[key] = value; });
-    const body = request.method === 'GET' || request.method === 'HEAD' ? undefined : await request.text();
-    return await baseFetch(request.url, { method: request.method, headers, body: body || undefined, signal: controller.signal });
+    return await baseFetch(out.url, { method: out.method, headers: out.headers, body: out.body, signal: controller.signal });
   } catch (error) {
     if (controller.signal.aborted) throw new ApiError(0, 'TIMEOUT', `No answer within ${ms / 1000} s`);
     throw new ApiError(0, 'NETWORK_ERROR', error instanceof Error ? error.message : 'Network request failed');
@@ -56,8 +68,38 @@ export async function fetchWithTimeout(request: Request, baseFetch: typeof fetch
   }
 }
 
-export function createApiClient(baseUrl = apiBaseUrl(), baseFetch: typeof fetch = fetch) {
-  const client = createClient<paths>({ baseUrl, fetch: (request) => fetchWithTimeout(request, baseFetch) });
+/** fetch with a timeout; a timed-out or failed request becomes an ApiError with status 0. */
+export async function fetchWithTimeout(request: Request, baseFetch: typeof fetch = fetch): Promise<Response> {
+  return send(await toOutgoing(request), baseFetch);
+}
+
+/**
+ * Called when a request comes back 401 (the access token expired): refreshes the session and says
+ * whether to send the request again. Registered by the session module (src/auth/session.ts), which
+ * keeps this file free of an import cycle.
+ */
+type UnauthorizedHandler = () => Promise<boolean>;
+let unauthorizedHandler: UnauthorizedHandler | null = null;
+export function onUnauthorized(handler: UnauthorizedHandler | null): void {
+  unauthorizedHandler = handler;
+}
+
+/** The auth routes answer 401 for wrong credentials or a dead session: never refresh-and-retry those. */
+const isAuthRoute = (url: string) => url.includes('/api/v1/auth/');
+
+// The global fetch is looked up per request (not captured once), so it can be replaced in tests.
+export function createApiClient(baseUrl = apiBaseUrl(), baseFetch: typeof fetch = (input, init) => fetch(input, init)) {
+  const client = createClient<paths>({
+    baseUrl,
+    fetch: async (request) => {
+      const out = await toOutgoing(request);
+      const response = await send(out, baseFetch);
+      if (response.status !== 401 || isAuthRoute(out.url) || !unauthorizedHandler) return response;
+      if (!(await unauthorizedHandler())) return response;
+      const token = useSession.getState().accessToken;
+      return send({ ...out, headers: { ...out.headers, authorization: `Bearer ${token}` } }, baseFetch);
+    },
+  });
   client.use({
     onRequest({ request }) {
       const token = useSession.getState().accessToken;

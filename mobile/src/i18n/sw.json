@@ -12,9 +12,48 @@
   },
   "auth": {
     "logInTitle": "Karibu tena",
+    "logInSubtitle": "Ingia kwa jina lako la mtumiaji au barua pepe.",
     "signUpTitle": "Fungua akaunti",
-    "comingSoon": "Skrini hii inajengwa katika hatua inayofuata (kazi 3.4).",
-    "devContinue": "Endelea bila akaunti (majaribio ya uundaji)"
+    "signUpSubtitle": "Jamii Air ni kwa watu wazima wenye miaka 18 au zaidi.",
+    "inviteCode": "Msimbo wa mwaliko",
+    "inviteHelper": "Kutoka kwa mtu aliyekualika kwenye majaribio.",
+    "email": "Barua pepe",
+    "username": "Jina la mtumiaji",
+    "usernameHelper": "Herufi 3–30, namba, . au _",
+    "password": "Nenosiri",
+    "passwordHelper": "Angalau herufi 8.",
+    "dateOfBirth": "Tarehe ya kuzaliwa",
+    "dobHelper": "Tunaitumia kuthibitisha kuwa una miaka 18 au zaidi. Watu wengine hawaioni.",
+    "acceptTerms": "Nakubali Masharti ya Huduma na Sera ya Faragha",
+    "createAccount": "Fungua akaunti",
+    "identifier": "Jina la mtumiaji au barua pepe",
+    "logIn": "Ingia",
+    "forgotPassword": "Umesahau nenosiri?",
+    "pendingDeletionTitle": "Akaunti imepangwa kufutwa",
+    "pendingDeletionBody": "Akaunti yako imepangwa kufutwa tarehe {{date}}. Ingia ili kusitisha kufutwa?",
+    "cancelDeletion": "Sitisha kufutwa",
+    "forgotTitle": "Weka upya nenosiri",
+    "forgotSubtitle": "Weka barua pepe uliyojisajili nayo. Tutakutumia msimbo wa tarakimu 6.",
+    "sendCode": "Tuma msimbo",
+    "resetTitle": "Weka msimbo",
+    "codeSent": "Ikiwa kuna akaunti ya {{email}}, tumetuma msimbo wa tarakimu 6.",
+    "code": "Msimbo wa tarakimu 6",
+    "newPassword": "Nenosiri jipya",
+    "resetPassword": "Weka nenosiri jipya",
+    "resendCode": "Tuma msimbo mpya",
+    "resetDoneTitle": "Nenosiri limebadilishwa",
+    "resetDoneBody": "Ingia kwa nenosiri lako jipya. Umetolewa kwenye vifaa vingine vyote.",
+    "errors": {
+      "emailFormat": "Weka barua pepe sahihi.",
+      "usernameFormat": "Tumia herufi 3–30, namba, . au _ (bila nafasi).",
+      "passwordLength": "Tumia herufi 8 hadi 128.",
+      "underAge": "Lazima uwe na miaka 18 au zaidi kutumia Jamii Air.",
+      "dobRequired": "Weka tarehe yako ya kuzaliwa.",
+      "required": "Inahitajika.",
+      "codeFormat": "Weka tarakimu 6 kutoka kwenye barua pepe.",
+      "termsRequired": "Kubali Masharti na Sera ya Faragha ili kuendelea.",
+      "tooManyAttempts": "Majaribio mengi mno, jaribu tena baada ya dakika chache."
+    }
   },
   "tabs": {
     "home": "Nyumbani",
@@ -41,7 +80,12 @@
     "logOut": "Toka"
   },
   "common": {
-    "back": "Rudi"
+    "back": "Rudi",
+    "show": "Onyesha",
+    "hide": "Ficha",
+    "showPassword": "Onyesha nenosiri",
+    "hidePassword": "Ficha nenosiri",
+    "cancel": "Ghairi"
   },
   "errors": {
     "ACCOUNT_NOT_ACTIVE": "Akaunti hii haitumiki. Tafadhali ingia tena.",

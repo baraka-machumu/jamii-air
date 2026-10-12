@@ -9,7 +9,7 @@ npm install
 npx expo start          # then press a for Android (Expo Go, or a development build once native modules need one)
 ```
 
-Signing in arrives with task 3.4. Until then, development builds show **Continue without an account (development preview)** on the Log in screen to reach the tabs.
+Sign up and log in need the API running (`cd ../backend`, see its README). With `REQUIRE_INVITE=false` no invite code is needed. The session survives restarts: the refresh token is in secure storage (`src/auth/`).
 
 ## Build (EAS)
 
@@ -45,6 +45,7 @@ Add packages with `npx expo install <package>` so versions match the SDK.
 | `src/components/` | Shared UI: `Text` (type scale), `Button`, `Screen`, `Icon`, `Logo`, `TabBar`, `Segmented` |
 | `src/theme/` | Design tokens (`tokens.ts`, light and dark, Design Brief §4) and `useTheme()` |
 | `src/i18n/` | English and Swahili strings (`en.json`, `sw.json`; same keys, enforced by a test) |
+| `src/auth/` | The session: refresh token in secure storage (`tokenStore.ts`), one refresh at a time, restore at launch, log out (`session.ts`); form checks that mirror the API (`validation.ts`) |
 | `src/stores/` | Zustand: `session` (who is signed in) and `settings` (language, theme) |
 | `src/api/` | Typed API client (`client.ts`), errors and their messages (`errors.ts`), TanStack Query client (retry rules from App Flow §13), and the generated `openapi.json` / `schema.d.ts` |
 | `src/__tests__/` | Tests that render the router |

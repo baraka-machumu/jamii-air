@@ -4,7 +4,7 @@ import { Button } from '@/components/Button';
 import { Placeholder } from '@/components/Placeholder';
 import { Screen } from '@/components/Screen';
 import { Segmented } from '@/components/Segmented';
-import { useSession } from '@/stores/session';
+import { signOut } from '@/auth/session';
 import { type LanguagePref, type ThemePref, useSettings } from '@/stores/settings';
 
 /**
@@ -14,7 +14,6 @@ import { type LanguagePref, type ThemePref, useSettings } from '@/stores/setting
 export default function ProfileTab() {
   const { t } = useTranslation();
   const { language, theme, setLanguage, setTheme } = useSettings();
-  const signOut = useSession((s) => s.signOut);
 
   return (
     <Screen>
@@ -30,7 +29,7 @@ export default function ProfileTab() {
             { value: 'light', label: t('settings.light') },
             { value: 'dark', label: t('settings.dark') },
           ]} />
-          <Button kind="secondary" label={t('settings.logOut')} onPress={signOut} />
+          <Button kind="secondary" label={t('settings.logOut')} onPress={() => void signOut()} />
         </View>
       </Placeholder>
     </Screen>

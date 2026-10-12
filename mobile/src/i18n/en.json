@@ -12,9 +12,48 @@
   },
   "auth": {
     "logInTitle": "Karibu tena",
+    "logInSubtitle": "Log in with your username or email.",
     "signUpTitle": "Create account",
-    "comingSoon": "This screen is built in the next step (task 3.4).",
-    "devContinue": "Continue without an account (development preview)"
+    "signUpSubtitle": "Jamii Air is for adults 18 and over.",
+    "inviteCode": "Invite code",
+    "inviteHelper": "From the person who invited you to the pilot.",
+    "email": "Email",
+    "username": "Username",
+    "usernameHelper": "3–30 letters, numbers, . or _",
+    "password": "Password",
+    "passwordHelper": "At least 8 characters.",
+    "dateOfBirth": "Date of birth",
+    "dobHelper": "We use this to confirm you're 18 or older. Other people never see it.",
+    "acceptTerms": "I accept the Terms of Service and Privacy Policy",
+    "createAccount": "Create account",
+    "identifier": "Username or email",
+    "logIn": "Log in",
+    "forgotPassword": "Forgot password?",
+    "pendingDeletionTitle": "Account scheduled for deletion",
+    "pendingDeletionBody": "Your account is scheduled for deletion on {{date}}. Log in to cancel deletion?",
+    "cancelDeletion": "Cancel deletion",
+    "forgotTitle": "Reset your password",
+    "forgotSubtitle": "Enter the email you signed up with. We'll send you a 6-digit code.",
+    "sendCode": "Send code",
+    "resetTitle": "Enter the code",
+    "codeSent": "If an account exists for {{email}}, we've sent a 6-digit code to it.",
+    "code": "6-digit code",
+    "newPassword": "New password",
+    "resetPassword": "Reset password",
+    "resendCode": "Send a new code",
+    "resetDoneTitle": "Password changed",
+    "resetDoneBody": "Log in with your new password. You've been logged out on every other device.",
+    "errors": {
+      "emailFormat": "Enter a valid email address.",
+      "usernameFormat": "Use 3–30 letters, numbers, . or _ (no spaces).",
+      "passwordLength": "Use 8 to 128 characters.",
+      "underAge": "You must be 18 or older to use Jamii Air.",
+      "dobRequired": "Enter your date of birth.",
+      "required": "Required.",
+      "codeFormat": "Enter the 6 digits from the email.",
+      "termsRequired": "Accept the Terms and Privacy Policy to continue.",
+      "tooManyAttempts": "Too many attempts, try again in a few minutes."
+    }
   },
   "tabs": {
     "home": "Home",
@@ -41,7 +80,12 @@
     "logOut": "Log out"
   },
   "common": {
-    "back": "Back"
+    "back": "Back",
+    "show": "Show",
+    "hide": "Hide",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "cancel": "Cancel"
   },
   "errors": {
     "ACCOUNT_NOT_ACTIVE": "This account is not active. Please log in again.",

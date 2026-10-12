@@ -13,8 +13,8 @@ The GitHub board does not exist yet (the `gh` CLI is not installed), so this tab
 | Designs (first increment, Design Brief §12) | **Done** (approved 2026-10-11) | — | [Design canvas](https://claude.ai/artifact/U9EUjyBSEbuL8as26BwFtw), private to the owner: brand and components, 38 mobile screens with click-through, the share landing page, 8 admin portal screens |
 | 3.1 Foundation | Review | see git log | Expo Router, TanStack Query, Zustand, i18next (en/sw), theme tokens (light/dark), FlashList, expo-image, react-native-svg. Sentry deferred (no DSN; local dev only) |
 | 3.2 API client | Review | see git log | `openapi-fetch` + generated types; 15 s / 30 s timeouts; token, `X-App-Version`, `X-Platform`; error code → en/sw message. Found and fixed 2 backend spec bugs (below) |
-| 3.3 EAS builds | **In progress** | see git log | `eas.json` profiles and `expo-dev-client` in the repo. Waiting on the owner: `eas login` + `eas init`, the first cloud build, install on the reference device, FCM credentials |
-| 3.4 Auth screens | Backlog | | |
+| 3.3 EAS builds | **In progress** | see git log | `eas.json` profiles and `expo-dev-client` in the repo. Project linked (`eas init`, projectId in `app.json`). Waiting on the owner: the first cloud build, install on the reference device, FCM credentials |
+| 3.4 Auth screens | Review | see git log | Sign up, Log in, Forgot password; session layer in `src/auth/` (secure store, one refresh at a time, restore at launch). 66 jest tests pass, plus 2 live tests against the local API. Device check waits for the dev build (3.3) |
 | 3.5 Profile and Settings | Backlog | | Persist the language and theme choice on the device |
 | 3.6 People | Backlog | | |
 | 3.7 Create flow | Backlog | | HEIC → JPEG on the phone (backend task 2.7) |
@@ -35,23 +35,25 @@ The Phase 3 tasks broken into trackable items. Tick an item (☐ → ✅) in the
 | 3.2.a | 3.2 API client | Reviewed PR, green CI on GitHub, demo on the reference Android → Done | ☐ |
 | 3.3.a | 3.3 EAS builds | Expo account `bmachumu` | ✅ |
 | 3.3.b | 3.3 EAS builds | EAS build profiles (`development`, `preview`, `production`), project owner `bmachumu`; `expo-dev-client` | ✅ |
-| 3.3.b2 | 3.3 EAS builds | `eas login` and `eas init` (owner); commit the `projectId` it writes to `app.json` | ☐ |
+| 3.3.b2 | 3.3 EAS builds | `eas login` and `eas init` (owner); commit the `projectId` it writes to `app.json` | ✅ |
 | 3.3.b3 | 3.3 EAS builds | Plain-HTTP access to the local API for `development` and `preview` builds (`app.config.ts`, `APP_VARIANT`) | ✅ |
 | 3.3.c | 3.3 EAS builds | Android dev build installed and running on the reference device | ☐ |
 | 3.3.d | 3.3 EAS builds | Android push credentials (FCM via EAS) | ☐ |
 | 3.3.e | 3.3 EAS builds | iOS builds and APNs | ☐ (waits for the Apple account, 5.0) |
-| 3.4.a | 3.4 Auth | Welcome screen | ☐ |
-| 3.4.b | 3.4 Auth | Sign up: date-of-birth picker, under-18 message, invite code | ☐ |
-| 3.4.c | 3.4 Auth | Log in | ☐ |
-| 3.4.d | 3.4 Auth | Forgot password | ☐ |
-| 3.4.e | 3.4 Auth | Secure token storage | ☐ |
-| 3.4.f | 3.4 Auth | Single-flight silent refresh | ☐ |
-| 3.4.g | 3.4 Auth | Session restore on launch | ☐ |
+| 3.4.a | 3.4 Auth | Welcome screen | ✅ |
+| 3.4.b | 3.4 Auth | Sign up: date-of-birth picker, under-18 message, invite code | ✅ |
+| 3.4.c | 3.4 Auth | Log in (incl. cancel a scheduled deletion) | ✅ |
+| 3.4.d | 3.4 Auth | Forgot password | ✅ |
+| 3.4.e | 3.4 Auth | Secure token storage | ✅ |
+| 3.4.f | 3.4 Auth | Single-flight silent refresh | ✅ |
+| 3.4.g | 3.4 Auth | Session restore on launch | ✅ |
+| 3.4.h | 3.4 Auth | Check sign up, log in, restart and log out on the reference Android (dev build) | ☐ |
 | 3.5.a | 3.5 Profile | My profile | ☐ |
 | 3.5.b | 3.5 Profile | Edit profile | ☐ |
 | 3.5.c | 3.5 Profile | Avatar upload | ☐ |
 | 3.5.d | 3.5 Profile | Settings | ☐ |
 | 3.5.e | 3.5 Profile | Language and theme, persisted on the device | ☐ |
+| 3.5.f | 3.5 Profile | Onboarding step 1 after sign-up: profile photo and bio, Skip always visible (App Flow §4.2) | ☐ |
 | 3.6.a | 3.6 People | Search: debounce, cancel, recent searches | ☐ |
 | 3.6.b | 3.6 People | User profile with optimistic Follow | ☐ |
 | 3.6.c | 3.6 People | Follower and following lists | ☐ |
@@ -100,4 +102,7 @@ The Phase 3 tasks broken into trackable items. Tick an item (☐ → ✅) in the
 | Web preview | `react-native-web` and `@expo/metro-runtime` added so `npm run web` opens the app in a browser for quick layout checks. Development aid only: the product targets Android and iOS, and the demo still runs on the reference Android | Fast visual feedback while the EAS dev build (task 3.3) is not set up yet |
 | EAS profiles | `development` and `preview` build APKs for internal install; `production` builds the store AAB. App version source is `remote` (EAS keeps the build number, `autoIncrement` on production). Update channels wait for task 3.12 (EAS Update) | APKs install straight from the build link on the reference Android; no manual build-number bumps |
 | Preview builds and the API | Purely development for now (owner, 2026-10-11): no HTTPS. `preview` builds call the local API over plain HTTP at `EXPO_PUBLIC_API_URL=http://192.168.0.65:3000` (set in `eas.json`). `app.config.ts` enables Android cleartext traffic for every `APP_VARIANT` except `production` (`expo-build-properties`) | A preview build has no dev server to find the API, and Android release builds block HTTP unless allowed. Keeping production locked means the setting cannot leak into a store build |
+| Session handling (3.4) | `src/auth/session.ts`: the refresh token in `expo-secure-store` (`AFTER_FIRST_UNLOCK`), the access token in memory. A 401 on any non-auth route triggers **one** shared refresh, then the request is sent again. At launch the splash waits up to 8 s for the refresh, then opens Home offline and lets the refresh land later (it is never abandoned). Log out clears the device at once and tells the server in the background | Refresh tokens rotate and a reused one revokes the whole session (AU-04): parallel refreshes would sign the user out. An abandoned refresh could lose the rotated token the same way |
+| After sign-up (3.4) | Sign-up opens Home until the onboarding steps exist: photo and bio (3.5.f), Find people (3.6), notifications (3.10) | Each step needs the screens of its own task |
+| Not in 3.4 | The dev-only "Continue without an account" button is gone (real sign-in replaces it). Suspension mid-session (`403 ACCOUNT_SUSPENDED` → explanation screen) is part of 3.11. The web preview keeps the refresh token in `localStorage` (no secure store on web; development only) | Keep each task to its own screens |
 | Spec fixes found by the client | `User-Agent` and `Idempotency-Key` were published as *required* headers (Nest's `@Headers`); now read with custom decorators. The dashboard's `MetricPoint` schema was referenced but not registered. Both now have backend tests | Generated clients would have demanded headers a phone never sets by hand, and refused to generate |

@@ -79,8 +79,9 @@ describe('API client', () => {
       init?.signal?.addEventListener('abort', () => reject(new Error('aborted')));
     })) as unknown as typeof fetch;
     const pending = fetchWithTimeout(new Request('http://api.test/api/v1/feed'), hanging);
-    jest.advanceTimersByTime(READ_TIMEOUT_MS);
-    await expect(pending).rejects.toMatchObject({ status: 0, code: 'TIMEOUT' });
+    const outcome = expect(pending).rejects.toMatchObject({ status: 0, code: 'TIMEOUT' });
+    await jest.advanceTimersByTimeAsync(READ_TIMEOUT_MS);
+    await outcome;
     jest.useRealTimers();
   });
 });

@@ -5,6 +5,7 @@
   "dependencies": {
     "@expo-google-fonts/nunito": "^0.4.2",
     "@expo/metro-runtime": "~57.0.16",
+    "@react-native-community/datetimepicker": "9.1.0",
     "@shopify/flash-list": "2.0.2",
     "@tanstack/react-query": "^5.104.1",
     "expo": "~57.0.27",
@@ -16,6 +17,7 @@
     "expo-linking": "~57.0.12",
     "expo-localization": "~57.0.2",
     "expo-router": "~57.0.25",
+    "expo-secure-store": "~57.0.4",
     "expo-status-bar": "~57.0.1",
     "i18next": "^26.4.3",
     "openapi-fetch": "^0.17.0",

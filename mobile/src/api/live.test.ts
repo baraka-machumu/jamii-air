@@ -46,4 +46,34 @@ function nodeFetch(url: string, init: RequestInit): Promise<Response> {
     expect(missing).toBeInstanceOf(ApiError);
     expect(missing).toMatchObject({ status: 404, code: 'POST_NOT_FOUND' });
   });
+
+  it('logs in, rotates the refresh token, refuses a reused one, and logs out (src/auth/session.ts)', async () => {
+    const api = createApiClient(LIVE, nodeFetch as unknown as typeof fetch);
+    const username = `mob_${Math.random().toString(36).slice(2, 10)}`;
+    const password = 'mango-chai-2026';
+    await call(api.POST('/api/v1/auth/register', {
+      body: { username, email: `${username}@example.test`, password, dateOfBirth: '1995-03-01', acceptTerms: true },
+    }));
+
+    const wrong = await call(api.POST('/api/v1/auth/login', { body: { identifier: username, password: 'not-it-at-all' } })).catch((e: unknown) => e);
+    expect(wrong).toMatchObject({ status: 401, code: 'INVALID_CREDENTIALS' });
+
+    const login = await call(api.POST('/api/v1/auth/login', { body: { identifier: username, password } }));
+    expect(login.user).toMatchObject({ id: expect.any(String) });
+    const rotated = await call(api.POST('/api/v1/auth/refresh', { body: { refreshToken: login.refreshToken } }));
+    expect(rotated.refreshToken).not.toBe(login.refreshToken);
+
+    // Presenting the old token again revokes the whole session: why the app refreshes one at a time.
+    const reused = await call(api.POST('/api/v1/auth/refresh', { body: { refreshToken: login.refreshToken } })).catch((e: unknown) => e);
+    expect(reused).toMatchObject({ status: 401 });
+    const after = await call(api.POST('/api/v1/auth/refresh', { body: { refreshToken: rotated.refreshToken } })).catch((e: unknown) => e);
+    expect(after).toMatchObject({ status: 401 });
+
+    const again = await call(api.POST('/api/v1/auth/login', { body: { identifier: username, password } }));
+    await call(api.POST('/api/v1/auth/logout', {
+      body: { refreshToken: again.refreshToken }, headers: { Authorization: `Bearer ${again.accessToken}` },
+    }));
+    const ended = await call(api.POST('/api/v1/auth/refresh', { body: { refreshToken: again.refreshToken } })).catch((e: unknown) => e);
+    expect(ended).toMatchObject({ status: 401 });
+  });
 });

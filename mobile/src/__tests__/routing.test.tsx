@@ -2,38 +2,15 @@
 // land in the tabs, and signing out returns to Welcome.
 import { act, fireEvent, screen } from '@testing-library/react-native';
 import { renderRouter } from 'expo-router/testing-library';
-import AuthLayout from '@/app/(auth)/_layout';
-import Welcome from '@/app/(auth)/index';
-import LogIn from '@/app/(auth)/login';
-import SignUp from '@/app/(auth)/signup';
-import TabsLayout from '@/app/(tabs)/_layout';
-import Activity from '@/app/(tabs)/activity';
-import Create from '@/app/(tabs)/create';
-import Home from '@/app/(tabs)/index';
-import Profile from '@/app/(tabs)/profile';
-import Search from '@/app/(tabs)/search';
-import RootLayout from '@/app/_layout';
 import { useSession } from '@/stores/session';
 import { useSettings } from '@/stores/settings';
+import { routes } from '@/test/routes';
 
 jest.mock('@expo-google-fonts/nunito', () => ({ useFonts: () => [true], Nunito_800ExtraBold: 1 }));
-
-const routes = {
-  _layout: RootLayout,
-  '(auth)/_layout': AuthLayout,
-  '(auth)/index': Welcome,
-  '(auth)/login': LogIn,
-  '(auth)/signup': SignUp,
-  '(tabs)/_layout': TabsLayout,
-  '(tabs)/index': Home,
-  '(tabs)/search': Search,
-  '(tabs)/create': Create,
-  '(tabs)/activity': Activity,
-  '(tabs)/profile': Profile,
-};
+jest.mock('@/auth/tokenStore', () => jest.requireActual('@/test/memoryTokenStore'));
 
 beforeEach(() => {
-  useSession.setState({ status: 'signedOut', accessToken: null });
+  useSession.setState({ status: 'signedOut', accessToken: null, user: null });
   useSettings.setState({ language: 'en', theme: 'system' });
 });
 

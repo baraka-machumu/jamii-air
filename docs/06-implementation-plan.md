@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Document** | 06 — Implementation Plan |
-| **Version** | 1.11 (Phase 3: 3.1 foundation, 3.2 typed API client and 3.4 auth built; 3.3 EAS in progress) |
+| **Version** | 1.12 (Phase 3: 3.1–3.5 built; 3.1–3.4 checked on the reference Android) |
 | **Status** | **Approved** — 2026-10-11 |
 | **Date** | 2026-10-10 |
 | **Team** | 1 engineer building with Claude Code; Product (stakeholder) as product owner |
@@ -48,7 +48,7 @@ Visual design (Design Brief, doc 04) is produced by the engineer with Claude Cod
 | 0 Docs | ✅ Complete | §4 Phase 0 |
 | 1 Database design | Built and tested locally; in **Review** | [Phase 1 backlog](backlog/phase-1-database-E0-E1.md#status) |
 | 2 Backend | Built and tested locally; exit gate met locally (UAT deferred); in **Review** | [Phase 2 backlog](backlog/phase-2-backend.md#status) |
-| 3 Mobile | **In progress.** Designs approved; 3.1 foundation, 3.2 API client, 3.3 EAS builds and 3.4 auth built (Review) | [Phase 3 backlog](backlog/phase-3-mobile.md#status) |
+| 3 Mobile | **In progress.** Designs approved; 3.1 foundation, 3.2 API client, 3.3 EAS builds, 3.4 auth and 3.5 profile and Settings built (Review) | [Phase 3 backlog](backlog/phase-3-mobile.md#status) |
 | 4 Admin portal | Not started; the admin API it needs is done (2.12) | §4 Phase 4 |
 | 5–6 Release, pilot | Not started | §4 Phases 5–6 |
 
@@ -230,7 +230,7 @@ The Expo app in `mobile/`, built screen by screen against the finished UAT API. 
 | 3.2 | ✅ API client (timeouts, auth header, `X-App-Version`, error code → localised message) with types generated from the OpenAPI spec (`openapi-fetch`; `npm run api:sync`; every published error code has en/sw text, enforced by tests on both sides) |
 | 3.3 | EAS build profiles (✅ Expo account `bmachumu` exists, project owner); Android dev build on the reference device; Android push credentials (FCM via EAS). iOS builds and APNs wait for the Apple account (5.0) |
 | 3.4 | ✅ Auth: Welcome, Sign up (**date-of-birth picker + under-18 message**, invite code), Log in, Forgot password; secure token storage; single-flight silent refresh; session restore |
-| 3.5 | Profile: My profile, Edit profile, avatar upload, Settings, language & theme |
+| 3.5 | ✅ Profile: My profile, Edit profile, avatar upload, Settings, language & theme (saved on the phone); onboarding step 1 (photo and bio) |
 | 3.6 | People: Search (debounce, cancel, recent searches), User profile with optimistic Follow, follower/following lists, Onboarding "Find people" |
 | 3.7 | Create flow: permissions, picker/camera, crop, downscale (HEIC → JPEG), caption, upload with progress/retry, draft persistence, posting/processing/failed card |
 | 3.8 | Feed: Home feed (FlashList, reserved aspect ratio, blurhash, infinite scroll, pull-to-refresh, all states, memoised card); profile grid; Post detail; performance pass on the reference Android |
@@ -351,5 +351,6 @@ If priorities change, these stories are dropped first, in this order: 1) Caption
 5. ✅ **Phase 3 started:** designs approved ([design canvas](https://claude.ai/artifact/U9EUjyBSEbuL8as26BwFtw)); 3.1 foundation built.
 6. ✅ 3.2 typed API client built.
 7. ✅ 3.3 EAS builds: profiles, project linked, FCM credentials; the Android dev build runs on the reference device against the local API over plain HTTP (purely development, no HTTPS for now).
-8. ✅ 3.4 auth built: Sign up (date of birth, under-18 message, invite code), Log in (incl. cancel a scheduled deletion), Forgot password; refresh token in secure storage, one refresh at a time, session restore at launch. **Next:** 3.5 (profile, Settings, onboarding step 1). Tracker: [`docs/backlog/phase-3-mobile.md`](backlog/phase-3-mobile.md).
+8. ✅ 3.4 auth built: Sign up (date of birth, under-18 message, invite code), Log in (incl. cancel a scheduled deletion), Forgot password; refresh token in secure storage, one refresh at a time, session restore at launch. 
+9. ✅ 3.5 profile and Settings built (avatar upload end to end locally); phone check after a new dev build. **Next:** 3.6 (People: search, user profile, follow, onboarding Find people). Tracker: [`docs/backlog/phase-3-mobile.md`](backlog/phase-3-mobile.md).
 

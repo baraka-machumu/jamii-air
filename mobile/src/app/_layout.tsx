@@ -53,12 +53,19 @@ export default function RootLayout() {
 function RootStack() {
   const theme = useTheme();
   const signedIn = useSession((s) => s.status === 'signedIn');
+  const onboarding = useSession((s) => s.onboarding);
   return (
     <>
       <StatusBar style={theme.scheme === 'dark' ? 'light' : 'dark'} />
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: theme.colors.bg } }}>
-        <Stack.Protected guard={signedIn}>
+        <Stack.Protected guard={signedIn && !onboarding}>
           <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="edit-profile" />
+          <Stack.Screen name="settings/index" />
+          <Stack.Screen name="settings/password" />
+        </Stack.Protected>
+        <Stack.Protected guard={signedIn && onboarding}>
+          <Stack.Screen name="onboarding" />
         </Stack.Protected>
         <Stack.Protected guard={!signedIn}>
           <Stack.Screen name="(auth)" />

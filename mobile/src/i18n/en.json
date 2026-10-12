@@ -66,8 +66,7 @@
     "home": "Your feed arrives in task 3.8.",
     "search": "Search arrives in task 3.6.",
     "create": "Posting a photo arrives in task 3.7.",
-    "activity": "Activity arrives in task 3.10.",
-    "profile": "Your profile arrives in task 3.5."
+    "activity": "Activity arrives in task 3.10."
   },
   "settings": {
     "language": "Language",
@@ -77,7 +76,18 @@
     "swahili": "Kiswahili",
     "light": "Light",
     "dark": "Dark",
-    "logOut": "Log out"
+    "logOut": "Log out",
+    "title": "Settings",
+    "account": "Account",
+    "preferences": "Preferences",
+    "about": "About",
+    "appVersion": "App version",
+    "changePassword": "Change password",
+    "changePasswordSubtitle": "You'll stay logged in on this phone. Every other device is logged out.",
+    "currentPassword": "Current password",
+    "passwordChangedTitle": "Password changed",
+    "passwordChangedBody": "You've been logged out on every other device.",
+    "logOutConfirm": "Log out of Jamii Air?"
   },
   "common": {
     "back": "Back",
@@ -85,7 +95,9 @@
     "hide": "Hide",
     "showPassword": "Show password",
     "hidePassword": "Hide password",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "retry": "Try again",
+    "save": "Save"
   },
   "errors": {
     "ACCOUNT_NOT_ACTIVE": "This account is not active. Please log in again.",
@@ -144,6 +156,40 @@
     "UNKNOWN": "Something went wrong. Please try again.",
     "USERNAME_TAKEN": "This username is taken.",
     "USER_NOT_FOUND": "This account isn't available.",
-    "VALIDATION_FAILED": "Please check what you entered."
+    "VALIDATION_FAILED": "Please check what you entered.",
+    "UPLOAD_FAILED": "The photo didn't upload. Check your connection and try again."
+  },
+  "profile": {
+    "posts": "Posts",
+    "followers": "Followers",
+    "following": "Following",
+    "edit": "Edit profile",
+    "noPostsTitle": "No posts yet",
+    "noPostsBody": "Photos you share will appear here.",
+    "displayName": "Name",
+    "bio": "Bio",
+    "discardTitle": "Discard your changes?",
+    "keepEditing": "Keep editing",
+    "discard": "Discard"
+  },
+  "media": {
+    "profilePhoto": "Profile photo",
+    "takePhoto": "Take photo",
+    "chooseFromLibrary": "Choose from library",
+    "removePhoto": "Remove photo",
+    "changePhoto": "Change photo",
+    "addPhoto": "Add a photo",
+    "avatarFailed": "Your profile photo couldn't be updated.",
+    "cameraDeniedTitle": "Camera access is off",
+    "cameraDeniedBody": "To take a photo, allow Jamii Air to use the camera in your phone's settings.",
+    "openSettings": "Open settings"
+  },
+  "onboarding": {
+    "welcome": "Welcome, {{username}}",
+    "skip": "Skip",
+    "photoTitle": "Add a profile photo",
+    "photoBody": "Help friends recognise you. You can change it any time.",
+    "bioPlaceholder": "A few words about you",
+    "continue": "Continue"
   }
 }

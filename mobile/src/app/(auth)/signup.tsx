@@ -42,8 +42,8 @@ export default function SignUp() {
 
   const register = useMutation({
     mutationFn: async (body: components['schemas']['RegisterDto']) =>
-      startSession(await call(api.POST('/api/v1/auth/register', { body }))),
-    // Success: the session flips to signed in and the router leaves the auth screens.
+      startSession(await call(api.POST('/api/v1/auth/register', { body })), { newAccount: true }),
+    // Success: the session flips to signed in and the router opens onboarding.
     onError: (error) => {
       const code = error instanceof ApiError ? error.code : '';
       const message = code === 'RATE_LIMITED' ? t('auth.errors.tooManyAttempts') : errorMessage(error, t);

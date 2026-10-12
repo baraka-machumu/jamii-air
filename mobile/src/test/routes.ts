@@ -11,6 +11,10 @@ import Home from '@/app/(tabs)/index';
 import Profile from '@/app/(tabs)/profile';
 import Search from '@/app/(tabs)/search';
 import RootLayout from '@/app/_layout';
+import EditProfile from '@/app/edit-profile';
+import Onboarding from '@/app/onboarding';
+import Settings from '@/app/settings/index';
+import ChangePassword from '@/app/settings/password';
 
 export const routes = {
   _layout: RootLayout,
@@ -25,4 +29,8 @@ export const routes = {
   '(tabs)/create': Create,
   '(tabs)/activity': Activity,
   '(tabs)/profile': Profile,
+  'edit-profile': EditProfile,
+  'settings/index': Settings,
+  'settings/password': ChangePassword,
+  onboarding: Onboarding,
 };

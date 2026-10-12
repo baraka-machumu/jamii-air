@@ -6,7 +6,7 @@ import type { components } from './schema';
 /** Every code the API can return (published in the OpenAPI spec). */
 export type ServerErrorCode = components['schemas']['ApiErrorDetail']['code'];
 /** Failures that never reached the API. */
-export type ClientErrorCode = 'NETWORK_ERROR' | 'TIMEOUT';
+export type ClientErrorCode = 'NETWORK_ERROR' | 'TIMEOUT' | 'UPLOAD_FAILED';
 export type ErrorCode = ServerErrorCode | ClientErrorCode;
 
 export class ApiError extends Error {

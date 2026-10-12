@@ -19,9 +19,10 @@ export type RefreshOutcome = 'refreshed' | 'signedOut' | 'offline';
 /** How long the splash waits for the launch refresh before opening Home offline (App Flow §3). */
 export const RESTORE_WAIT_MS = 8_000;
 
-export async function startSession(session: SessionResponse): Promise<void> {
+/** `newAccount`: just signed up, so onboarding comes before the tabs (App Flow §4.2). */
+export async function startSession(session: SessionResponse, { newAccount = false } = {}): Promise<void> {
   await tokenStore.set(session.refreshToken);
-  useSession.getState().signIn(session.accessToken, session.user);
+  useSession.getState().signIn(session.accessToken, session.user, newAccount || undefined);
 }
 
 async function endLocally(): Promise<void> {

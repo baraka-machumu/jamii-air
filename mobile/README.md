@@ -35,6 +35,20 @@ Check from the phone's browser: `http://<laptop Wi-Fi IP>:3000/api/v1/health/liv
 
 Plain HTTP is allowed in `development` and `preview` builds only: `app.config.ts` reads `APP_VARIANT` (set per profile in `eas.json`) and turns Android cleartext traffic off for `production`.
 
+**Photos on the phone (avatar, posts).** Uploads go straight to storage (MinIO), and photos load from it, so the phone must reach MinIO too, and the worker must run to make the photo sizes:
+
+```powershell
+cd ../backend
+$env:MINIO_BIND = "0.0.0.0"; docker compose up -d --wait minio           # MinIO on the Wi-Fi, not only localhost
+$env:S3_PUBLIC_ENDPOINT = "http://<laptop Wi-Fi IP>:9000"
+$env:MEDIA_BASE_URL = "http://<laptop Wi-Fi IP>:9000/jamii-air-media-local"
+$env:REQUIRE_INVITE = "false"
+npm run start:dev                                                          # API; in a second terminal with the same variables:
+node dist/worker.js                                                        # after npm run build: the media worker
+```
+
+**New native modules need a new dev build** (`npm run build:dev`): task 3.5 added `expo-image-picker`, `expo-image-manipulator` and AsyncStorage.
+
 ## Check
 
 ```bash
@@ -44,20 +58,23 @@ npm test                # jest-expo: tokens contrast, translations, query retrie
 npx expo-doctor         # dependency and config diagnostics
 ```
 
+If `typecheck` complains about routes like `"/../api/me"`, the running `expo start` wrote a stale `.expo/types/router.d.ts` (it lists files created outside `src/app/` while it runs). Restart `expo start`, or delete that file; CI does not use it.
+
 Add packages with `npx expo install <package>` so versions match the SDK.
 
 ## Structure
 
 | Path | What |
 |---|---|
-| `src/app/` | Routes (Expo Router). Every file is a screen; `_layout.tsx` files are navigators. `(auth)` = signed-out screens, `(tabs)` = the five tabs; `Stack.Protected` keeps them apart. Keep non-route code (and tests) out of this folder. |
-| `src/components/` | Shared UI: `Text` (type scale), `Button`, `Screen`, `Icon`, `Logo`, `TabBar`, `Segmented` |
+| `src/app/` | Routes (Expo Router). Every file is a screen; `_layout.tsx` files are navigators. `(auth)` = signed-out screens, `(tabs)` = the five tabs, `onboarding` = first session after sign-up; pushed screens (`edit-profile`, `settings/…`) sit beside the tabs. `Stack.Protected` keeps the groups apart. Keep non-route code (and tests) out of this folder. |
+| `src/components/` | Shared UI: `Text` (type scale), `Button`, `Screen`, `Header`, `Icon`, `Logo`, `TabBar`, `Segmented`, `Avatar`, `ListRow`; form parts `TextField`, `Checkbox`, `DateField`, `FormScreen` |
+| `src/media/` | Photos: pick (library / camera, `pickImage.ts`), downscale to JPEG and upload to storage with retries (`upload.ts`, shared with posts in 3.7), the profile photo flow (`useAvatar.ts`) |
 | `src/theme/` | Design tokens (`tokens.ts`, light and dark, Design Brief §4) and `useTheme()` |
 | `src/i18n/` | English and Swahili strings (`en.json`, `sw.json`; same keys, enforced by a test) |
 | `src/auth/` | The session: refresh token in secure storage (`tokenStore.ts`), one refresh at a time, restore at launch, log out (`session.ts`); form checks that mirror the API (`validation.ts`) |
-| `src/stores/` | Zustand: `session` (who is signed in) and `settings` (language, theme) |
+| `src/stores/` | Zustand: `session` (who is signed in, onboarding) and `settings` (language, theme; saved on the phone with AsyncStorage) |
 | `src/api/` | Typed API client (`client.ts`), errors and their messages (`errors.ts`), TanStack Query client (retry rules from App Flow §13), and the generated `openapi.json` / `schema.d.ts` |
-| `src/__tests__/` | Tests that render the router |
+| `src/__tests__/`, `src/test/` | Tests that render the router; shared test helpers (routes, a stubbed API, an in-memory token store) |
 
 ## API
 

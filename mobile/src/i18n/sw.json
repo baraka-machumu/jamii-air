@@ -66,8 +66,7 @@
     "home": "Habari zako zinakuja katika kazi 3.8.",
     "search": "Kutafuta kunakuja katika kazi 3.6.",
     "create": "Kuchapisha picha kunakuja katika kazi 3.7.",
-    "activity": "Shughuli zinakuja katika kazi 3.10.",
-    "profile": "Wasifu wako unakuja katika kazi 3.5."
+    "activity": "Shughuli zinakuja katika kazi 3.10."
   },
   "settings": {
     "language": "Lugha",
@@ -77,7 +76,18 @@
     "swahili": "Kiswahili",
     "light": "Mwanga",
     "dark": "Giza",
-    "logOut": "Toka"
+    "logOut": "Toka",
+    "title": "Mipangilio",
+    "account": "Akaunti",
+    "preferences": "Mapendeleo",
+    "about": "Kuhusu",
+    "appVersion": "Toleo la programu",
+    "changePassword": "Badilisha nenosiri",
+    "changePasswordSubtitle": "Utaendelea kuwa umeingia kwenye simu hii. Vifaa vingine vyote vitatolewa.",
+    "currentPassword": "Nenosiri la sasa",
+    "passwordChangedTitle": "Nenosiri limebadilishwa",
+    "passwordChangedBody": "Umetolewa kwenye vifaa vingine vyote.",
+    "logOutConfirm": "Toka kwenye Jamii Air?"
   },
   "common": {
     "back": "Rudi",
@@ -85,7 +95,9 @@
     "hide": "Ficha",
     "showPassword": "Onyesha nenosiri",
     "hidePassword": "Ficha nenosiri",
-    "cancel": "Ghairi"
+    "cancel": "Ghairi",
+    "retry": "Jaribu tena",
+    "save": "Hifadhi"
   },
   "errors": {
     "ACCOUNT_NOT_ACTIVE": "Akaunti hii haitumiki. Tafadhali ingia tena.",
@@ -144,6 +156,40 @@
     "UNKNOWN": "Kuna hitilafu. Tafadhali jaribu tena.",
     "USERNAME_TAKEN": "Jina hili la mtumiaji limeshachukuliwa.",
     "USER_NOT_FOUND": "Akaunti hii haipatikani.",
-    "VALIDATION_FAILED": "Tafadhali kagua ulichoandika."
+    "VALIDATION_FAILED": "Tafadhali kagua ulichoandika.",
+    "UPLOAD_FAILED": "Picha haikupakiwa. Angalia mtandao wako na ujaribu tena."
+  },
+  "profile": {
+    "posts": "Machapisho",
+    "followers": "Wafuasi",
+    "following": "Unaowafuata",
+    "edit": "Hariri wasifu",
+    "noPostsTitle": "Bado hakuna machapisho",
+    "noPostsBody": "Picha utakazoshiriki zitaonekana hapa.",
+    "displayName": "Jina",
+    "bio": "Maelezo mafupi",
+    "discardTitle": "Uachane na mabadiliko yako?",
+    "keepEditing": "Endelea kuhariri",
+    "discard": "Achana nayo"
+  },
+  "media": {
+    "profilePhoto": "Picha ya wasifu",
+    "takePhoto": "Piga picha",
+    "chooseFromLibrary": "Chagua kutoka kwenye picha",
+    "removePhoto": "Ondoa picha",
+    "changePhoto": "Badilisha picha",
+    "addPhoto": "Weka picha",
+    "avatarFailed": "Picha yako ya wasifu haikuweza kubadilishwa.",
+    "cameraDeniedTitle": "Kamera imezimwa",
+    "cameraDeniedBody": "Ili kupiga picha, ruhusu Jamii Air kutumia kamera kwenye mipangilio ya simu yako.",
+    "openSettings": "Fungua mipangilio"
+  },
+  "onboarding": {
+    "welcome": "Karibu, {{username}}",
+    "skip": "Ruka",
+    "photoTitle": "Weka picha ya wasifu",
+    "photoBody": "Wasaidie marafiki wakutambue. Unaweza kuibadilisha wakati wowote.",
+    "bioPlaceholder": "Maneno machache kukuhusu",
+    "continue": "Endelea"
   }
 }

@@ -118,12 +118,13 @@ describe('Sign up (§4.1)', () => {
     expect(await screen.findByText('This username is taken.')).toBeTruthy();
   });
 
-  it('creates the account with the date as YYYY-MM-DD and opens the app', async () => {
-    reply = () => json(201, session);
+  it('creates the account with the date as YYYY-MM-DD and opens onboarding (§4.2)', async () => {
+    reply = (url) => (url.endsWith('/api/v1/me') ? json(200, { ...session.user, avatarUrl: null }) : json(201, session));
     await fill();
     fireEvent.press(screen.getByText('pick adult'));
     fireEvent.press(screen.getByRole('button', { name: 'Create account' }));
-    expect(await screen.findByTestId('tab-index')).toBeTruthy();
+    expect(await screen.findByText('Add a profile photo')).toBeTruthy();
+    expect(screen.queryByTestId('tab-index')).toBeNull();
     expect(bodies[0]).toEqual({
       email: 'amina@example.com', username: 'amina_shop', password: 'long-enough', dateOfBirth: '1999-05-14',
       inviteCode: 'PILOT1', acceptTerms: true, locale: 'en',

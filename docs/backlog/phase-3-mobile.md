@@ -17,7 +17,7 @@ The GitHub board does not exist yet (the `gh` CLI is not installed), so this tab
 | 3.2 API client | Review | see git log | `openapi-fetch` + generated types; 15 s / 30 s timeouts; token, `X-App-Version`, `X-Platform`; error code → en/sw message. Found and fixed 2 backend spec bugs (below) |
 | 3.3 EAS builds | Review | see git log | `eas.json` profiles and `expo-dev-client`; project linked (`eas init`); FCM V1 key in EAS, `google-services.json` in the app. Dev build installed on the reference Android and working against the local API (2026-10-12: account created on the phone). iOS waits for the Apple account |
 | 3.4 Auth screens | Review | see git log | Sign up, Log in, Forgot password; session layer in `src/auth/` (secure store, one refresh at a time, restore at launch). 66 jest tests pass, plus 2 live tests against the local API. Checked on the reference Android (3.4.h). Local API for testing: `REQUIRE_INVITE=false npm run start:dev` in `backend/` (works since `c0d837c`) |
-| 3.5 Profile and Settings | Backlog | | Persist the language and theme choice on the device |
+| 3.5 Profile and Settings | Review | see git log | My profile, Edit profile (photo, name, username, bio, discard prompt), Settings (account, change password, language and theme saved on the phone, version, log out with confirm), onboarding step 1. Avatar upload end to end against the local stack (API, worker, MinIO). Found and fixed untyped spec properties (`5642da6`). Needs a new dev build (new native modules) for the phone check (3.5.g) |
 | 3.6 People | Backlog | | |
 | 3.7 Create flow | Backlog | | HEIC → JPEG on the phone (backend task 2.7) |
 | 3.8 Feed | Backlog | | |
@@ -50,12 +50,13 @@ The Phase 3 tasks broken into trackable items. Tick an item (☐ → ✅) in the
 | 3.4.f | 3.4 Auth | Single-flight silent refresh | ✅ |
 | 3.4.g | 3.4 Auth | Session restore on launch | ✅ |
 | 3.4.h | 3.4 Auth | Check on the reference Android (dev build), 2026-10-12: sign up, restart (session restored), log out, log in, wrong password message | ✅ |
-| 3.5.a | 3.5 Profile | My profile | ☐ |
-| 3.5.b | 3.5 Profile | Edit profile | ☐ |
-| 3.5.c | 3.5 Profile | Avatar upload | ☐ |
-| 3.5.d | 3.5 Profile | Settings | ☐ |
-| 3.5.e | 3.5 Profile | Language and theme, persisted on the device | ☐ |
-| 3.5.f | 3.5 Profile | Onboarding step 1 after sign-up: profile photo and bio, Skip always visible (App Flow §4.2) | ☐ |
+| 3.5.a | 3.5 Profile | My profile | ✅ |
+| 3.5.b | 3.5 Profile | Edit profile | ✅ |
+| 3.5.c | 3.5 Profile | Avatar upload | ✅ |
+| 3.5.d | 3.5 Profile | Settings (built: account, change password, preferences, version, log out) | ✅ |
+| 3.5.e | 3.5 Profile | Language and theme, persisted on the device | ✅ |
+| 3.5.f | 3.5 Profile | Onboarding step 1 after sign-up: profile photo and bio, Skip always visible (App Flow §4.2) | ✅ |
+| 3.5.g | 3.5 Profile | Check on the reference Android (new dev build): photo from camera and library, edit and save, discard prompt, language and theme survive a restart, change password, onboarding after sign-up | ☐ |
 | 3.6.a | 3.6 People | Search: debounce, cancel, recent searches | ☐ |
 | 3.6.b | 3.6 People | User profile with optimistic Follow | ☐ |
 | 3.6.c | 3.6 People | Follower and following lists | ☐ |
@@ -105,7 +106,9 @@ The Phase 3 tasks broken into trackable items. Tick an item (☐ → ✅) in the
 | EAS profiles | `development` and `preview` build APKs for internal install; `production` builds the store AAB. App version source is `remote` (EAS keeps the build number, `autoIncrement` on production). Update channels wait for task 3.12 (EAS Update) | APKs install straight from the build link on the reference Android; no manual build-number bumps |
 | Preview builds and the API | Purely development for now (owner, 2026-10-11): no HTTPS. `preview` builds call the local API over plain HTTP at `EXPO_PUBLIC_API_URL=http://192.168.0.65:3000` (set in `eas.json`). `app.config.ts` enables Android cleartext traffic for every `APP_VARIANT` except `production` (`expo-build-properties`) | A preview build has no dev server to find the API, and Android release builds block HTTP unless allowed. Keeping production locked means the setting cannot leak into a store build |
 | Session handling (3.4) | `src/auth/session.ts`: the refresh token in `expo-secure-store` (`AFTER_FIRST_UNLOCK`), the access token in memory. A 401 on any non-auth route triggers **one** shared refresh, then the request is sent again. At launch the splash waits up to 8 s for the refresh, then opens Home offline and lets the refresh land later (it is never abandoned). Log out clears the device at once and tells the server in the background | Refresh tokens rotate and a reused one revokes the whole session (AU-04): parallel refreshes would sign the user out. An abandoned refresh could lose the rotated token the same way |
-| After sign-up (3.4) | Sign-up opens Home until the onboarding steps exist: photo and bio (3.5.f), Find people (3.6), notifications (3.10) | Each step needs the screens of its own task |
+| After sign-up (3.4, 3.5) | Sign-up opens onboarding step 1 (photo and bio) since 3.5; Continue / Skip then open Home until Find people (3.6) and Notifications (3.10) exist. The onboarding flag is set with the sign-in (one state update, no flash of the tabs) and is not saved: an app kill mid-onboarding lands on Home | App Flow §4.2: first session only |
+| Profile and Settings (3.5) | Settings saved with AsyncStorage (zustand `persist`); the language also goes to the account (`PATCH /me { locale }`, best effort) for push and email text. A new photo applies at once (upload → `PATCH /me { avatarMediaId }`), the text fields on Save; the local photo shows until the server's sizes are READY. Avatars are downscaled to 1080 px (shown at ≤ 320). Settings rows still to come: Notifications (3.10), Blocked accounts and Delete account (3.11), Terms / Privacy / Contact support (when the pages exist, Plan 5) | Ship what works now; no dead rows |
+| Photos from the phone in development | MinIO's port can be opened to the Wi-Fi (`MINIO_BIND=0.0.0.0`, default stays localhost) and the API given `S3_PUBLIC_ENDPOINT` / `MEDIA_BASE_URL` at the laptop's address; the worker must run | Presigned uploads and photo URLs go to storage directly, not through the API |
 | Not in 3.4 | The dev-only "Continue without an account" button is gone (real sign-in replaces it). Suspension mid-session (`403 ACCOUNT_SUSPENDED` → explanation screen) is part of 3.11. The web preview keeps the refresh token in `localStorage` (no secure store on web; development only) | Keep each task to its own screens |
 | Push credentials (3.3) | Firebase project `notifications-5c8b9` (an existing project of the owner's, shared with another app) holds the Android app `tz.jamiiair.app`. Its FCM V1 service account key is uploaded to EAS only and git-ignored (`*firebase-adminsdk*.json`); `mobile/google-services.json` is public client config and committed. The backend sends through Expo Push (`exp.host`), so it needs no Firebase credentials | Fine for development. Before the pilot, consider a Firebase project of Jamii Air's own (Plan 5.x) so the push setup does not depend on another app |
 | Dev server address | Start Metro with `REACT_NATIVE_PACKAGER_HOSTNAME=<laptop Wi-Fi IP>` and `--lan`: on this laptop Expo otherwise advertised `127.0.0.1` or a stale address, and the app finds the API from the same host. Office/guest Wi-Fi may isolate devices; a phone hotspot works | Found on the first device run (two stale servers on 8081/8082) |

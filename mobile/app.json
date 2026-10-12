@@ -14,6 +14,7 @@
     },
     "android": {
       "package": "tz.jamiiair.app",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#1E1B4B",
         "foregroundImage": "./assets/android-icon-foreground.png",

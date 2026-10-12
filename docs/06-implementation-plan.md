@@ -350,6 +350,6 @@ If priorities change, these stories are dropped first, in this order: 1) Caption
    - rebuild the Docker image and check the API and worker containers start after the `.env` loading fix (`c0d837c`, found while building 3.4).
 5. ✅ **Phase 3 started:** designs approved ([design canvas](https://claude.ai/artifact/U9EUjyBSEbuL8as26BwFtw)); 3.1 foundation built.
 6. ✅ 3.2 typed API client built.
-7. **3.3 in progress:** `eas.json` profiles and `expo-dev-client` added; development and preview builds reach the local API over plain HTTP (purely development, no HTTPS for now). ✅ `eas init` done (project linked). Owner steps left: `npm run build:dev`, install on the reference device, FCM credentials.
+7. **3.3 in progress:** `eas.json` profiles and `expo-dev-client` added; development and preview builds reach the local API over plain HTTP (purely development, no HTTPS for now). ✅ `eas init` done (project linked); ✅ FCM credentials (key in EAS, `google-services.json` in the app). Owner steps left: `npm run build:dev`, install on the reference device.
 8. ✅ 3.4 auth built: Sign up (date of birth, under-18 message, invite code), Log in (incl. cancel a scheduled deletion), Forgot password; refresh token in secure storage, one refresh at a time, session restore at launch. **Next:** 3.5 (profile, Settings, onboarding step 1). Tracker: [`docs/backlog/phase-3-mobile.md`](backlog/phase-3-mobile.md).
 

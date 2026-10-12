@@ -39,3 +39,8 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Firebase service account keys (FCM V1): uploaded to EAS, never committed.
+# google-services.json is public client config and is committed.
+*firebase-adminsdk*.json
+*service-account*.json

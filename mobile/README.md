@@ -35,6 +35,8 @@ Check from the phone's browser: `http://<laptop Wi-Fi IP>:3000/api/v1/health/liv
 
 Plain HTTP is allowed in `development` and `preview` builds only: `app.config.ts` reads `APP_VARIANT` (set per profile in `eas.json`) and turns Android cleartext traffic off for `production`.
 
+**Quickest way (Windows):** from the repo root, `powershell -ExecutionPolicy Bypass -File scripts\dev-phone.ps1` finds the laptop's current Wi-Fi address and restarts the API (no invite codes), the worker and the Expo dev server on it, each in its own window, with MinIO open to the network. Run it again whenever the Wi-Fi address changes (`-Build` rebuilds the API first). The manual steps it automates:
+
 **Photos on the phone (avatar, posts).** Uploads go straight to storage (MinIO), and photos load from it, so the phone must reach MinIO too, and the worker must run to make the photo sizes:
 
 ```powershell

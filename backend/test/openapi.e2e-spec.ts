@@ -49,6 +49,15 @@ describe('OpenAPI spec (e2e)', () => {
     expect([...new Set(refs)].filter((name) => !schemas[name])).toEqual([]);
   });
 
+  it('gives every property a type (a nullable union without `type: String` becomes an empty object)', async () => {
+    const doc = await openApiDocument(app);
+    const schemas = (doc as unknown as { components: { schemas: Record<string, { properties?: Record<string, Record<string, unknown>> }> } }).components.schemas;
+    const untyped = Object.entries(schemas).flatMap(([name, schema]) => Object.entries(schema.properties ?? {})
+      .filter(([, p]) => p.type === 'object' && !p.properties && !p.additionalProperties && !p.$ref && !p.allOf)
+      .map(([key]) => `${name}.${key}`));
+    expect(untyped).toEqual([]);
+  });
+
   it('requires no header a client cannot be expected to send by hand (only X-Admin-Client)', async () => {
     const doc = await openApiDocument(app);
     const required = Object.entries(doc.paths).flatMap(([path, ops]) => Object.entries(ops).flatMap(([method, op]) =>

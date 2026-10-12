@@ -2793,6 +2793,23 @@
           "acceptTerms"
         ]
       },
+      "SessionUser": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "01a1…"
+          },
+          "username": {
+            "type": "string",
+            "example": "amina_shop",
+            "description": "Sent on register"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
       "SessionResponse": {
         "type": "object",
         "properties": {
@@ -2809,11 +2826,7 @@
             "example": 900
           },
           "user": {
-            "type": "object",
-            "example": {
-              "id": "01a1…",
-              "username": "amina_shop"
-            }
+            "$ref": "#/components/schemas/SessionUser"
           }
         },
         "required": [
@@ -2991,12 +3004,12 @@
         "type": "object",
         "properties": {
           "displayName": {
-            "type": "object",
+            "type": "string",
             "nullable": true,
             "maxLength": 50
           },
           "bio": {
-            "type": "object",
+            "type": "string",
             "nullable": true,
             "maxLength": 160
           },
@@ -3004,7 +3017,7 @@
             "type": "string"
           },
           "avatarMediaId": {
-            "type": "object",
+            "type": "string",
             "nullable": true,
             "description": "An AVATAR upload (POST /media/uploads); null removes the avatar"
           },
@@ -3258,6 +3271,9 @@
           },
           "headers": {
             "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
             "description": "Send exactly these headers with the PUT (they are signed)",
             "example": {
               "Content-Type": "image/jpeg",
@@ -3343,7 +3359,7 @@
             }
           },
           "caption": {
-            "type": "object",
+            "type": "string",
             "nullable": true,
             "maxLength": 2200
           }

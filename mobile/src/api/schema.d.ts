@@ -997,6 +997,15 @@ export interface components {
             /** @enum {string} */
             locale?: "en" | "sw";
         };
+        SessionUser: {
+            /** @example 01a1… */
+            id: string;
+            /**
+             * @description Sent on register
+             * @example amina_shop
+             */
+            username?: string;
+        };
         SessionResponse: {
             /** @description JWT, 15 minutes; keep in memory */
             accessToken: string;
@@ -1004,13 +1013,7 @@ export interface components {
             refreshToken: string;
             /** @example 900 */
             expiresIn: number;
-            /**
-             * @example {
-             *       "id": "01a1…",
-             *       "username": "amina_shop"
-             *     }
-             */
-            user: Record<string, never>;
+            user: components["schemas"]["SessionUser"];
         };
         LoginDto: {
             /** @description Username or email */
@@ -1058,11 +1061,11 @@ export interface components {
             followingCount: number;
         };
         UpdateMeDto: {
-            displayName?: Record<string, never> | null;
-            bio?: Record<string, never> | null;
+            displayName?: string | null;
+            bio?: string | null;
             username?: string;
             /** @description An AVATAR upload (POST /media/uploads); null removes the avatar */
-            avatarMediaId?: Record<string, never> | null;
+            avatarMediaId?: string | null;
             /** @enum {string} */
             locale?: "en" | "sw";
         };
@@ -1140,7 +1143,9 @@ export interface components {
              *       "Content-Length": "123456"
              *     }
              */
-            headers: Record<string, never>;
+            headers: {
+                [key: string]: string;
+            };
             expiresAt: string;
         };
         MediaStatus: {
@@ -1158,7 +1163,7 @@ export interface components {
         CreatePostDto: {
             /** @description POST uploads (POST /media/uploads). R1 posts take exactly one photo */
             mediaIds: string[];
-            caption?: Record<string, never> | null;
+            caption?: string | null;
         };
         PostAuthor: {
             id: string;

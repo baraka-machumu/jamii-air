@@ -14,7 +14,7 @@ export class CreatePostDto {
   @IsUUID('all', { each: true })
   mediaIds!: string[];
 
-  @ApiPropertyOptional({ nullable: true, maxLength: MAX_CAPTION })
+  @ApiPropertyOptional({ nullable: true, type: String, maxLength: MAX_CAPTION })
   @IsOptional()
   @ValidateIf((_, v) => v !== null)
   @IsString()

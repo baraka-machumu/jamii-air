@@ -27,7 +27,7 @@ export class CreateUploadDto {
 export class UploadIntent {
   @ApiProperty() mediaId!: string;
   @ApiProperty({ description: 'PUT the file here, before expiresAt' }) uploadUrl!: string;
-  @ApiProperty({ description: 'Send exactly these headers with the PUT (they are signed)', example: { 'Content-Type': 'image/jpeg', 'Content-Length': '123456' } })
+  @ApiProperty({ type: 'object', additionalProperties: { type: 'string' }, description: 'Send exactly these headers with the PUT (they are signed)', example: { 'Content-Type': 'image/jpeg', 'Content-Length': '123456' } })
   headers!: Record<string, string>;
   @ApiProperty() expiresAt!: string;
 }

@@ -10,7 +10,7 @@
 import { api, call, onUnauthorized } from '@/api/client';
 import { ApiError } from '@/api/errors';
 import type { components } from '@/api/schema';
-import { type SessionUser, useSession } from '@/stores/session';
+import { useSession } from '@/stores/session';
 import { tokenStore } from './tokenStore';
 
 export type SessionResponse = components['schemas']['SessionResponse'];
@@ -19,15 +19,9 @@ export type RefreshOutcome = 'refreshed' | 'signedOut' | 'offline';
 /** How long the splash waits for the launch refresh before opening Home offline (App Flow §3). */
 export const RESTORE_WAIT_MS = 8_000;
 
-function userOf(session: SessionResponse): SessionUser | null {
-  const user = session.user as { id?: unknown; username?: unknown };
-  if (typeof user.id !== 'string') return null;
-  return { id: user.id, username: typeof user.username === 'string' ? user.username : undefined };
-}
-
 export async function startSession(session: SessionResponse): Promise<void> {
   await tokenStore.set(session.refreshToken);
-  useSession.getState().signIn(session.accessToken, userOf(session));
+  useSession.getState().signIn(session.accessToken, session.user);
 }
 
 async function endLocally(): Promise<void> {

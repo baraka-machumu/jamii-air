@@ -6,14 +6,14 @@ import { IsIn, IsInt, IsOptional, IsString, IsUUID, Matches, Max, MaxLength, Min
 import { USERNAME_PATTERN } from '../auth/auth.dto.js';
 
 export class UpdateMeDto {
-  @ApiPropertyOptional({ nullable: true, maxLength: 50 })
+  @ApiPropertyOptional({ nullable: true, type: String, maxLength: 50 })
   @IsOptional()
   @ValidateIf((_, v) => v !== null)
   @IsString()
   @MaxLength(50)
   displayName?: string | null;
 
-  @ApiPropertyOptional({ nullable: true, maxLength: 160 })
+  @ApiPropertyOptional({ nullable: true, type: String, maxLength: 160 })
   @IsOptional()
   @ValidateIf((_, v) => v !== null)
   @IsString()
@@ -25,7 +25,7 @@ export class UpdateMeDto {
   @Matches(USERNAME_PATTERN, { message: 'username must be 3–30 letters, digits, "." or "_"' })
   username?: string;
 
-  @ApiPropertyOptional({ nullable: true, description: 'An AVATAR upload (POST /media/uploads); null removes the avatar' })
+  @ApiPropertyOptional({ nullable: true, type: String, description: 'An AVATAR upload (POST /media/uploads); null removes the avatar' })
   @IsOptional()
   @ValidateIf((_, v) => v !== null)
   @IsUUID()

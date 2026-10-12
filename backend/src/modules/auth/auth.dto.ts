@@ -106,6 +106,11 @@ export class ChangePasswordDto {
   installationId?: string;
 }
 
+export class SessionUser {
+  @ApiProperty({ example: '01a1…' }) id!: string;
+  @ApiPropertyOptional({ example: 'amina_shop', description: 'Sent on register' }) username?: string;
+}
+
 export class SessionResponse {
   @ApiProperty({ description: 'JWT, 15 minutes; keep in memory' })
   accessToken!: string;
@@ -116,6 +121,6 @@ export class SessionResponse {
   @ApiProperty({ example: 900 })
   expiresIn!: number;
 
-  @ApiProperty({ example: { id: '01a1…', username: 'amina_shop' } })
-  user!: { id: string; username?: string };
+  @ApiProperty({ type: SessionUser })
+  user!: SessionUser;
 }

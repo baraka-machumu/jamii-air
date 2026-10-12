@@ -7,7 +7,7 @@ import { Alert, type AlertButton } from 'react-native';
 import { tokenStore } from '@/auth/tokenStore';
 import { useSession } from '@/stores/session';
 import { useSettings } from '@/stores/settings';
-import { apiError, json, me, type StubRequest, stubApi } from '@/test/api';
+import { apiError, emptyPage, json, me, type StubRequest, stubApi } from '@/test/api';
 import { routes } from '@/test/routes';
 
 jest.mock('@expo-google-fonts/nunito', () => ({ useFonts: () => [true], Nunito_800ExtraBold: 1 }));
@@ -42,6 +42,7 @@ function api(overrides: (req: StubRequest) => Response | undefined = () => undef
     if (req.path === '/api/v1/me' && req.method === 'GET') return json(200, me);
     if (req.path === '/api/v1/me' && req.method === 'PATCH') return json(200, { ...me, ...req.body });
     if (req.path === '/api/v1/users/search') return json(200, { items: [] });
+    if (req.path === '/api/v1/feed' || req.path.endsWith('/posts')) return json(200, emptyPage);
     if (req.path === '/api/v1/media/uploads') return json(201, { mediaId: 'media-1', uploadUrl: 'http://storage.test/put', headers: { 'Content-Type': 'image/jpeg' }, expiresAt: '' });
     if (req.url.startsWith('file://')) return new Response(new Uint8Array(2048));
     if (req.path.startsWith('/api/v1/media/')) return json(200, { id: 'media-1', status: 'READY' });

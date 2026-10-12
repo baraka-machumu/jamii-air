@@ -8,7 +8,7 @@ import { useFollowStore } from '@/people/follow';
 import { useRecentSearches } from '@/people/recentSearches';
 import { useSession } from '@/stores/session';
 import { useSettings } from '@/stores/settings';
-import { apiError, json, me, type StubRequest, stubApi } from '@/test/api';
+import { apiError, emptyPage, json, me, type StubRequest, stubApi } from '@/test/api';
 import { routes } from '@/test/routes';
 
 jest.mock('@expo-google-fonts/nunito', () => ({ useFonts: () => [true], Nunito_800ExtraBold: 1 }));
@@ -33,6 +33,7 @@ function api(overrides: (req: StubRequest) => Response | undefined = () => undef
     const custom = overrides(req);
     if (custom) return custom;
     if (req.path === '/api/v1/me') return json(200, me);
+    if (req.path === '/api/v1/feed' || req.path.endsWith('/posts')) return json(200, emptyPage);
     if (req.path === '/api/v1/users/search') {
       const q = new URL(req.url).searchParams.get('q');
       return json(200, { items: !q ? [juma, neema] : q === 'ju' ? [juma] : [] });

@@ -5,14 +5,14 @@ import { renderRouter } from 'expo-router/testing-library';
 import { Alert } from 'react-native';
 import { useSession } from '@/stores/session';
 import { useSettings } from '@/stores/settings';
-import { json, me, stubApi } from '@/test/api';
+import { emptyPage, json, me, stubApi } from '@/test/api';
 import { routes } from '@/test/routes';
 
 jest.mock('@expo-google-fonts/nunito', () => ({ useFonts: () => [true], Nunito_800ExtraBold: 1 }));
 jest.mock('@/auth/tokenStore', () => jest.requireActual('@/test/memoryTokenStore'));
 
 beforeEach(() => {
-  stubApi((req) => (req.path === '/api/v1/me' ? json(200, me) : json(204)));
+  stubApi((req) => (req.path === '/api/v1/me' ? json(200, me) : req.method === 'GET' ? json(200, emptyPage) : json(204)));
   useSession.setState({ status: 'signedOut', accessToken: null, user: null });
   useSettings.setState({ language: 'en', theme: 'system' });
 });
@@ -29,7 +29,7 @@ describe('routing', () => {
     await screen.findByText('Create account');
     act(() => useSession.getState().signIn('token'));
     expect(await screen.findByTestId('tab-index')).toBeTruthy();
-    expect(screen.getByText('Your feed arrives in task 3.8.')).toBeTruthy();
+    expect(await screen.findByText('Your feed is empty')).toBeTruthy();
 
     fireEvent.press(screen.getByTestId('tab-profile'));
     fireEvent.press(await screen.findByLabelText('Settings'));

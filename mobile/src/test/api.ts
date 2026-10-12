@@ -29,6 +29,9 @@ export function stubApi(handler: (req: StubRequest) => Response | Promise<Respon
   return requests;
 }
 
+/** An empty cursor page (feed, grid, lists). */
+export const emptyPage = { items: [], nextCursor: null };
+
 export const me = {
   id: 'u1', username: 'amina', email: 'amina@example.com', displayName: 'Amina', bio: 'Mama Lishe, Arusha',
   avatarMediaId: null, avatarUrl: null, avatarLargeUrl: null, locale: 'en' as const,

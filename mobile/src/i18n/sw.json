@@ -63,7 +63,6 @@
     "profile": "Wasifu wako"
   },
   "placeholder": {
-    "home": "Habari zako zinakuja katika kazi 3.8.",
     "activity": "Shughuli zinakuja katika kazi 3.10."
   },
   "settings": {
@@ -246,5 +245,29 @@
       "INTERRUPTED": "Chapisho lako lilikatizwa.",
       "PROCESSING_FAILED": "Hatukuweza kushughulikia picha hii. Jaribu tena, au chagua nyingine."
     }
+  },
+  "feed": {
+    "postBy": "Chapisho la {{username}}",
+    "moreOptions": "Chaguo zaidi",
+    "photoBy": "Picha ya {{username}}",
+    "likes_one": "Pendo {{formatted}}",
+    "likes_other": "Mapendo {{formatted}}",
+    "viewComments_one": "Tazama maoni 1",
+    "viewComments_other": "Tazama maoni yote {{formatted}}",
+    "deleteTitle": "Ufute chapisho hili?",
+    "deleteBody": "Huwezi kulirudisha.",
+    "delete": "Futa",
+    "deleted": "Chapisho limefutwa",
+    "deleteFailed": "Imeshindikana kufuta chapisho",
+    "refreshFailed": "Imeshindikana kusasisha",
+    "loadFailed": "Imeshindikana kupakia habari zako.",
+    "emptyTitle": "Habari zako ni tupu",
+    "emptyBody": "Wafuate watu ili uone machapisho yao.",
+    "findPeople": "Tafuta watu",
+    "shareFirst": "Shiriki picha yako ya kwanza",
+    "caughtUp": "Umeona kila kitu ✓",
+    "removed": "Imeondolewa",
+    "openPost": "Fungua chapisho",
+    "post": "Chapisho"
   }
 }

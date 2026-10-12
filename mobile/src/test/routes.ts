@@ -15,6 +15,7 @@ import Caption from '@/app/compose/caption';
 import Crop from '@/app/compose/crop';
 import EditProfile from '@/app/edit-profile';
 import Onboarding from '@/app/onboarding/index';
+import PostDetail from '@/app/p/[id]';
 import FindPeople from '@/app/onboarding/people';
 import Settings from '@/app/settings/index';
 import ChangePassword from '@/app/settings/password';
@@ -43,4 +44,5 @@ export const routes = {
   'u/[username]/[list]': FollowListScreen,
   'compose/crop': Crop,
   'compose/caption': Caption,
+  'p/[id]': PostDetail,
 };

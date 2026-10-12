@@ -34,6 +34,7 @@ let reply: (url: string, body: Record<string, unknown>) => Response;
 beforeEach(async () => {
   bodies = [];
   global.fetch = jest.fn(async (url: string, init: RequestInit) => {
+    if (url.includes('/api/v1/feed')) return json(200, { items: [], nextCursor: null }); // Home after sign-in
     const body = init.body ? JSON.parse(init.body as string) : {};
     bodies.push(body);
     return reply(url, body);
@@ -119,7 +120,7 @@ describe('Sign up (§4.1)', () => {
   });
 
   it('creates the account with the date as YYYY-MM-DD and opens onboarding (§4.2)', async () => {
-    reply = (url) => (url.endsWith('/api/v1/me') ? json(200, { ...session.user, avatarUrl: null }) : json(201, session));
+    reply = (url) => (url.endsWith('/api/v1/me') ? json(200, { ...session.user, avatarUrl: null }) : url.includes('/users/search') ? json(200, { items: [] }) : json(201, session));
     await fill();
     fireEvent.press(screen.getByText('pick adult'));
     fireEvent.press(screen.getByRole('button', { name: 'Create account' }));

@@ -1,13 +1,14 @@
 // My profile (App Flow §8.3): photo, counts, name, @username, bio; Edit profile and ⚙ Settings.
-// The counts open the follower lists; the posts grid arrives with the feed (task 3.8).
+// The counts open the follower lists; below, the posts grid (with processing / failed posts).
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import { errorMessage } from '@/api/errors';
 import { useMe } from '@/api/me';
 import { Button } from '@/components/Button';
 import { Icon } from '@/components/Icon';
 import { ProfileHeader } from '@/components/ProfileHeader';
+import { ProfilePosts } from '@/components/ProfilePosts';
 import { Screen } from '@/components/Screen';
 import { Text } from '@/components/Text';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -47,22 +48,26 @@ export default function MyProfile() {
     router.push({ pathname: '/u/[username]/[list]', params: { username: user.username, list: which } });
 
   return (
-    <Screen>
-      <View style={styles.top}>
+    <Screen padded={false}>
+      <View style={[styles.top, { paddingHorizontal: space.md }]}>
         <Text variant="title" numberOfLines={1} style={styles.flex} accessibilityRole="header">{user.username}</Text>
         {settings}
       </View>
-      <ScrollView refreshControl={<RefreshControl refreshing={me.isRefetching} onRefresh={() => void me.refetch()} />}>
-        <ProfileHeader user={user} onFollowers={() => list('followers')} onFollowing={() => list('following')} />
-        <Button kind="secondary" label={t('profile.edit')} onPress={() => router.push('/edit-profile')}
-          style={{ marginTop: space.md, minHeight: 40 }} />
-        {user.postCount === 0 && (
-          <View style={[styles.empty, { borderTopColor: colors.border }]}>
+      <ProfilePosts username={user.username} postCount={user.postCount} refreshing={me.isRefetching}
+        onRefresh={() => void me.refetch()}
+        header={
+          <>
+            <ProfileHeader user={user} onFollowers={() => list('followers')} onFollowing={() => list('following')} />
+            <Button kind="secondary" label={t('profile.edit')} onPress={() => router.push('/edit-profile')}
+              style={{ marginTop: space.md, minHeight: 40 }} />
+          </>
+        }
+        empty={
+          <>
             <Text variant="bodyStrong">{t('profile.noPostsTitle')}</Text>
             <Text muted style={styles.textCenter}>{t('profile.noPostsBody')}</Text>
-          </View>
-        )}
-      </ScrollView>
+          </>
+        } />
     </Screen>
   );
 }
@@ -72,6 +77,5 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   icon: { width: touchTarget, height: touchTarget, alignItems: 'flex-end', justifyContent: 'center' },
   center: { flex: 1, justifyContent: 'center', gap: 16 },
-  empty: { marginTop: 24, paddingTop: 32, borderTopWidth: StyleSheet.hairlineWidth, alignItems: 'center', gap: 4 },
   textCenter: { textAlign: 'center' },
 });

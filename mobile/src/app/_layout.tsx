@@ -10,11 +10,12 @@ import { useEffect, useState } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { createQueryClient } from '@/api/queryClient';
 import { restoreSession } from '@/auth/session';
+import { Toast } from '@/components/Toast';
+import i18n, { resolveLanguage } from '@/i18n';
 import { useFollowStore } from '@/people/follow';
 import { useRecentSearches } from '@/people/recentSearches';
 import { runPosting } from '@/posting/run';
 import { usePosting } from '@/posting/store';
-import i18n, { resolveLanguage } from '@/i18n';
 import { useSession } from '@/stores/session';
 import { useSettings } from '@/stores/settings';
 import { ThemeProvider, useTheme } from '@/theme/ThemeProvider';
@@ -86,6 +87,7 @@ function RootStack() {
           <Stack.Screen name="u/[username]/[list]" />
           <Stack.Screen name="compose/crop" />
           <Stack.Screen name="compose/caption" />
+          <Stack.Screen name="p/[id]" />
         </Stack.Protected>
         <Stack.Protected guard={signedIn && onboarding}>
           <Stack.Screen name="onboarding/index" />
@@ -95,6 +97,7 @@ function RootStack() {
           <Stack.Screen name="(auth)" />
         </Stack.Protected>
       </Stack>
+      <Toast />
     </>
   );
 }

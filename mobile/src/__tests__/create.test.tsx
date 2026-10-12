@@ -7,7 +7,7 @@ import { tokenStore } from '@/auth/tokenStore';
 import { usePosting } from '@/posting/store';
 import { useSession } from '@/stores/session';
 import { useSettings } from '@/stores/settings';
-import { apiError, json, me, type StubRequest, stubApi } from '@/test/api';
+import { apiError, emptyPage, json, me, type StubRequest, stubApi } from '@/test/api';
 import { routes } from '@/test/routes';
 
 jest.mock('@expo-google-fonts/nunito', () => ({ useFonts: () => [true], Nunito_800ExtraBold: 1 }));
@@ -56,6 +56,7 @@ beforeEach(async () => {
   requests = stubApi((req) => {
     if (req.path === '/api/v1/posts' && req.method === 'POST') return createReply();
     if (req.path === '/api/v1/me') return json(200, me);
+    if (req.path === '/api/v1/feed') return json(200, emptyPage);
     return json(200, post('PUBLISHED'));
   });
   await tokenStore.set('refresh-0-xxxxxxxxxxxxxxxx');
@@ -78,7 +79,7 @@ describe('Create (§6)', () => {
     expect(draft.source.uri).toMatch(/\.jpg$/);
     expect(draft.image).toMatchObject({ width: 1536, height: 1536 }); // 2048 × 1536 source, square crop
     fireEvent.press(screen.getByRole('button', { name: 'Share' }));
-    expect(await screen.findByText('Your feed arrives in task 3.8.')).toBeTruthy(); // Home, visible
+    expect(await screen.findByText('Your feed is empty')).toBeTruthy(); // Home, visible
     expect(requests.find((r) => r.path === '/api/v1/posts')!.body).toEqual({ mediaIds: ['media-1'], caption: 'Sokoni' });
     expect(usePosting.getState().draft).toBeNull();
   });
@@ -92,7 +93,7 @@ describe('Create (§6)', () => {
 
     createReply = () => json(201, post('PUBLISHED'));
     fireEvent.press(screen.getByRole('button', { name: 'Try again' }));
-    await screen.findByText('Your feed arrives in task 3.8.');
+    await screen.findByText('Your feed is empty');
     expect(screen.queryByText("Couldn't post")).toBeNull();
   });
 

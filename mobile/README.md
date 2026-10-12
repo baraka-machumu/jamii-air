@@ -70,6 +70,7 @@ Add packages with `npx expo install <package>` so versions match the SDK.
 |---|---|
 | `src/app/` | Routes (Expo Router). Every file is a screen; `_layout.tsx` files are navigators. `(auth)` = signed-out screens, `(tabs)` = the five tabs, `onboarding` = first session after sign-up; pushed screens (`edit-profile`, `settings/…`) sit beside the tabs. `Stack.Protected` keeps the groups apart. Keep non-route code (and tests) out of this folder. |
 | `src/components/` | Shared UI: `Text` (type scale), `Button`, `Screen`, `Header`, `Icon`, `Logo`, `TabBar`, `Segmented`, `Avatar`, `ListRow`; form parts `TextField`, `Checkbox`, `DateField`, `FormScreen` |
+| `src/api/posts.ts` | Feed, post, grid queries and delete; `PostCard`, `PostGrid`, `ProfilePosts` render them |
 | `src/posting/` | The post being made: crop geometry (`crop.ts`), the saved draft (`store.ts`), sharing with resume / retry (`run.ts`) |
 | `src/people/` | Follow / unfollow, optimistic, shared by every screen (`follow.ts`); recent searches (`recentSearches.ts`); `useDebounced` |
 | `src/media/` | Photos: pick (library / camera, `pickImage.ts`), downscale to JPEG and upload to storage with retries (`upload.ts`, shared with posts in 3.7), the profile photo flow (`useAvatar.ts`) |

@@ -12,9 +12,12 @@ import Profile from '@/app/(tabs)/profile';
 import Search from '@/app/(tabs)/search';
 import RootLayout from '@/app/_layout';
 import EditProfile from '@/app/edit-profile';
-import Onboarding from '@/app/onboarding';
+import Onboarding from '@/app/onboarding/index';
+import FindPeople from '@/app/onboarding/people';
 import Settings from '@/app/settings/index';
 import ChangePassword from '@/app/settings/password';
+import UserProfile from '@/app/u/[username]/index';
+import FollowListScreen from '@/app/u/[username]/[list]';
 
 export const routes = {
   _layout: RootLayout,
@@ -32,5 +35,8 @@ export const routes = {
   'edit-profile': EditProfile,
   'settings/index': Settings,
   'settings/password': ChangePassword,
-  onboarding: Onboarding,
+  'onboarding/index': Onboarding,
+  'onboarding/people': FindPeople,
+  'u/[username]/index': UserProfile,
+  'u/[username]/[list]': FollowListScreen,
 };

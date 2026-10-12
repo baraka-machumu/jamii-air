@@ -40,6 +40,8 @@ interface Outgoing {
   method: string;
   headers: Record<string, string>;
   body?: string;
+  /** The caller's cancel signal (e.g. TanStack Query when a newer search replaces this one). */
+  signal?: AbortSignal | null;
 }
 
 /**
@@ -51,20 +53,25 @@ async function toOutgoing(request: Request): Promise<Outgoing> {
   const headers: Record<string, string> = {};
   request.headers.forEach((value, key) => { headers[key] = value; });
   const body = request.method === 'GET' || request.method === 'HEAD' ? undefined : await request.text();
-  return { url: request.url, method: request.method, headers, body: body || undefined };
+  return { url: request.url, method: request.method, headers, body: body || undefined, signal: request.signal };
 }
 
 async function send(out: Outgoing, baseFetch: typeof fetch): Promise<Response> {
+  if (out.signal?.aborted) throw new ApiError(0, 'CANCELLED', 'Request cancelled'); // never sent
   const controller = new AbortController();
   const ms = out.method === 'GET' ? READ_TIMEOUT_MS : WRITE_TIMEOUT_MS;
   const timer = setTimeout(() => controller.abort(), ms);
+  const cancel = () => controller.abort();
+  out.signal?.addEventListener('abort', cancel);
   try {
     return await baseFetch(out.url, { method: out.method, headers: out.headers, body: out.body, signal: controller.signal });
   } catch (error) {
+    if (out.signal?.aborted) throw new ApiError(0, 'CANCELLED', 'Request cancelled');
     if (controller.signal.aborted) throw new ApiError(0, 'TIMEOUT', `No answer within ${ms / 1000} s`);
     throw new ApiError(0, 'NETWORK_ERROR', error instanceof Error ? error.message : 'Network request failed');
   } finally {
     clearTimeout(timer);
+    out.signal?.removeEventListener('abort', cancel);
   }
 }
 

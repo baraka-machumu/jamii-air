@@ -47,6 +47,35 @@ function nodeFetch(url: string, init: RequestInit): Promise<Response> {
     expect(missing).toMatchObject({ status: 404, code: 'POST_NOT_FOUND' });
   });
 
+  it('searches people, follows and unfollows, and lists followers (task 3.6)', async () => {
+    const api = createApiClient(LIVE, nodeFetch as unknown as typeof fetch);
+    const register = async (username: string) => call(api.POST('/api/v1/auth/register', {
+      body: { username, email: `${username}@example.test`, password: 'mango-chai-2026', dateOfBirth: '1995-03-01', acceptTerms: true },
+    }));
+    const stamp = Math.random().toString(36).slice(2, 8);
+    const them = await register(`ppl_b_${stamp}`);
+    const mine = await register(`ppl_a_${stamp}`);
+    useSession.getState().signIn(mine.accessToken);
+
+    const newest = await call(api.GET('/api/v1/users/search', { params: { query: {} } }));
+    expect(newest.items.some((u) => u.id === them.user.id)).toBe(true);
+    expect(newest.items.some((u) => u.id === mine.user.id)).toBe(false); // never yourself
+    const found = await call(api.GET('/api/v1/users/search', { params: { query: { q: `ppl_b_${stamp}` } } }));
+    expect(found.items[0]).toMatchObject({ id: them.user.id, isFollowing: false });
+
+    const followed = await call(api.PUT('/api/v1/users/{id}/follow', { params: { path: { id: them.user.id } } }));
+    expect(followed).toEqual({ following: true, followerCount: 1 });
+    const profile = await call(api.GET('/api/v1/users/{username}', { params: { path: { username: `ppl_b_${stamp}` } } }));
+    expect(profile).toMatchObject({ isFollowing: true, followerCount: 1, isMe: false, isBlockedByMe: false });
+    const followers = await call(api.GET('/api/v1/users/{username}/followers', { params: { path: { username: `ppl_b_${stamp}` } } }));
+    expect(followers.items).toEqual([expect.objectContaining({ id: mine.user.id, isMe: true })]);
+
+    const unfollowed = await call(api.DELETE('/api/v1/users/{id}/follow', { params: { path: { id: them.user.id } } }));
+    expect(unfollowed).toEqual({ following: false, followerCount: 0 });
+    const missing = await call(api.GET('/api/v1/users/{username}', { params: { path: { username: 'no_such_user_zz' } } })).catch((e: unknown) => e);
+    expect(missing).toMatchObject({ status: 404 });
+  });
+
   it('logs in, rotates the refresh token, refuses a reused one, and logs out (src/auth/session.ts)', async () => {
     const api = createApiClient(LIVE, nodeFetch as unknown as typeof fetch);
     const username = `mob_${Math.random().toString(36).slice(2, 10)}`;

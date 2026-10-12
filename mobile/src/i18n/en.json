@@ -64,7 +64,6 @@
   },
   "placeholder": {
     "home": "Your feed arrives in task 3.8.",
-    "search": "Search arrives in task 3.6.",
     "create": "Posting a photo arrives in task 3.7.",
     "activity": "Activity arrives in task 3.10."
   },
@@ -97,7 +96,8 @@
     "hidePassword": "Hide password",
     "cancel": "Cancel",
     "retry": "Try again",
-    "save": "Save"
+    "save": "Save",
+    "clear": "Clear"
   },
   "errors": {
     "ACCOUNT_NOT_ACTIVE": "This account is not active. Please log in again.",
@@ -190,6 +190,34 @@
     "photoTitle": "Add a profile photo",
     "photoBody": "Help friends recognise you. You can change it any time.",
     "bioPlaceholder": "A few words about you",
-    "continue": "Continue"
+    "continue": "Continue",
+    "peopleTitle": "Find people",
+    "peopleHint": "Follow at least 1 person to fill your feed.",
+    "peopleFollowed_one": "You're following {{count}} person.",
+    "peopleFollowed_other": "You're following {{count}} people.",
+    "peopleNone": "No one else has joined yet. You can find people later in Search."
+  },
+  "search": {
+    "placeholder": "Search people",
+    "recent": "Recent",
+    "clearAll": "Clear all",
+    "removeRecent": "Remove {{username}} from recent",
+    "hint": "Find friends by username or name.",
+    "noResults": "No accounts found for “{{query}}”"
+  },
+  "people": {
+    "follow": "Follow",
+    "following": "Following",
+    "followUser": "Follow {{username}}",
+    "followingUser": "Following {{username}}. Tap to unfollow",
+    "unfollow": "Unfollow",
+    "unfollowConfirm": "Unfollow @{{username}}?",
+    "followFailed": "Couldn't follow",
+    "unfollowFailed": "Couldn't unfollow",
+    "unavailable": "This account isn't available",
+    "youBlocked": "You blocked this account.",
+    "followsYou": "Follows you",
+    "noFollowers": "No followers yet",
+    "noFollowing": "Not following anyone yet"
   }
 }

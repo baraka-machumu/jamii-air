@@ -10,6 +10,8 @@ import { useEffect, useState } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { createQueryClient } from '@/api/queryClient';
 import { restoreSession } from '@/auth/session';
+import { useFollowStore } from '@/people/follow';
+import { useRecentSearches } from '@/people/recentSearches';
 import i18n, { resolveLanguage } from '@/i18n';
 import { useSession } from '@/stores/session';
 import { useSettings } from '@/stores/settings';
@@ -32,7 +34,11 @@ export default function RootLayout() {
 
   // Signing out (by the user, or a session the server ended) drops every cached response.
   useEffect(() => {
-    if (status === 'signedOut') queryClient.clear();
+    if (status !== 'signedOut') return;
+    queryClient.clear();
+    // Another account may sign in on this phone next: forget this one's follows and searches.
+    useFollowStore.setState({ chosen: {}, pending: {} });
+    useRecentSearches.getState().clear();
   }, [status, queryClient]);
 
   // The splash screen stays up until the brand font is ready (a few ms, bundled) and the saved
@@ -63,9 +69,12 @@ function RootStack() {
           <Stack.Screen name="edit-profile" />
           <Stack.Screen name="settings/index" />
           <Stack.Screen name="settings/password" />
+          <Stack.Screen name="u/[username]/index" />
+          <Stack.Screen name="u/[username]/[list]" />
         </Stack.Protected>
         <Stack.Protected guard={signedIn && onboarding}>
-          <Stack.Screen name="onboarding" />
+          <Stack.Screen name="onboarding/index" />
+          <Stack.Screen name="onboarding/people" />
         </Stack.Protected>
         <Stack.Protected guard={!signedIn}>
           <Stack.Screen name="(auth)" />

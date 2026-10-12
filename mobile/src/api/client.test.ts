@@ -73,6 +73,17 @@ describe('API client', () => {
     await expect(call(api.GET('/api/v1/me'))).rejects.toMatchObject({ status: 0, code: 'NETWORK_ERROR' });
   });
 
+  it('stops when the caller cancels (a newer search replaced this one)', async () => {
+    const hanging = ((_: string, init?: RequestInit) => new Promise<Response>((_resolve, reject) => {
+      init?.signal?.addEventListener('abort', () => reject(new Error('aborted')));
+    })) as unknown as typeof fetch;
+    const api = createApiClient('http://api.test', hanging);
+    const controller = new AbortController();
+    const pending = call(api.GET('/api/v1/users/search', { params: { query: { q: 'ju' } }, signal: controller.signal }));
+    controller.abort();
+    await expect(pending).rejects.toMatchObject({ status: 0, code: 'CANCELLED' });
+  });
+
   it('gives up on a read after 15 s with TIMEOUT', async () => {
     jest.useFakeTimers();
     const hanging = ((_: string, init?: RequestInit) => new Promise<Response>((_resolve, reject) => {

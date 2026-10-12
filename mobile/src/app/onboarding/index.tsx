@@ -1,6 +1,6 @@
 // Onboarding step 1 after sign-up (App Flow §4.2): profile photo and bio, both optional, Skip
-// always visible. Find people (task 3.6) and Notifications (task 3.10) become steps 2 and 3; until
-// then Continue opens Home.
+// always visible. Then step 2, Find people; Notifications (task 3.10) will be step 3.
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
@@ -23,15 +23,16 @@ export default function Onboarding() {
   const me = useMe();
   const updateMe = useUpdateMe();
   const avatar = useAvatar();
-  const finish = useSession((s) => s.finishOnboarding);
+  const router = useRouter();
+  const toPeople = () => router.push('/onboarding/people');
   const username = useSession((s) => s.user?.username) ?? me.data?.username ?? '';
   const [bio, setBio] = useState('');
   const [message, setMessage] = useState<string>();
 
   const next = () => {
     const text = bio.trim();
-    if (!text) { finish(); return; }
-    updateMe.mutate({ bio: text }, { onSuccess: finish, onError: (error) => setMessage(errorMessage(error, t)) });
+    if (!text) { toPeople(); return; }
+    updateMe.mutate({ bio: text }, { onSuccess: toPeople, onError: (error) => setMessage(errorMessage(error, t)) });
   };
 
   const photo = avatar.preview ?? me.data?.avatarLargeUrl ?? me.data?.avatarUrl;
@@ -40,7 +41,7 @@ export default function Onboarding() {
     <Screen edges={['top', 'bottom']}>
       <View style={styles.top}>
         <Text muted variant="caption">{username ? t('onboarding.welcome', { username }) : ''}</Text>
-        <Button kind="tertiary" label={t('onboarding.skip')} onPress={finish} style={styles.skip} />
+        <Button kind="tertiary" label={t('onboarding.skip')} onPress={toPeople} style={styles.skip} />
       </View>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: space.md, paddingBottom: space.lg }}>

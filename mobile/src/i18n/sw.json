@@ -64,7 +64,6 @@
   },
   "placeholder": {
     "home": "Habari zako zinakuja katika kazi 3.8.",
-    "search": "Kutafuta kunakuja katika kazi 3.6.",
     "create": "Kuchapisha picha kunakuja katika kazi 3.7.",
     "activity": "Shughuli zinakuja katika kazi 3.10."
   },
@@ -97,7 +96,8 @@
     "hidePassword": "Ficha nenosiri",
     "cancel": "Ghairi",
     "retry": "Jaribu tena",
-    "save": "Hifadhi"
+    "save": "Hifadhi",
+    "clear": "Futa"
   },
   "errors": {
     "ACCOUNT_NOT_ACTIVE": "Akaunti hii haitumiki. Tafadhali ingia tena.",
@@ -190,6 +190,34 @@
     "photoTitle": "Weka picha ya wasifu",
     "photoBody": "Wasaidie marafiki wakutambue. Unaweza kuibadilisha wakati wowote.",
     "bioPlaceholder": "Maneno machache kukuhusu",
-    "continue": "Endelea"
+    "continue": "Endelea",
+    "peopleTitle": "Tafuta watu",
+    "peopleHint": "Fuata angalau mtu 1 ili kujaza habari zako.",
+    "peopleFollowed_one": "Unamfuata mtu {{count}}.",
+    "peopleFollowed_other": "Unawafuata watu {{count}}.",
+    "peopleNone": "Bado hakuna mwingine aliyejiunga. Utaweza kutafuta watu baadaye kwenye Tafuta."
+  },
+  "search": {
+    "placeholder": "Tafuta watu",
+    "recent": "Za hivi karibuni",
+    "clearAll": "Futa zote",
+    "removeRecent": "Ondoa {{username}} kwenye za hivi karibuni",
+    "hint": "Tafuta marafiki kwa jina la mtumiaji au jina.",
+    "noResults": "Hakuna akaunti iliyopatikana kwa “{{query}}”"
+  },
+  "people": {
+    "follow": "Fuata",
+    "following": "Unamfuata",
+    "followUser": "Mfuate {{username}}",
+    "followingUser": "Unamfuata {{username}}. Gusa kuacha kumfuata",
+    "unfollow": "Acha kumfuata",
+    "unfollowConfirm": "Acha kumfuata @{{username}}?",
+    "followFailed": "Imeshindikana kumfuata",
+    "unfollowFailed": "Imeshindikana kuacha kumfuata",
+    "unavailable": "Akaunti hii haipatikani",
+    "youBlocked": "Umeizuia akaunti hii.",
+    "followsYou": "Anakufuata",
+    "noFollowers": "Bado hakuna wafuasi",
+    "noFollowing": "Bado hakuna anayefuatwa"
   }
 }

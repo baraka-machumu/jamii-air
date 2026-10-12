@@ -9,3 +9,20 @@ jest.mock('@shopify/flash-list/dist/recyclerview/utils/measureLayout', () => ({
   measureFirstChildLayout: jest.fn(() => ({ x: 0, y: 0, width: 400, height: 900 })),
   measureItemLayout: jest.fn(() => ({ x: 0, y: 0, width: 400, height: 100 })),
 }));
+
+// expo-file-system's File (native): a photo file of 2048 bytes; upload() goes through the global
+// fetch, so tests that stub fetch also see the storage PUT (and can fail it).
+jest.mock('expo-file-system', () => ({
+  UploadType: { BINARY_CONTENT: 0, MULTIPART: 1 },
+  File: class {
+    mockUri: string;
+    constructor(path: string) { this.mockUri = path; }
+    get size() { return 2048; }
+    async upload(url: string, options: { httpMethod?: string; headers?: Record<string, string>; onProgress?: (p: { bytesSent: number; totalBytes: number }) => void }) {
+      options.onProgress?.({ bytesSent: 1024, totalBytes: 2048 });
+      const response = await fetch(url, { method: options.httpMethod ?? 'POST', headers: options.headers });
+      options.onProgress?.({ bytesSent: 2048, totalBytes: 2048 });
+      return { status: response.status, body: '', headers: {} };
+    }
+  },
+}));

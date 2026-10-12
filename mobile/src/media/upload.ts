@@ -1,8 +1,9 @@
 // Photo uploads (App Flow §6.1), shared by the avatar (task 3.5) and posts (task 3.7):
 //  1. downscale on the phone to ≤ 2048 px long edge, JPEG quality 85 (also turns HEIC into JPEG);
 //  2. POST /media/uploads → a presigned PUT URL (15 min) and the headers it was signed with;
-//  3. PUT the bytes straight to storage, never through the API. A network failure retries ×3 with
-//     backoff; an expired or refused URL (403) gets a fresh upload intent once.
+//  3. PUT the file straight to storage (native upload from disk), never through the API. A network
+//     failure retries ×3 with backoff; an expired or refused URL (403) gets a fresh intent once.
+import { File, UploadType } from 'expo-file-system';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import { api, call } from '@/api/client';
 import { ApiError } from '@/api/errors';
@@ -58,32 +59,27 @@ const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 export type OnProgress = (fraction: number) => void;
 
 /**
- * One PUT with upload progress: fetch cannot report it, XMLHttpRequest can (posts show
- * "Posting… 45%"). Resolves with the HTTP status; rejects on a network failure.
+ * One PUT of the file straight from disk by the native side (expo-file-system), with progress.
+ * Not a JavaScript Blob: React Native copies a Blob through base64, and the bytes that reached
+ * storage were not a valid image (found on the reference Android). Content-Length is set by the
+ * platform from the file. Resolves with the HTTP status; rejects on a network failure.
  */
-export function putWithProgress(url: string, headers: Record<string, string>, body: Blob, onProgress: OnProgress): Promise<number> {
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open('PUT', url);
-    for (const [name, value] of Object.entries(headers)) {
-      if (name.toLowerCase() !== 'content-length') xhr.setRequestHeader(name, value); // the platform sets it
-    }
-    xhr.upload.onprogress = (event) => { if (event.lengthComputable) onProgress(event.loaded / event.total); };
-    xhr.onload = () => resolve(xhr.status);
-    xhr.onerror = () => reject(new TypeError('Network request failed'));
-    xhr.ontimeout = () => reject(new TypeError('Upload timed out'));
-    xhr.timeout = 60_000; // App Flow §13: an upload chunk over 60 s counts as a network error
-    xhr.send(body);
+export async function putFile(uri: string, url: string, headers: Record<string, string>, onProgress?: OnProgress): Promise<number> {
+  const send = Object.fromEntries(Object.entries(headers).filter(([name]) => name.toLowerCase() !== 'content-length'));
+  const result = await new File(uri).upload(url, {
+    httpMethod: 'PUT',
+    uploadType: UploadType.BINARY_CONTENT,
+    headers: send,
+    onProgress: onProgress && (({ bytesSent, totalBytes }) => { if (totalBytes > 0) onProgress(bytesSent / totalBytes); }),
   });
+  return result.status;
 }
 
 /** PUT to storage; true when stored, false when the URL was refused (expired). Retries network errors. */
-async function put(url: string, headers: Record<string, string>, body: Blob, onProgress?: OnProgress): Promise<boolean> {
+async function put(uri: string, url: string, headers: Record<string, string>, onProgress?: OnProgress): Promise<boolean> {
   for (let attempt = 0; ; attempt++) {
     try {
-      const status = onProgress
-        ? await putWithProgress(url, headers, body, onProgress)
-        : (await fetch(url, { method: 'PUT', headers, body })).status;
+      const status = await putFile(uri, url, headers, onProgress);
       if (status >= 200 && status < 300) return true;
       if (status === 403) return false;
       if (status < 500) throw new ApiError(status, 'UPLOAD_FAILED', `Storage answered ${status}`);
@@ -97,14 +93,15 @@ async function put(url: string, headers: Record<string, string>, body: Blob, onP
 
 /** Uploads a prepared JPEG and returns its mediaId (still to be attached: PATCH /me or POST /posts). */
 export async function uploadImage(image: PreparedImage, purpose: UploadPurpose, { onProgress }: { onProgress?: OnProgress } = {}): Promise<string> {
-  const body = await (await fetch(image.uri)).blob();
-  if (body.size > MAX_BYTES) throw new ApiError(413, 'PAYLOAD_TOO_LARGE', 'Photo larger than 15 MB');
+  const byteSize = new File(image.uri).size;
+  if (!byteSize) throw new ApiError(0, 'UPLOAD_FAILED', 'The photo file is missing');
+  if (byteSize > MAX_BYTES) throw new ApiError(413, 'PAYLOAD_TOO_LARGE', 'Photo larger than 15 MB');
 
   for (let intents = 0; intents < 2; intents++) {
     const intent = await call(api.POST('/api/v1/media/uploads', {
-      body: { kind: 'IMAGE', purpose, mimeType: 'image/jpeg', byteSize: body.size },
+      body: { kind: 'IMAGE', purpose, mimeType: 'image/jpeg', byteSize },
     }));
-    if (await put(intent.uploadUrl, intent.headers, body, onProgress)) return intent.mediaId;
+    if (await put(image.uri, intent.uploadUrl, intent.headers, onProgress)) return intent.mediaId;
   }
   throw new ApiError(403, 'UPLOAD_FAILED', 'Storage refused the upload');
 }

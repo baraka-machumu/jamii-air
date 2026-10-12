@@ -89,13 +89,13 @@ async function run(queryClient: QueryClient, delays: number[]): Promise<void> {
 }
 
 /** Retry from the failed step; after a processing failure, start the upload over. */
-export function retryPosting(queryClient: QueryClient): Promise<void> {
+export function retryPosting(queryClient: QueryClient, delays = POLL_DELAYS_MS): Promise<void> {
   const current = usePosting.getState().draft;
   if (current?.failure === 'PROCESSING_FAILED') {
     usePosting.getState().update({ mediaId: undefined, postId: undefined, key: newDraftKey() });
   }
   usePosting.getState().update({ phase: 'uploading' });
-  return runPosting(queryClient);
+  return runPosting(queryClient, delays);
 }
 
 /** Discard; a post the server already has but could not process is deleted (best effort). */

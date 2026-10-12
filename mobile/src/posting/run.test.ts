@@ -56,7 +56,7 @@ describe('runPosting (App Flow §6.1)', () => {
     expect(usePosting.getState().draft).toMatchObject({ phase: 'failed', failure: 'NETWORK_ERROR', mediaId: 'media-1' });
 
     fail = false;
-    await retryPosting(queryClient);
+    await retryPosting(queryClient, NO_WAIT);
     expect(uploadImage).toHaveBeenCalledTimes(1);
     expect(creates()).toHaveLength(2);
     expect(creates()[1]!.headers['idempotency-key']).toBe(creates()[0]!.headers['idempotency-key']);
@@ -71,8 +71,7 @@ describe('runPosting (App Flow §6.1)', () => {
     await runPosting(queryClient, NO_WAIT);
     expect(usePosting.getState().draft).toMatchObject({ phase: 'failed', failure: 'PROCESSING_FAILED' });
 
-    void retryPosting(queryClient);
-    await new Promise((r) => setTimeout(r, 0));
+    await retryPosting(queryClient, NO_WAIT);
     expect(uploadImage).toHaveBeenCalledTimes(2);
     expect(usePosting.getState().draft!.key).not.toBe(firstKey);
   });

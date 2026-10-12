@@ -1,5 +1,5 @@
 import { useSession } from '@/stores/session';
-import { fitWithin, uploadImage, waitUntilProcessed } from './upload';
+import { fitWithin, putFile, uploadImage, waitUntilProcessed } from './upload';
 
 jest.mock('expo-image-manipulator', () => ({ ImageManipulator: {}, SaveFormat: { JPEG: 'jpeg' } }));
 
@@ -7,7 +7,7 @@ const json = (status: number, body?: unknown) =>
   new Response(body === undefined ? null : JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
 const intent = (n: number) => ({ mediaId: `m${n}`, uploadUrl: `http://storage.test/put-${n}`, headers: { 'Content-Type': 'image/jpeg' }, expiresAt: '' });
 
-interface Call { url: string; method: string; body?: unknown }
+interface Call { url: string; method: string; body?: unknown; headers?: Record<string, string> }
 let calls: Call[];
 let storage: (url: string) => Response;
 
@@ -16,8 +16,7 @@ beforeEach(() => {
   let intents = 0;
   useSession.setState({ status: 'signedIn', accessToken: 'access-1' });
   global.fetch = jest.fn(async (url: string, init?: RequestInit) => {
-    calls.push({ url, method: init?.method ?? 'GET', body: init?.body });
-    if (url.startsWith('file://')) return new Response(new Uint8Array(1234));
+    calls.push({ url, method: init?.method ?? 'GET', body: init?.body, headers: init?.headers as Record<string, string> });
     if (url.endsWith('/media/uploads')) return json(201, intent(++intents));
     return storage(url);
   }) as unknown as typeof fetch;
@@ -34,11 +33,11 @@ describe('fitWithin (≤ 2048 px long edge, never upscale)', () => {
 describe('uploadImage (App Flow §6.1)', () => {
   const image = { uri: 'file:///cache/photo.jpg', width: 1080, height: 1080 };
 
-  it('asks for an intent with the real size, then PUTs the bytes with the signed headers', async () => {
+  it('asks for an intent with the file size, then PUTs the file with the signed headers', async () => {
     storage = () => new Response(null, { status: 200 });
     await expect(uploadImage(image, 'AVATAR')).resolves.toBe('m1');
     const ask = calls.find((c) => c.url.endsWith('/media/uploads'))!;
-    expect(JSON.parse(ask.body as string)).toEqual({ kind: 'IMAGE', purpose: 'AVATAR', mimeType: 'image/jpeg', byteSize: 1234 });
+    expect(JSON.parse(ask.body as string)).toEqual({ kind: 'IMAGE', purpose: 'AVATAR', mimeType: 'image/jpeg', byteSize: 2048 }); // the file's size on disk
     const put = calls.find((c) => c.url === 'http://storage.test/put-1')!;
     expect(put.method).toBe('PUT');
   });
@@ -60,35 +59,16 @@ describe('uploadImage (App Flow §6.1)', () => {
   });
 });
 
-describe('putWithProgress', () => {
-  it('reports progress, lets the platform set Content-Length, and resolves with the status', async () => {
-    const sentHeaders: Record<string, string> = {};
-    class FakeXhr {
-      upload: { onprogress?: (e: { lengthComputable: boolean; loaded: number; total: number }) => void } = {};
-      onload?: () => void;
-      status = 0;
-      timeout = 0;
-      open() {}
-      setRequestHeader(name: string, value: string) { sentHeaders[name] = value; }
-      send() {
-        this.upload.onprogress?.({ lengthComputable: true, loaded: 25, total: 100 });
-        this.upload.onprogress?.({ lengthComputable: true, loaded: 100, total: 100 });
-        this.status = 200;
-        this.onload?.();
-      }
-    }
-    const original = global.XMLHttpRequest;
-    global.XMLHttpRequest = FakeXhr as unknown as typeof XMLHttpRequest;
+describe('putFile', () => {
+  it('uploads the file from disk as a binary PUT, reports progress, and leaves Content-Length to the platform', async () => {
+    storage = () => new Response(null, { status: 200 });
     const seen: number[] = [];
-    try {
-      const { putWithProgress } = jest.requireActual<typeof import('./upload')>('./upload');
-      await expect(putWithProgress('http://storage.test/put', { 'Content-Type': 'image/jpeg', 'Content-Length': '100' }, new Blob(['x']), (p) => seen.push(p)))
-        .resolves.toBe(200);
-    } finally {
-      global.XMLHttpRequest = original;
-    }
-    expect(seen).toEqual([0.25, 1]);
-    expect(sentHeaders).toEqual({ 'Content-Type': 'image/jpeg' });
+    await expect(putFile('file:///cache/photo.jpg', 'http://storage.test/put', { 'Content-Type': 'image/jpeg', 'Content-Length': '2048' }, (p) => seen.push(p)))
+      .resolves.toBe(200);
+    expect(seen).toEqual([0.5, 1]);
+    const put = calls.find((c) => c.url === 'http://storage.test/put')!;
+    expect(put.method).toBe('PUT');
+    expect(put.headers).toEqual({ 'Content-Type': 'image/jpeg' });
   });
 });
 

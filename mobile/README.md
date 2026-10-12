@@ -22,6 +22,15 @@ npm run build:dev                   # Android development build in the cloud; op
 npx expo start                      # the dev build on the phone connects to this server
 ```
 
+**Phone can't connect?** The app reaches Metro and the API (port 3000) at the address Expo advertises. Give it the laptop's Wi-Fi IP explicitly (`ipconfig`), run one server only, and keep the phone on the same Wi-Fi:
+
+```powershell
+$env:REACT_NATIVE_PACKAGER_HOSTNAME = "<laptop Wi-Fi IP>"
+npx expo start --lan --port 8081
+```
+
+Check from the phone's browser: `http://<laptop Wi-Fi IP>:3000/api/v1/health/live` → `{"status":"ok"}`. If that fails, the Wi-Fi isolates devices (common on office/guest networks): use a phone hotspot. `--tunnel` loads the app but cannot reach the API.
+
 `npm run build:preview` makes a standalone APK for demos. It has no dev server to find the API, so `eas.json` bakes in `EXPO_PUBLIC_API_URL=http://192.168.0.65:3000` (the dev machine on Wi-Fi). If that address changes, edit it in `eas.json` and rebuild. The phone must be on the same Wi-Fi, and Windows Firewall must allow inbound TCP 3000 to the API.
 
 Plain HTTP is allowed in `development` and `preview` builds only: `app.config.ts` reads `APP_VARIANT` (set per profile in `eas.json`) and turns Android cleartext traffic off for `production`.

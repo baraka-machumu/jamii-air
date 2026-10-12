@@ -39,8 +39,8 @@ Also green: lint, type-check, build, `npm run db:drift-check` (94 functions) and
 
 ## Open before the phase is Done
 
-1. Push `main` to GitHub, check CI there (Backend and Database workflows), and review the Phase 1 and 2 commits.
-2. In `main`'s branch protection, make the **Database** and **Backend** checks required.
+1. ✅ Pushed 2026-10-12; CI green on GitHub at `bb2002b` (Backend, Database, Mobile). Still to do: review the Phase 1 and 2 commits.
+2. In `main`'s branch protection, make the **Database**, **Backend** and **Mobile** checks required.
 3. Create the board and issues (install the `gh` CLI, see Plan §9).
 4. Rebuild the image (`docker compose --profile app up -d --build`) and check the API and worker containers still start after the `.env` loading fix (`c0d837c`); not yet run.
 5. When development is finished: the UAT deploy and the rest of task 2.16.

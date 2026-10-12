@@ -55,8 +55,8 @@ Visual design (Design Brief, doc 04) is produced by the engineer with Claude Cod
 - **Database:** 11 migrations and 94 functions. The drift check passes, and the 123 procedure tests pass, including the authorization matrix and the SR-01/03/04 security checks. Every measured P95 is under 50 ms at 10k users / 1M posts (task 1.13).
 - **Backend:** 56 API paths, all in the OpenAPI spec. 47 unit and 77 e2e tests pass, including a spec-driven authorization sweep and the upload-security tests. Every endpoint has an e2e call. The API was reviewed against every App Flow screen ([07-api-review.md](07-api-review.md)).
 - **Open before Phases 1 and 2 are Done:**
-  - push `main` (it is ahead of `origin`), check CI on GitHub, and review the commits;
-  - make the **Database** and **Backend** checks required in `main`'s branch protection;
+  - ✅ `main` pushed, CI green on GitHub (2026-10-12, `bb2002b`); review the commits;
+  - make the **Database**, **Backend** and **Mobile** checks required in `main`'s branch protection;
   - create the GitHub board (the `gh` CLI is not installed yet; §9).
 - **Deferred (local dev only until development is finished):** the UAT deploy, Sentry and metrics (task 2.16).
 - **Repository:** [`baraka-machumu/jamii-air`](https://github.com/baraka-machumu/jamii-air) on GitHub. `backend/` holds the API, worker and database; `mobile/` has the Expo scaffold; `admin/` is a placeholder.
@@ -344,8 +344,8 @@ If priorities change, these stories are dropped first, in this order: 1) Caption
 2. ✅ **Phase 1 · Database** built and tested locally (tasks 1.1–1.14).
 3. ✅ **Phase 2 · Backend** built and tested locally (tasks 2.1–2.16; UAT deploy deferred).
 4. **Close Phases 1 and 2** (Review → Done):
-   - push `main` and check the Backend and Database CI runs on GitHub;
-   - review the Phase 1 and 2 commits, then make both checks required in `main`'s branch protection;
+   - ✅ push `main` and check CI on GitHub: Backend, Database and Mobile green at `bb2002b` (2026-10-12);
+   - review the Phase 1 and 2 commits, then make the three checks required in `main`'s branch protection;
    - create the board: `winget install GitHub.cli`, `gh auth login`, `gh auth refresh -s project`, then `node docs/backlog/create-github-issues.mjs <backlog file>`. Until then the backlog files are the tracker.
    - rebuild the Docker image and check the API and worker containers start after the `.env` loading fix (`c0d837c`, found while building 3.4).
 5. ✅ **Phase 3 started:** designs approved ([design canvas](https://claude.ai/artifact/U9EUjyBSEbuL8as26BwFtw)); 3.1 foundation built.

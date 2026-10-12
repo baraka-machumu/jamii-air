@@ -347,6 +347,7 @@ If priorities change, these stories are dropped first, in this order: 1) Caption
    - push `main` and check the Backend and Database CI runs on GitHub;
    - review the Phase 1 and 2 commits, then make both checks required in `main`'s branch protection;
    - create the board: `winget install GitHub.cli`, `gh auth login`, `gh auth refresh -s project`, then `node docs/backlog/create-github-issues.mjs <backlog file>`. Until then the backlog files are the tracker.
+   - rebuild the Docker image and check the API and worker containers start after the `.env` loading fix (`c0d837c`, found while building 3.4).
 5. ✅ **Phase 3 started:** designs approved ([design canvas](https://claude.ai/artifact/U9EUjyBSEbuL8as26BwFtw)); 3.1 foundation built.
 6. ✅ 3.2 typed API client built.
 7. **3.3 in progress:** `eas.json` profiles and `expo-dev-client` added; development and preview builds reach the local API over plain HTTP (purely development, no HTTPS for now). ✅ `eas init` done (project linked). Owner steps left: `npm run build:dev`, install on the reference device, FCM credentials.

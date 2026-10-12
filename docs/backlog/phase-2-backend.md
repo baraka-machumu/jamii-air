@@ -25,7 +25,7 @@ The GitHub board does not exist yet (the `gh` CLI is not installed), so this tab
 | 2.13 Maintenance schedule | E8 | Review | `e01f5cb` | 10 BullMQ job schedulers, East Africa Time |
 | 2.14 OpenAPI spec and App Flow review | E8 | Review | `ee2a901` | [Review record](../07-api-review.md): 10 gaps fixed, migration `api_review_fixes` |
 | 2.15 Test sweep | E8 | Review | `4e3ce30` | Spec-driven authorization sweep, upload security, every operation has an e2e call |
-| 2.16 Docker image, worker, CI | E0 | Review (deploy deferred) | `1b73e2d` | **Deferred:** UAT deploy, Sentry, latency metrics and alerts |
+| 2.16 Docker image, worker, CI | E0 | Review (deploy deferred) | `1b73e2d`, `c0d837c` | **Deferred:** UAT deploy, Sentry, latency metrics and alerts. Fix 2026-10-12: the API and worker load `backend/.env` on the host (`npm run start` failed with missing config); `dotenv` moved to runtime dependencies |
 
 ## Test totals at the phase gate
 
@@ -42,7 +42,8 @@ Also green: lint, type-check, build, `npm run db:drift-check` (94 functions) and
 1. Push `main` to GitHub, check CI there (Backend and Database workflows), and review the Phase 1 and 2 commits.
 2. In `main`'s branch protection, make the **Database** and **Backend** checks required.
 3. Create the board and issues (install the `gh` CLI, see Plan §9).
-4. When development is finished: the UAT deploy and the rest of task 2.16.
+4. Rebuild the image (`docker compose --profile app up -d --build`) and check the API and worker containers still start after the `.env` loading fix (`c0d837c`); not yet run.
+5. When development is finished: the UAT deploy and the rest of task 2.16.
 
 ## Decisions taken during Phase 2
 
@@ -54,3 +55,4 @@ Also green: lint, type-check, build, `npm run db:drift-check` (94 functions) and
 | Change password | `POST /auth/password/change`: the current device stays signed in, every other one is signed out | TRD §5.1, Schema §17 |
 | Minimum app version | `MIN_APP_VERSION` + `X-App-Version` → `426`; off while empty | TRD API-07 |
 | HEIC | Converted to JPEG on the phone | TRD §9, Plan 2.7 / 3.7 |
+| Local configuration | `main.ts` and `worker.ts` import `dotenv/config` first: `backend/.env` on the host, never overriding variables already set; containers have no `.env` (`.dockerignore`). `dotenv` is a runtime dependency because the image installs with `--omit=dev` | `backend/README.md` (Run) |

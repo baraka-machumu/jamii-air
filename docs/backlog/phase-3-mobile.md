@@ -14,7 +14,7 @@ The GitHub board does not exist yet (the `gh` CLI is not installed), so this tab
 | 3.1 Foundation | Review | see git log | Expo Router, TanStack Query, Zustand, i18next (en/sw), theme tokens (light/dark), FlashList, expo-image, react-native-svg. Sentry deferred (no DSN; local dev only) |
 | 3.2 API client | Review | see git log | `openapi-fetch` + generated types; 15 s / 30 s timeouts; token, `X-App-Version`, `X-Platform`; error code → en/sw message. Found and fixed 2 backend spec bugs (below) |
 | 3.3 EAS builds | **In progress** | see git log | `eas.json` profiles and `expo-dev-client` in the repo. Project linked (`eas init`, projectId in `app.json`). Waiting on the owner: the first cloud build, install on the reference device, FCM credentials |
-| 3.4 Auth screens | Review | see git log | Sign up, Log in, Forgot password; session layer in `src/auth/` (secure store, one refresh at a time, restore at launch). 66 jest tests pass, plus 2 live tests against the local API. Device check waits for the dev build (3.3) |
+| 3.4 Auth screens | Review | see git log | Sign up, Log in, Forgot password; session layer in `src/auth/` (secure store, one refresh at a time, restore at launch). 66 jest tests pass, plus 2 live tests against the local API. Device check waits for the dev build (3.3). Local API for testing: `REQUIRE_INVITE=false npm run start:dev` in `backend/` (works since `c0d837c`) |
 | 3.5 Profile and Settings | Backlog | | Persist the language and theme choice on the device |
 | 3.6 People | Backlog | | |
 | 3.7 Create flow | Backlog | | HEIC → JPEG on the phone (backend task 2.7) |

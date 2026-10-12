@@ -59,7 +59,9 @@ services:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:?set in backend/.env}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?set in backend/.env}
     ports:
-      - "127.0.0.1:${MINIO_API_PORT:-9000}:9000"
+      # MINIO_BIND=0.0.0.0 lets a phone on the same Wi-Fi upload and load photos (local dev only;
+      # set S3_PUBLIC_ENDPOINT and MEDIA_BASE_URL to the laptop's address too). Default: this computer only.
+      - "${MINIO_BIND:-127.0.0.1}:${MINIO_API_PORT:-9000}:9000"
       - "127.0.0.1:${MINIO_CONSOLE_PORT:-9001}:9001"
     volumes:
       - minio-data:/data

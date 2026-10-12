@@ -122,7 +122,7 @@ docker compose --profile app up -d --build   # migrate, api (localhost:3000), wo
 docker compose --profile app rm -sf api worker migrate   # stop them; the infrastructure keeps running
 ```
 
-Or on the host, against the local infrastructure (`npm run infra:up`). The API and the worker read `backend/.env` at startup (copy `.env.example`); variables already set in the shell win, so `REQUIRE_INVITE=false npm run start:dev` lets the mobile app sign up without an invite code.
+Or on the host, against the local infrastructure (`npm run infra:up`). The API and the worker read `backend/.env` at startup (copy `.env.example`); variables already set in the shell win, so `REQUIRE_INVITE=false npm run start:dev` lets the mobile app sign up without an invite code. To use photos from a phone on the same Wi-Fi, see the mobile README ("Photos on the phone"): `MINIO_BIND=0.0.0.0` for MinIO, `S3_PUBLIC_ENDPOINT` / `MEDIA_BASE_URL` at the laptop's address, and the worker running.
 
 ```bash
 npm install

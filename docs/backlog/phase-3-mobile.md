@@ -14,7 +14,7 @@ The GitHub board does not exist yet (the `gh` CLI is not installed), so this tab
 | 3.1 Foundation | Review | see git log | Expo Router, TanStack Query, Zustand, i18next (en/sw), theme tokens (light/dark), FlashList, expo-image, react-native-svg. Sentry deferred (no DSN; local dev only) |
 | 3.2 API client | Review | see git log | `openapi-fetch` + generated types; 15 s / 30 s timeouts; token, `X-App-Version`, `X-Platform`; error code → en/sw message. Found and fixed 2 backend spec bugs (below) |
 | 3.3 EAS builds | Review | see git log | `eas.json` profiles and `expo-dev-client`; project linked (`eas init`); FCM V1 key in EAS, `google-services.json` in the app. Dev build installed on the reference Android and working against the local API (2026-10-12: account created on the phone). iOS waits for the Apple account |
-| 3.4 Auth screens | Review | see git log | Sign up, Log in, Forgot password; session layer in `src/auth/` (secure store, one refresh at a time, restore at launch). 66 jest tests pass, plus 2 live tests against the local API. Device check waits for the dev build (3.3). Local API for testing: `REQUIRE_INVITE=false npm run start:dev` in `backend/` (works since `c0d837c`) |
+| 3.4 Auth screens | Review | see git log | Sign up, Log in, Forgot password; session layer in `src/auth/` (secure store, one refresh at a time, restore at launch). 66 jest tests pass, plus 2 live tests against the local API. Checked on the reference Android (3.4.h). Local API for testing: `REQUIRE_INVITE=false npm run start:dev` in `backend/` (works since `c0d837c`) |
 | 3.5 Profile and Settings | Backlog | | Persist the language and theme choice on the device |
 | 3.6 People | Backlog | | |
 | 3.7 Create flow | Backlog | | HEIC → JPEG on the phone (backend task 2.7) |
@@ -47,7 +47,7 @@ The Phase 3 tasks broken into trackable items. Tick an item (☐ → ✅) in the
 | 3.4.e | 3.4 Auth | Secure token storage | ✅ |
 | 3.4.f | 3.4 Auth | Single-flight silent refresh | ✅ |
 | 3.4.g | 3.4 Auth | Session restore on launch | ✅ |
-| 3.4.h | 3.4 Auth | Check sign up, log in, restart and log out on the reference Android (dev build). ✅ Sign up (2026-10-12); log in, restart (session restore) and log out still to check | ☐ |
+| 3.4.h | 3.4 Auth | Check on the reference Android (dev build), 2026-10-12: sign up, restart (session restored), log out, log in, wrong password message | ✅ |
 | 3.5.a | 3.5 Profile | My profile | ☐ |
 | 3.5.b | 3.5 Profile | Edit profile | ☐ |
 | 3.5.c | 3.5 Profile | Avatar upload | ☐ |

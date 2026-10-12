@@ -122,6 +122,8 @@ docker compose --profile app up -d --build   # migrate, api (localhost:3000), wo
 docker compose --profile app rm -sf api worker migrate   # stop them; the infrastructure keeps running
 ```
 
+Or on the host, against the local infrastructure (`npm run infra:up`). The API and the worker read `backend/.env` at startup (copy `.env.example`); variables already set in the shell win, so `REQUIRE_INVITE=false npm run start:dev` lets the mobile app sign up without an invite code.
+
 ```bash
 npm install
 npm run start:dev

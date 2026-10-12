@@ -1,3 +1,6 @@
+// Local runs read backend/.env (first import, so it is loaded before anything reads the config).
+// Containers have no .env (.dockerignore) and set real variables, which .env never overrides.
+import 'dotenv/config';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module.js';
 import { configureApp } from './app.setup.js';

@@ -1,5 +1,6 @@
 // Worker process (TRD DP-01: same image as the API, `node dist/worker.js`). No HTTP server.
 // The queue processors (media, push, maintenance schedule) register in WorkerModule.
+import 'dotenv/config'; // local runs: backend/.env (see main.ts)
 import { NestFactory } from '@nestjs/core';
 import { Logger } from 'nestjs-pino';
 import { WorkerModule } from './worker.module.js';

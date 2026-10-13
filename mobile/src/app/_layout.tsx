@@ -12,6 +12,7 @@ import { useEffect, useState } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { createQueryClient } from '@/api/queryClient';
 import { restoreSession } from '@/auth/session';
+import { closeSheet, SheetHost } from '@/components/Sheet';
 import { Toast } from '@/components/Toast';
 import { resetLikes } from '@/engagement/likes';
 import i18n, { resolveLanguage } from '@/i18n';
@@ -44,6 +45,7 @@ export default function RootLayout() {
   useEffect(() => {
     if (status !== 'signedOut') return;
     queryClient.clear();
+    closeSheet();
     // Another account may sign in on this phone next: forget this one's follows and searches.
     useFollowStore.setState({ chosen: {}, pending: {} });
     resetLikes();
@@ -91,6 +93,8 @@ function RootStack() {
           <Stack.Screen name="edit-profile" />
           <Stack.Screen name="settings/index" />
           <Stack.Screen name="settings/password" />
+          <Stack.Screen name="settings/blocked" />
+          <Stack.Screen name="settings/delete-account" />
           <Stack.Screen name="u/[username]/index" />
           <Stack.Screen name="u/[username]/[list]" />
           <Stack.Screen name="compose/crop" />
@@ -107,6 +111,7 @@ function RootStack() {
           <Stack.Screen name="(auth)" />
         </Stack.Protected>
       </Stack>
+      <SheetHost />
       <Toast />
     </>
   );

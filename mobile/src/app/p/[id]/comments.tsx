@@ -3,9 +3,9 @@
 // fit it as they come, and older pages load on scrolling up). The input bar stays above the
 // keyboard. Send: the comment shows at once as "Sending…", then is confirmed; a failure turns it
 // into "Not sent · Tap to retry" (same Idempotency-Key, so a retry never posts twice). Long-press
-// a comment you may delete (yours, or any on your post) → Delete → confirm. Max 1,000 characters,
-// counter from 900. A post you can no longer see (deleted, or a block) hides the input.
-// Reporting a comment comes with task 3.11.
+// a comment → a sheet: Report (someone else's comment, §10.2) and Delete → confirm (yours, or any
+// on your post). Max 1,000 characters, counter from 900. A post you can no longer see (deleted, or
+// a block) hides the input.
 import { useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams } from 'expo-router';
 import { memo, useState } from 'react';
@@ -21,9 +21,11 @@ import { Avatar } from '@/components/Avatar';
 import { Button } from '@/components/Button';
 import { Header } from '@/components/Header';
 import { Screen } from '@/components/Screen';
+import { type SheetAction, showActions } from '@/components/Sheet';
 import { Text } from '@/components/Text';
 import { showToast } from '@/components/Toast';
 import { formatRelative } from '@/i18n/time';
+import { openReport } from '@/safety/report';
 import { useSession } from '@/stores/session';
 import { useTheme } from '@/theme/ThemeProvider';
 import { touchTarget } from '@/theme/tokens';
@@ -85,6 +87,14 @@ export default function Comments() {
     ]);
   };
 
+  const mine = (comment: Comment) => comment.author.id === user?.id;
+  const options = (comment: Comment) => {
+    const actions: SheetAction[] = [];
+    if (!mine(comment)) actions.push({ label: t('safety.report'), destructive: true, onPress: () => openReport({ type: 'COMMENT', id: comment.id, user: comment.author }) });
+    if (comment.canDelete) actions.push({ label: t('feed.delete'), destructive: true, onPress: () => remove(comment) });
+    showActions(actions, { cancel: t('common.cancel') });
+  };
+
   // Inverted list: index 0 sits at the bottom. Newest first: unsent ones (latest typed first), then the server's.
   const rows: Row[] = [
     ...[...pending].reverse().map((p): Row => ({ kind: 'pending', pending: p })),
@@ -117,7 +127,7 @@ export default function Comments() {
         data={rows}
         keyExtractor={(row) => (row.kind === 'comment' ? row.comment.id : row.pending.key)}
         renderItem={({ item }) => (item.kind === 'comment'
-          ? <CommentRow comment={item.comment} onLongPress={item.comment.canDelete ? remove : undefined} />
+          ? <CommentRow comment={item.comment} onLongPress={item.comment.canDelete || !mine(item.comment) ? options : undefined} />
           : <PendingRow pending={item.pending} onRetry={() => void send(item.pending)} />)}
         onEndReached={() => { if (comments.hasNextPage && !comments.isFetchingNextPage) void comments.fetchNextPage(); }}
         onEndReachedThreshold={0.5}

@@ -8,6 +8,7 @@ import { Alert, type AlertButton, Share } from 'react-native';
 import { createQueryClient } from '@/api/queryClient';
 import { feedKey, patchPost, type Post } from '@/api/posts';
 import { tokenStore } from '@/auth/tokenStore';
+import { closeSheet } from '@/components/Sheet';
 import { hideToast } from '@/components/Toast';
 import { resetLikes } from '@/engagement/likes';
 import { linkTarget, rememberLink } from '@/links/pendingLink';
@@ -16,6 +17,7 @@ import { useSession } from '@/stores/session';
 import { useSettings } from '@/stores/settings';
 import { apiError, emptyPage, json, me, type StubRequest, stubApi } from '@/test/api';
 import { routes } from '@/test/routes';
+import { pressSheet, sheetOptions } from '@/test/sheet';
 
 jest.mock('@expo-google-fonts/nunito', () => ({ useFonts: () => [true], Nunito_800ExtraBold: 1 }));
 jest.mock('@/auth/tokenStore', () => jest.requireActual('@/test/memoryTokenStore'));
@@ -72,6 +74,7 @@ beforeEach(async () => {
   resetLikes();
   rememberLink(null);
   hideToast();
+  closeSheet();
 });
 
 afterEach(() => alert.mockRestore());
@@ -215,6 +218,8 @@ describe('Comments (§7.2)', () => {
   it('deletes your comment after a long-press and a confirm', async () => {
     await openComments();
     fireEvent(screen.getByText(/Comment 2/), 'longPress');
+    expect(sheetOptions()).toEqual(['Delete', 'Cancel']); // your own comment: nothing to report
+    pressSheet('Delete');
     expect(alert).toHaveBeenCalledWith('Delete comment?', undefined, expect.any(Array));
     answerAlert('Delete');
     expect(await screen.findByText('Comment deleted')).toBeTruthy();
@@ -222,10 +227,10 @@ describe('Comments (§7.2)', () => {
     expect(sent('DELETE', '/api/v1/comments/c2')).toHaveLength(1);
   });
 
-  it("offers nothing on a long-press of someone else's comment (Report comes with 3.11)", async () => {
+  it("offers Report on a long-press of someone else's comment", async () => {
     await openComments();
     fireEvent(screen.getByText(/Comment 1/), 'longPress');
-    expect(alert).not.toHaveBeenCalled();
+    expect(sheetOptions()).toEqual(['Report', 'Cancel']);
   });
 
   it("hides the input when the post can't take comments (deleted or blocked)", async () => {
@@ -266,24 +271,23 @@ describe('Share and copy link (§7.3, §8.2)', () => {
     renderRouter(routes, { initialUrl: '/' });
     await screen.findByText(/Caption 2/);
     fireEvent.press(within(screen.getByLabelText('Post by amina')).getByLabelText('More options'));
-    const buttons = (alert.mock.calls.at(-1)![2] as AlertButton[]).map((b) => b.text);
-    expect(buttons).toEqual(['Copy link', 'Delete', 'Cancel']);
-    answerAlert('Copy link');
+    expect(sheetOptions()).toEqual(['Copy link', 'Delete', 'Cancel']);
+    pressSheet('Copy link');
     expect(await screen.findByText('Link copied')).toBeTruthy();
     expect(clipboard()).toBe('https://jamii.test/p/p2');
   });
 
-  it("offers Copy link and Unfollow on someone else's post", async () => {
+  it("offers Report, Copy link, Unfollow and Block on someone else's post", async () => {
     renderRouter(routes, { initialUrl: '/' });
     await screen.findByText(/Caption 1/);
     fireEvent.press(within(juma()).getByLabelText('More options'));
-    expect((alert.mock.calls.at(-1)![2] as AlertButton[]).map((b) => b.text)).toEqual(['Copy link', 'Unfollow', 'Cancel']);
+    expect(sheetOptions()).toEqual(['Report', 'Copy link', 'Unfollow', 'Block @juma', 'Cancel']);
   });
 
   it('copies a profile link from the profile ⋯', async () => {
     renderRouter(routes, { initialUrl: '/u/juma' });
     fireEvent.press(await screen.findByLabelText('More options'));
-    answerAlert('Copy profile link');
+    pressSheet('Copy profile link');
     expect(await screen.findByText('Link copied')).toBeTruthy();
     expect(clipboard()).toBe('https://jamii.test/u/juma');
   });

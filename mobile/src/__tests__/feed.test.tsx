@@ -9,7 +9,9 @@ import { useFollowStore } from '@/people/follow';
 import { useSession } from '@/stores/session';
 import { useSettings } from '@/stores/settings';
 import { apiError, emptyPage, json, me, type StubRequest, stubApi } from '@/test/api';
+import { closeSheet } from '@/components/Sheet';
 import { routes } from '@/test/routes';
+import { pressSheet } from '@/test/sheet';
 
 jest.mock('@expo-google-fonts/nunito', () => ({ useFonts: () => [true], Nunito_800ExtraBold: 1 }));
 jest.mock('@/auth/tokenStore', () => jest.requireActual('@/test/memoryTokenStore'));
@@ -57,6 +59,7 @@ beforeEach(async () => {
   useSession.setState({ status: 'signedIn', accessToken: 'access-0', user: { id: 'u1', username: 'amina' }, onboarding: false });
   useSettings.setState({ language: 'en', theme: 'system' });
   useFollowStore.setState({ chosen: {}, pending: {} });
+  closeSheet();
 });
 
 afterEach(() => alert.mockRestore());
@@ -117,7 +120,7 @@ describe('Post detail and delete (§7.4)', () => {
     await screen.findByText(/Caption 2/);
     const mine = screen.getByLabelText('Post by amina');
     fireEvent.press(within(mine).getByLabelText('More options'));
-    answerAlert('Delete');
+    pressSheet('Delete');
     expect(alert).toHaveBeenCalledWith('Delete this post?', "This can't be undone.", expect.any(Array));
     answerAlert('Delete');
     expect(await screen.findByText('Post deleted')).toBeTruthy();

@@ -1,9 +1,8 @@
 // Settings (App Flow §11). Built so far: Edit profile, Change password, Notifications (the
 // permission status: Turn on asks the OS once, after that the row opens the phone's settings),
 // Language and Theme (saved on the phone; the language also goes to the account and this phone's
-// push registration, so pushes and emails use it), app version and Log out. Blocked accounts and
-// Delete account come with 3.11; Terms, Privacy Policy and Contact support once their pages exist
-// (Plan 5).
+// push registration, so pushes and emails use it), Blocked accounts, app version, Log out and
+// Delete account (§10). Terms, Privacy Policy and Contact support once their pages exist (Plan 5).
 import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
@@ -63,6 +62,7 @@ export default function Settings() {
           <ListRow label={t('settings.notifications')} onPress={onNotifications}
             value={push === 'granted' ? t('settings.notificationsOn') : push === 'denied' ? t('settings.notificationsOff') : t('onboarding.turnOn')} />
         )}
+        <ListRow label={t('safety.blockedAccounts')} onPress={() => router.push('/settings/blocked')} />
 
         <ListSection title={t('settings.preferences')} />
         <View style={{ gap: space.md, paddingTop: space.xs }}>
@@ -83,6 +83,7 @@ export default function Settings() {
 
         <View style={{ marginTop: space.lg }}>
           <ListRow label={t('settings.logOut')} onPress={logOut} danger />
+          <ListRow label={t('safety.deleteAccount')} onPress={() => router.push('/settings/delete-account')} danger />
         </View>
       </ScrollView>
     </Screen>

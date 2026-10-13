@@ -20,6 +20,8 @@ import PostDetail from '@/app/p/[id]/index';
 import NotificationsStep from '@/app/onboarding/notifications';
 import FindPeople from '@/app/onboarding/people';
 import Settings from '@/app/settings/index';
+import BlockedAccounts from '@/app/settings/blocked';
+import DeleteAccount from '@/app/settings/delete-account';
 import ChangePassword from '@/app/settings/password';
 import UserProfile from '@/app/u/[username]/index';
 import FollowListScreen from '@/app/u/[username]/[list]';
@@ -40,6 +42,8 @@ export const routes = {
   'edit-profile': EditProfile,
   'settings/index': Settings,
   'settings/password': ChangePassword,
+  'settings/blocked': BlockedAccounts,
+  'settings/delete-account': DeleteAccount,
   'onboarding/index': Onboarding,
   'onboarding/people': FindPeople,
   'onboarding/notifications': NotificationsStep,

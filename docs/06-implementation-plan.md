@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Document** | 06 — Implementation Plan |
-| **Version** | 1.17 (Phase 3: 3.1–3.8 built and checked on the reference Android; 3.9 engagement and 3.10 notifications built, CI green) |
+| **Version** | 1.18 (Phase 3: 3.1–3.8 built and checked on the reference Android; 3.9 engagement, 3.10 notifications and 3.11 safety built) |
 | **Status** | **Approved** — 2026-10-11 |
 | **Date** | 2026-10-10 |
 | **Team** | 1 engineer building with Claude Code; Product (stakeholder) as product owner |
@@ -48,7 +48,7 @@ Visual design (Design Brief, doc 04) is produced by the engineer with Claude Cod
 | 0 Docs | ✅ Complete | §4 Phase 0 |
 | 1 Database design | Built and tested locally; in **Review** | [Phase 1 backlog](backlog/phase-1-database-E0-E1.md#status) |
 | 2 Backend | Built and tested locally; exit gate met locally (UAT deferred); in **Review** | [Phase 2 backlog](backlog/phase-2-backend.md#status) |
-| 3 Mobile | **In progress.** Designs approved; 3.1 foundation, 3.2 API client, 3.3 EAS builds, 3.4 auth, 3.5 profile and Settings, 3.6 People, 3.7 Create flow, 3.8 Feed, 3.9 Engagement and deep links, 3.10 Notifications built (Review). 3.1–3.8 checked on the reference Android; 3.9 and 3.10 wait for one new dev build. Next: 3.11 Safety, 3.12 Quality | [Phase 3 backlog](backlog/phase-3-mobile.md#status) |
+| 3 Mobile | **In progress.** Designs approved; 3.1 foundation, 3.2 API client, 3.3 EAS builds, 3.4 auth, 3.5 profile and Settings, 3.6 People, 3.7 Create flow, 3.8 Feed, 3.9 Engagement and deep links, 3.10 Notifications, 3.11 Safety built (Review). 3.1–3.8 checked on the reference Android; 3.9–3.11 wait for one phone session on the new dev build. Next: 3.12 Quality | [Phase 3 backlog](backlog/phase-3-mobile.md#status) |
 | 4 Admin portal | Not started; the admin API it needs is done (2.12) | §4 Phase 4 |
 | 5–6 Release, pilot | Not started | §4 Phases 5–6 |
 
@@ -237,7 +237,7 @@ The Expo app in `mobile/`, built screen by screen against the finished UAT API. 
 | 3.8 | ✅ Feed: Home feed (FlashList, reserved aspect ratio, blurhash, infinite scroll, pull-to-refresh, all states, memoised card); profile grid; Post detail; performance pass on the reference Android |
 | 3.9 | ✅ Engagement: like button + double-tap animation, debounced optimistic toggle; Comments screen; share sheet, copy link, deep-link routing |
 | 3.10 | ✅ Notifications: Activity screen, tab badge, permission onboarding, push handling in all app states |
-| 3.11 | Safety: block/unblock, Blocked accounts, Report sheet, Delete account flow |
+| 3.11 | ✅ Safety: block/unblock, Blocked accounts, Report sheet, Delete account flow (and the bottom sheet for the ⋯ menus; suspension mid-session signs out) |
 | 3.12 | Quality: Maestro E2E of the core loop in CI; PostHog KPI events (sent once its key is set — optional until production); accessibility pass; min-version (`426`) wiring; EAS Update channel |
 
 **Exit:** on the reference Android against UAT, a new user registers (18+), follows someone, posts a photo, likes and comments, receives a push, and blocks/reports a user; liking post #7 re-renders only post #7; a shared link opens the post on another phone; Maestro E2E green.
@@ -358,5 +358,6 @@ If priorities change, these stories are dropped first, in this order: 1) Caption
 11. ✅ 3.7 Create flow built: pick or take a photo, crop, caption, share with progress, retry and saved drafts; checked end to end against the local stack. 
 12. ✅ 3.8 Feed built: home feed, post detail, profile grids, delete own post. 3.1–3.8 all checked on the reference Android (2026-10-13), after fixing photo uploads to go natively from disk.
 13. ✅ 3.9 Engagement built: like (button and double-tap, debounced, optimistic, only that card re-renders), Comments screen (send with retry, delete, counter), share sheet and Copy link (post and profile), deep links `/p/:id`, `/u/:username` and `jamiiair://` that wait for log-in. The phone check (3.9.e) needs a new dev build for `expo-clipboard`.
-14. ✅ 3.10 Notifications built: Activity tab (New / Earlier, Follow back, marks read after 1 s), unread badge, onboarding step 3 and a Settings row to turn pushes on, pushes in every app state (foreground toast, tap opens the post or profile), log-out removes this phone's push token. Phone checks 3.9.e and 3.10.e go together on one new dev build. **Next:** 3.11 (Safety: block / unblock, Blocked accounts, Report sheet, Delete account). Tracker: [`docs/backlog/phase-3-mobile.md`](backlog/phase-3-mobile.md).
+14. ✅ 3.10 Notifications built: Activity tab (New / Earlier, Follow back, marks read after 1 s), unread badge, onboarding step 3 and a Settings row to turn pushes on, pushes in every app state (foreground toast, tap opens the post or profile), log-out removes this phone's push token. Phone checks 3.9.e and 3.10.e go together on one new dev build. Tracker: [`docs/backlog/phase-3-mobile.md`](backlog/phase-3-mobile.md).
+15. ✅ 3.11 Safety built: the ⋯ menus became a bottom sheet (Report, Copy link, Unfollow, Block); block / unblock from posts, profiles and Settings → Blocked accounts; the Report sheet for posts, comments and accounts, then the offer to block; Delete account (password, 30-day grace, Welcome says when); a suspension noticed mid-session signs out and Welcome explains. Checked against the local API; the phone check 3.11.e joins 3.9.e and 3.10.e (no new native module). **Next:** 3.12 (Quality).
 

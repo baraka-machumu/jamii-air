@@ -6,6 +6,10 @@ import { create } from 'zustand';
 
 export type SessionStatus = 'restoring' | 'signedOut' | 'signedIn';
 
+/** Why the user was signed out, told on Welcome: suspended mid-session (App Flow §13), or the
+ * account was just scheduled for deletion (§10.4; `deletionDueAt` is an ISO date). */
+export type SignOutNotice = { kind: 'suspended' } | { kind: 'deleted'; deletionDueAt: string };
+
 export interface SessionUser {
   id: string;
   username?: string;
@@ -18,10 +22,12 @@ interface SessionState {
   user: SessionUser | null;
   /** Just signed up: show onboarding before the tabs. Not saved: onboarding is first session only. */
   onboarding: boolean;
+  /** Shown on Welcome after a sign-out the user did not ask for; cleared by the next sign-in. */
+  notice: SignOutNotice | null;
   /** `onboarding`: a new account, so routing opens onboarding instead of the tabs (one update, no flash). */
   signIn: (accessToken: string | null, user?: SessionUser | null, onboarding?: boolean) => void;
   finishOnboarding: () => void;
-  signOut: () => void;
+  signOut: (notice?: SignOutNotice) => void;
 }
 
 export const useSession = create<SessionState>((set) => ({
@@ -29,9 +35,13 @@ export const useSession = create<SessionState>((set) => ({
   accessToken: null,
   user: null,
   onboarding: false,
+  notice: null,
   signIn: (accessToken, user = null, onboarding) => set((s) => ({
-    status: 'signedIn', accessToken, user: user ?? s.user, onboarding: onboarding ?? s.onboarding,
+    status: 'signedIn', accessToken, user: user ?? s.user, onboarding: onboarding ?? s.onboarding, notice: null,
   })),
   finishOnboarding: () => set({ onboarding: false }),
-  signOut: () => set({ status: 'signedOut', accessToken: null, user: null, onboarding: false }),
+  // A second sign-out (a refresh failing after a suspension) keeps the reason already given.
+  signOut: (notice) => set((s) => ({
+    status: 'signedOut', accessToken: null, user: null, onboarding: false, notice: notice ?? (s.status === 'signedOut' ? s.notice : null),
+  })),
 }));

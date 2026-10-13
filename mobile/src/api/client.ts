@@ -6,7 +6,8 @@
 //
 // Every request carries the access token (when signed in), X-App-Version and X-Platform
 // (TRD API-03, API-07) and gives up after 15 s (reads) or 30 s (writes) (App Flow §13). A 401 on
-// any other route refreshes the session once (shared by all requests) and sends the request again.
+// any other route refreshes the session once (shared by all requests) and sends the request again;
+// a 403 ACCOUNT_SUSPENDED there signs the user out (App Flow §13).
 // Photo bytes never go through here: they are PUT straight to storage (task 3.7).
 import Constants from 'expo-constants';
 import createClient from 'openapi-fetch';
@@ -91,6 +92,19 @@ export function onUnauthorized(handler: UnauthorizedHandler | null): void {
   unauthorizedHandler = handler;
 }
 
+/** Called when a request comes back 403 ACCOUNT_SUSPENDED (an admin suspended the account
+ * mid-session). Registered by the session module, which signs out. */
+let suspendedHandler: (() => void) | null = null;
+export function onSuspended(handler: (() => void) | null): void {
+  suspendedHandler = handler;
+}
+
+async function isSuspended(response: Response): Promise<boolean> {
+  if (response.status !== 403) return false;
+  const body = await response.clone().json().catch(() => null) as { error?: { code?: string } } | null;
+  return body?.error?.code === 'ACCOUNT_SUSPENDED';
+}
+
 /** The auth routes answer 401 for wrong credentials or a dead session: never refresh-and-retry those. */
 const isAuthRoute = (url: string) => url.includes('/api/v1/auth/');
 
@@ -101,7 +115,9 @@ export function createApiClient(baseUrl = apiBaseUrl(), baseFetch: typeof fetch 
     fetch: async (request) => {
       const out = await toOutgoing(request);
       const response = await send(out, baseFetch);
-      if (response.status !== 401 || isAuthRoute(out.url) || !unauthorizedHandler) return response;
+      if (isAuthRoute(out.url)) return response;
+      if (suspendedHandler && await isSuspended(response)) suspendedHandler();
+      if (response.status !== 401 || !unauthorizedHandler) return response;
       if (!(await unauthorizedHandler())) return response;
       const token = useSession.getState().accessToken;
       return send({ ...out, headers: { ...out.headers, authorization: `Bearer ${token}` } }, baseFetch);

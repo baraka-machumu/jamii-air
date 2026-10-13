@@ -313,5 +313,51 @@
   "notifications": {
     "channelName": "Likes, comments and follows",
     "new": "New activity"
+  },
+  "safety": {
+    "report": "Report",
+    "block": "Block",
+    "unblock": "Unblock",
+    "blockUser": "Block @{{username}}",
+    "unblockUser": "Unblock @{{username}}",
+    "blockTitle": "Block @{{username}}?",
+    "blockBody": "They won't be able to see your profile or posts, or interact with you. They won't be notified.",
+    "blocked": "Blocked @{{username}}",
+    "unblocked": "Unblocked @{{username}}",
+    "unblockFailed": "Couldn't unblock",
+    "blockedAccounts": "Blocked accounts",
+    "noBlockedTitle": "No blocked accounts",
+    "noBlockedBody": "When you block someone, they show up here.",
+    "reportTitle": {
+      "POST": "Report post",
+      "COMMENT": "Report comment",
+      "USER": "Report account"
+    },
+    "reportSubtitle": "Why are you reporting this? They won't know it was you.",
+    "reasons": {
+      "SPAM": "Spam",
+      "NUDITY": "Nudity or sexual content",
+      "HARASSMENT": "Harassment or bullying",
+      "HATE": "Hate speech",
+      "VIOLENCE": "Violence",
+      "FALSE_INFORMATION": "False information",
+      "OTHER": "Something else"
+    },
+    "detailsPlaceholder": "Add details (optional)",
+    "submit": "Submit",
+    "reportThanks": "Thanks — we'll review this.",
+    "reportThanksBody": "Our team looks at every report. You can also block this account.",
+    "done": "Done",
+    "deleteAccount": "Delete account",
+    "deleteTitle": "Delete your account",
+    "deleteSubtitle": "Your account is closed now and deleted after 30 days.",
+    "deletePoint1": "Your profile, photos, comments and likes are deleted, and nobody can see them from now on.",
+    "deletePoint2": "Changed your mind? Log in within 30 days to cancel the deletion.",
+    "deletePoint3": "After 30 days this can't be undone.",
+    "deletePassword": "Enter your password to confirm",
+    "deleteConfirm": "Delete my account",
+    "deletedTitle": "Your account is scheduled for deletion",
+    "deletedBody": "It will be deleted on {{date}}. Log in before then to cancel.",
+    "suspendedTitle": "Your account is suspended"
   }
 }

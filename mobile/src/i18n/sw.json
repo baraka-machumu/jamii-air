@@ -313,5 +313,51 @@
   "notifications": {
     "channelName": "Kupendwa, maoni na wafuasi",
     "new": "Shughuli mpya"
+  },
+  "safety": {
+    "report": "Ripoti",
+    "block": "Zuia",
+    "unblock": "Ondoa kizuizi",
+    "blockUser": "Zuia @{{username}}",
+    "unblockUser": "Ondoa kizuizi kwa @{{username}}",
+    "blockTitle": "Umzuie @{{username}}?",
+    "blockBody": "Hataweza kuona wasifu wako au machapisho yako, wala kuwasiliana nawe. Hatajulishwa.",
+    "blocked": "Umemzuia @{{username}}",
+    "unblocked": "Umeondoa kizuizi kwa @{{username}}",
+    "unblockFailed": "Imeshindikana kuondoa kizuizi",
+    "blockedAccounts": "Akaunti ulizozuia",
+    "noBlockedTitle": "Hujazuia akaunti yoyote",
+    "noBlockedBody": "Ukimzuia mtu, ataonekana hapa.",
+    "reportTitle": {
+      "POST": "Ripoti chapisho",
+      "COMMENT": "Ripoti maoni",
+      "USER": "Ripoti akaunti"
+    },
+    "reportSubtitle": "Kwa nini unaripoti hili? Hatajua ni wewe.",
+    "reasons": {
+      "SPAM": "Barua taka",
+      "NUDITY": "Uchi au maudhui ya ngono",
+      "HARASSMENT": "Unyanyasaji au uonevu",
+      "HATE": "Matamshi ya chuki",
+      "VIOLENCE": "Vurugu",
+      "FALSE_INFORMATION": "Taarifa za uongo",
+      "OTHER": "Kitu kingine"
+    },
+    "detailsPlaceholder": "Ongeza maelezo (si lazima)",
+    "submit": "Tuma",
+    "reportThanks": "Asante — tutalikagua.",
+    "reportThanksBody": "Timu yetu hukagua kila ripoti. Unaweza pia kuizuia akaunti hii.",
+    "done": "Sawa",
+    "deleteAccount": "Futa akaunti",
+    "deleteTitle": "Futa akaunti yako",
+    "deleteSubtitle": "Akaunti yako inafungwa sasa na itafutwa baada ya siku 30.",
+    "deletePoint1": "Wasifu wako, picha, maoni na mapendo yako yanafutwa, na hakuna atakayeyaona kuanzia sasa.",
+    "deletePoint2": "Umebadili nia? Ingia ndani ya siku 30 ili kusitisha ufutaji.",
+    "deletePoint3": "Baada ya siku 30 huwezi kuirudisha.",
+    "deletePassword": "Weka nenosiri lako kuthibitisha",
+    "deleteConfirm": "Futa akaunti yangu",
+    "deletedTitle": "Akaunti yako imepangwa kufutwa",
+    "deletedBody": "Itafutwa tarehe {{date}}. Ingia kabla ya hapo ili kusitisha.",
+    "suspendedTitle": "Akaunti yako imesimamishwa"
   }
 }

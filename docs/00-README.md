@@ -3,8 +3,8 @@
 | | |
 |---|---|
 | **Project** | Jamii Air — photo & short-video social platform |
-| **Phase** | Phase 0 complete. Phases 1 · Database and 2 · Backend built and tested locally, in review (2026-10-11). Phase 3 · Mobile in progress: tasks 3.1–3.8 built and checked on the reference Android (2026-10-13); 3.9 engagement and 3.10 notifications built (2026-10-13), phone checks pending; next 3.11. Status: [Plan §1](06-implementation-plan.md#1-summary) |
-| **Doc version** | 1.6 — 2026-10-13 (TRD 1.7 and Design Brief 1.3: mobile stack and motion as built; Plan 1.17: status after 3.10; Phase 3 decisions in the [Phase 3 backlog](backlog/phase-3-mobile.md#decisions-taken-during-phase-3)) |
+| **Phase** | Phase 0 complete. Phases 1 · Database and 2 · Backend built and tested locally, in review (2026-10-11). Phase 3 · Mobile in progress: tasks 3.1–3.8 built and checked on the reference Android (2026-10-13); 3.9 engagement and 3.10 notifications built (2026-10-13), 3.11 safety built (2026-10-14), phone checks pending; next 3.12. Status: [Plan §1](06-implementation-plan.md#1-summary) |
+| **Doc version** | 1.7 — 2026-10-14 (TRD 1.7 and Design Brief 1.3: mobile stack and motion as built; Plan 1.18: status after 3.11; Phase 3 decisions in the [Phase 3 backlog](backlog/phase-3-mobile.md#decisions-taken-during-phase-3)) |
 | **Prepared by** | Senior Software Engineer |
 | **Source guidelines** | `instagram_mvp_technical_specification_10_users.pdf` (the "Spec"), `application-consideration.txt` (the "Guidelines") |
 

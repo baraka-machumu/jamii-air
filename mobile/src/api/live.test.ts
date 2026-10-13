@@ -13,7 +13,11 @@ const LIVE = process.env.API_LIVE_URL;
 
 function nodeFetch(url: string, init: RequestInit): Promise<Response> {
   return new Promise((resolve, reject) => {
-    const req = httpRequest(url, { method: init.method, headers: init.headers as Record<string, string> }, (res) => {
+    // A written body goes out chunked unless its length is given, and the server answers a chunked
+    // DELETE (DELETE /me carries the password) with a bare 400. Phones' fetch always sends the length.
+    const headers = { ...init.headers as Record<string, string> };
+    if (typeof init.body === 'string') headers['content-length'] = String(Buffer.byteLength(init.body));
+    const req = httpRequest(url, { method: init.method, headers }, (res) => {
       let text = '';
       res.setEncoding('utf8');
       res.on('data', (chunk: string) => { text += chunk; });
@@ -104,5 +108,47 @@ function nodeFetch(url: string, init: RequestInit): Promise<Response> {
     }));
     const ended = await call(api.POST('/api/v1/auth/refresh', { body: { refreshToken: again.refreshToken } })).catch((e: unknown) => e);
     expect(ended).toMatchObject({ status: 401 });
+  });
+
+  it('blocks, lists, reports, unblocks and deletes the account (task 3.11)', async () => {
+    const api = createApiClient(LIVE, nodeFetch as unknown as typeof fetch);
+    const password = 'mango-chai-2026';
+    const register = async (username: string) => call(api.POST('/api/v1/auth/register', {
+      body: { username, email: `${username}@example.test`, password, dateOfBirth: '1995-03-01', acceptTerms: true },
+    }));
+    const stamp = Math.random().toString(36).slice(2, 8);
+    const them = await register(`sf_b_${stamp}`);
+    const mine = await register(`sf_a_${stamp}`);
+    useSession.getState().signIn(mine.accessToken);
+    const id = { params: { path: { id: them.user.id } } };
+    const theirProfile = () => call(api.GET('/api/v1/users/{username}', { params: { path: { username: `sf_b_${stamp}` } } }));
+
+    await call(api.PUT('/api/v1/users/{id}/follow', id));
+    expect(await call(api.PUT('/api/v1/users/{id}/block', id))).toEqual({ blocked: true });
+    expect(await theirProfile()).toMatchObject({ isBlockedByMe: true, isFollowing: false }); // the follow is gone
+    const blocks = await call(api.GET('/api/v1/me/blocks'));
+    expect(blocks.items).toEqual([expect.objectContaining({ id: them.user.id, username: `sf_b_${stamp}` })]);
+
+    const report = { targetType: 'USER' as const, targetId: them.user.id, reason: 'HARASSMENT' as const, details: 'Live test' };
+    const first = await call(api.POST('/api/v1/reports', { body: report }));
+    expect(await call(api.POST('/api/v1/reports', { body: report }))).toEqual(first); // a repeat is accepted silently
+    const self = await call(api.POST('/api/v1/reports', { body: { ...report, targetId: mine.user.id } })).catch((e: unknown) => e);
+    expect(self).toMatchObject({ code: 'CANNOT_REPORT_SELF' });
+
+    expect(await call(api.DELETE('/api/v1/users/{id}/block', id))).toEqual({ blocked: false });
+    expect(await theirProfile()).toMatchObject({ isBlockedByMe: false, isFollowing: false }); // not restored
+    expect((await call(api.GET('/api/v1/me/blocks'))).items).toEqual([]);
+
+    const wrong = await call(api.DELETE('/api/v1/me', { body: { password: 'not-it-at-all' } })).catch((e: unknown) => e);
+    expect(wrong).toMatchObject({ status: 403, code: 'INVALID_PASSWORD' });
+    const { deletionDueAt } = await call(api.DELETE('/api/v1/me', { body: { password } }));
+    const days = (new Date(deletionDueAt).getTime() - Date.now()) / 86_400_000;
+    expect(days).toBeGreaterThan(29.9);
+    expect(days).toBeLessThan(30.1);
+    const gone = await call(api.GET('/api/v1/me')).catch((e: unknown) => e);
+    expect(gone).toMatchObject({ status: 401 }); // the access token stops working at once
+
+    const pending = await call(api.POST('/api/v1/auth/login', { body: { identifier: `sf_a_${stamp}`, password } })).catch((e: unknown) => e);
+    expect(pending).toMatchObject({ status: 403, code: 'ACCOUNT_PENDING_DELETION' });
   });
 });

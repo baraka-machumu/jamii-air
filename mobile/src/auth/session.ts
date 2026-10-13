@@ -6,12 +6,14 @@
 //    parallel refreshes would sign the user out.
 //  - restoreSession: at launch. No saved token → Welcome; refresh OK → Home; 401 → Welcome;
 //    no answer within 8 s → Home offline, and the refresh lands when it can.
-//  - signOut: local data is always cleared; telling the server is best effort.
-import { api, call, onUnauthorized } from '@/api/client';
+//  - signOut: local data is always cleared; telling the server is best effort. After deleting the
+//    account it carries a notice for Welcome; so does a suspension noticed mid-session (any
+//    request answered 403 ACCOUNT_SUSPENDED, App Flow §13).
+import { api, call, onSuspended, onUnauthorized } from '@/api/client';
 import { ApiError } from '@/api/errors';
 import type { components } from '@/api/schema';
 import { getInstallationId } from '@/notifications/installation';
-import { useSession } from '@/stores/session';
+import { type SignOutNotice, useSession } from '@/stores/session';
 import { tokenStore } from './tokenStore';
 
 export type SessionResponse = components['schemas']['SessionResponse'];
@@ -26,9 +28,10 @@ export async function startSession(session: SessionResponse, { newAccount = fals
   useSession.getState().signIn(session.accessToken, session.user, newAccount || undefined);
 }
 
-async function endLocally(): Promise<void> {
+/** Clear this phone only: for when the server has already ended every session (account deleted). */
+export async function endLocally(notice?: SignOutNotice): Promise<void> {
   await tokenStore.clear().catch(() => undefined);
-  useSession.getState().signOut();
+  useSession.getState().signOut(notice);
 }
 
 let inflight: Promise<RefreshOutcome> | null = null;
@@ -73,10 +76,10 @@ export async function restoreSession(wait = RESTORE_WAIT_MS): Promise<void> {
   if (outcome === 'offline' && useSession.getState().status === 'restoring') useSession.getState().signIn(null);
 }
 
-export async function signOut(): Promise<void> {
+export async function signOut(notice?: SignOutNotice): Promise<void> {
   const accessToken = useSession.getState().accessToken;
   const refreshToken = await tokenStore.get().catch(() => null);
-  await endLocally();
+  await endLocally(notice);
   if (refreshToken && accessToken) {
     // With this installation's ID the server removes its push token too: no pushes once signed out.
     const installationId = await getInstallationId().catch(() => undefined);
@@ -88,3 +91,7 @@ export async function signOut(): Promise<void> {
 }
 
 onUnauthorized(async () => (await refreshSession()) === 'refreshed');
+// The server will not serve a suspended account: sign out here, Welcome explains.
+onSuspended(() => {
+  if (useSession.getState().status === 'signedIn') void endLocally({ kind: 'suspended' });
+});

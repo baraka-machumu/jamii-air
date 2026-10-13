@@ -3,6 +3,9 @@
 #   - the API on :3000 (no invite codes) and the media worker, with storage URLs at that address;
 #   - the Expo dev server on :8081, advertising that address to the dev build.
 # MinIO is opened to the network (MINIO_BIND=0.0.0.0). Run it again whenever the address changes.
+# After a network change it also restarts the PostgreSQL, Redis and MinIO containers: on this laptop
+# Docker's port forwarding stopped passing data after a Wi-Fi switch (connections opened, then
+# dropped), and the API hung on every request (2026-10-13). Share links point at this address too.
 #
 #   powershell -ExecutionPolicy Bypass -File scripts\dev-phone.ps1            # restart everything
 #   powershell -ExecutionPolicy Bypass -File scripts\dev-phone.ps1 -Build     # rebuild the API first
@@ -35,7 +38,14 @@ Start-Sleep -Seconds 1
 Push-Location $backend
 try {
   $env:MINIO_BIND = '0.0.0.0'
-  docker compose up -d --wait minio | Out-Host
+  $ipFile = Join-Path $env:TEMP 'jamii-dev-phone.ip'
+  $lastIp = if (Test-Path $ipFile) { (Get-Content $ipFile -Raw).Trim() } else { '' }
+  if ($lastIp -and $lastIp -ne $ip) {
+    Write-Host "Network changed ($lastIp -> $ip): restarting PostgreSQL, Redis and MinIO" -ForegroundColor Yellow
+    docker compose restart postgres redis minio | Out-Host
+  }
+  Set-Content -Path $ipFile -Value $ip
+  docker compose up -d --wait postgres redis minio | Out-Host
   if ($Build -or -not (Test-Path 'dist/main.js')) { npm run build | Out-Host }
 } finally { Pop-Location }
 
@@ -46,7 +56,7 @@ function Start-Window($title, $dir, $command) {
   $window = Start-Process powershell -ArgumentList '-NoExit', '-Command', $script -PassThru
   Add-Content -Path $pidFile -Value $window.Id
 }
-Start-Window 'Jamii API :3000' $backend "`$env:REQUIRE_INVITE='false'; `$env:S3_PUBLIC_ENDPOINT='$storage'; `$env:MEDIA_BASE_URL='$media'; node --enable-source-maps dist/main.js"
+Start-Window 'Jamii API :3000' $backend "`$env:REQUIRE_INVITE='false'; `$env:PUBLIC_WEB_URL='http://${ip}:3000'; `$env:S3_PUBLIC_ENDPOINT='$storage'; `$env:MEDIA_BASE_URL='$media'; node --enable-source-maps dist/main.js"
 Start-Window 'Jamii worker' $backend "`$env:S3_PUBLIC_ENDPOINT='$storage'; `$env:MEDIA_BASE_URL='$media'; node --enable-source-maps dist/worker.js"
 # The route types are rewritten by the dev server; a stale copy only breaks the local typecheck.
 Remove-Item (Join-Path $mobile '.expo/types/router.d.ts') -ErrorAction SilentlyContinue
@@ -59,7 +69,7 @@ foreach ($i in 1..40) {
   Start-Sleep -Seconds 1
 }
 Write-Host ''
-if ($ok) { Write-Host "API is up on http://${ip}:3000" -ForegroundColor Green } else { Write-Host 'API did not answer yet: check the "Jamii API" window.' -ForegroundColor Yellow }
+if ($ok) { Write-Host "API is up on http://${ip}:3000" -ForegroundColor Green } else { Write-Host 'API did not answer yet: check the "Jamii API" window. If it started but hangs, run: cd backend; docker compose restart postgres redis minio' -ForegroundColor Yellow }
 Write-Host "On the phone (same Wi-Fi):"
 Write-Host "  1. Browser: http://${ip}:3000/api/v1/health/live  ->  {""status"":""ok""}"
 Write-Host "  2. Jamii Air dev build: enter http://${ip}:8081 (or scan the QR in the Expo window)"

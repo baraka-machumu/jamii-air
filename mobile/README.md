@@ -87,7 +87,7 @@ Add packages with `npx expo install <package>` so versions match the SDK.
 
 `/p/{postId}` and `/u/{username}` (the `shareUrl` paths) are also the app's routes, so a link opens the post or profile. A link that arrives while signed out waits until log-in or onboarding is done (`src/links/pendingLink.ts`, `src/app/+native-intent.tsx`).
 
-- **Now (no domain yet):** `jamiiair://p/{postId}` works in every build. To try one on the phone over USB: `adb shell am start -a android.intent.action.VIEW -d "jamiiair://p/<postId>"`.
+- **Now (no domain yet):** `jamiiair://p/{postId}` works in every build. With `scripts/dev-phone.bat`, `shareUrl` is `http://<laptop IP>:3000/p/…` (the API's landing page), so a shared link opens in a phone browser on the same Wi-Fi. To try one on the phone over USB: `adb shell am start -a android.intent.action.VIEW -d "jamiiair://p/<postId>"`.
 - **Once the domain exists (Plan 5.0):** set `APP_LINK_HOST=<domain>` for the EAS build (in `eas.json`) and rebuild. `app.config.ts` then adds the Android App Links intent filter (`autoVerify`) and the iOS associated domain for `https://<domain>/p/…` and `/u/…`. The backend serves the matching `/.well-known` files from its env (task 2.9).
 
 Copy link uses `expo-clipboard` (task 3.9) and pushes use `expo-notifications` (task 3.10), both native modules loaded lazily: a dev build made before them still runs (Copy link opens the share sheet, pushes are off) until you run `npm run build:dev` again.

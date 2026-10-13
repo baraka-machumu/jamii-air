@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Document** | 04 — Design Brief |
-| **Version** | 1.2 (designs delivered and approved on a Claude design canvas, §12) |
+| **Version** | 1.3 (designs delivered and approved on a Claude design canvas, §12; §5 motion as built) |
 | **Status** | **Approved** — 2026-10-11 |
 | **Date** | 2026-10-09 |
 | **For** | Whoever produces the designs (the engineer with Claude Code until a designer joins — D-11), mobile and web engineers |
@@ -117,7 +117,7 @@ Empty states and onboarding use a small set of simple, flat, warm illustrations 
 | Skeleton shimmer | Subtle, low-contrast | 1.2 s loop |
 | Toasts | Slide/fade from top | 200 ms |
 
-All animations run on the UI thread (Reanimated) and respect the OS "Reduce motion" setting (replace with fades).
+All animations run on the UI thread and respect the OS "Reduce motion" setting (replace with fades). As built (Plan 3.9): React Native `Animated` with the native driver, since the like motions are transforms and opacity only; Reanimated joins when a gesture needs it ([Phase 3 decisions](backlog/phase-3-mobile.md#decisions-taken-during-phase-3)).
 
 ## 6. Component inventory (R1)
 

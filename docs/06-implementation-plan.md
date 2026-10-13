@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Document** | 06 — Implementation Plan |
-| **Version** | 1.16 (Phase 3: 3.1–3.8 built and checked on the reference Android) |
+| **Version** | 1.17 (Phase 3: 3.1–3.8 built and checked on the reference Android; 3.9 engagement and 3.10 notifications built, CI green) |
 | **Status** | **Approved** — 2026-10-11 |
 | **Date** | 2026-10-10 |
 | **Team** | 1 engineer building with Claude Code; Product (stakeholder) as product owner |
@@ -41,25 +41,26 @@ flowchart LR
 
 Visual design (Design Brief, doc 04) is produced by the engineer with Claude Code: the mobile designs as the first increment of Phase 3, the admin wireframes as the first increment of Phase 4.
 
-**Status (2026-10-11):**
+**Status (2026-10-13):**
 
 | Phase | State | Tracker |
 |---|---|---|
 | 0 Docs | ✅ Complete | §4 Phase 0 |
 | 1 Database design | Built and tested locally; in **Review** | [Phase 1 backlog](backlog/phase-1-database-E0-E1.md#status) |
 | 2 Backend | Built and tested locally; exit gate met locally (UAT deferred); in **Review** | [Phase 2 backlog](backlog/phase-2-backend.md#status) |
-| 3 Mobile | **In progress.** Designs approved; 3.1 foundation, 3.2 API client, 3.3 EAS builds, 3.4 auth, 3.5 profile and Settings, 3.6 People, 3.7 Create flow and 3.8 Feed built (Review) | [Phase 3 backlog](backlog/phase-3-mobile.md#status) |
+| 3 Mobile | **In progress.** Designs approved; 3.1 foundation, 3.2 API client, 3.3 EAS builds, 3.4 auth, 3.5 profile and Settings, 3.6 People, 3.7 Create flow, 3.8 Feed, 3.9 Engagement and deep links, 3.10 Notifications built (Review). 3.1–3.8 checked on the reference Android; 3.9 and 3.10 wait for one new dev build. Next: 3.11 Safety, 3.12 Quality | [Phase 3 backlog](backlog/phase-3-mobile.md#status) |
 | 4 Admin portal | Not started; the admin API it needs is done (2.12) | §4 Phase 4 |
 | 5–6 Release, pilot | Not started | §4 Phases 5–6 |
 
 - **Database:** 11 migrations and 94 functions. The drift check passes, and the 123 procedure tests pass, including the authorization matrix and the SR-01/03/04 security checks. Every measured P95 is under 50 ms at 10k users / 1M posts (task 1.13).
 - **Backend:** 56 API paths, all in the OpenAPI spec. 47 unit and 77 e2e tests pass, including a spec-driven authorization sweep and the upload-security tests. Every endpoint has an e2e call. The API was reviewed against every App Flow screen ([07-api-review.md](07-api-review.md)).
+- **Mobile:** 163 jest tests pass (screens against a stubbed API, plus 3 optional live tests against the local API); typecheck, lint and Expo doctor clean. Mobile CI green on GitHub for 3.9 (`81bd310`) and 3.10 (`0a6aafd`). New native modules since the installed dev build: `expo-clipboard` (3.9) and `expo-notifications` (3.10), both loaded lazily so the installed build keeps working; the phone checks 3.9.e and 3.10.e need `npm run build:dev`.
 - **Open before Phases 1 and 2 are Done:**
   - ✅ `main` pushed, CI green on GitHub (2026-10-12, `bb2002b`); review the commits;
   - make the **Database**, **Backend** and **Mobile** checks required in `main`'s branch protection;
   - create the GitHub board (the `gh` CLI is not installed yet; §9).
 - **Deferred (local dev only until development is finished):** the UAT deploy, Sentry and metrics (task 2.16).
-- **Repository:** [`baraka-machumu/jamii-air`](https://github.com/baraka-machumu/jamii-air) on GitHub. `backend/` holds the API, worker and database; `mobile/` has the Expo scaffold; `admin/` is a placeholder.
+- **Repository:** [`baraka-machumu/jamii-air`](https://github.com/baraka-machumu/jamii-air) on GitHub. `backend/` holds the API, worker and database; `mobile/` holds the Expo app (tasks 3.1–3.10); `admin/` is a placeholder.
 
 ## 2. Agile delivery model
 

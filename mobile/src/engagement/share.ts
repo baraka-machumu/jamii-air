@@ -4,6 +4,7 @@
 import type { TFunction } from 'i18next';
 import { Share } from 'react-native';
 import { showToast } from '@/components/Toast';
+import { nativeModuleAvailable } from '@/native/available';
 
 /** The phone's share sheet. Dismissing it is not an error. */
 export async function shareLink(message: string): Promise<void> {
@@ -20,15 +21,18 @@ export function sharePost(post: { shareUrl: string; author: { username: string }
 
 /**
  * Copy a link and say so. expo-clipboard is a native module that dev builds made before task 3.9
- * do not have: there it is loaded lazily, and the share sheet (which offers Copy) stands in.
+ * do not have: it is loaded only when its native side is there (src/native/available.ts), and
+ * otherwise the share sheet (which offers Copy) stands in.
  */
 export async function copyLink(url: string, t: TFunction): Promise<void> {
   let clipboard: typeof import('expo-clipboard') | undefined;
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    clipboard = require('expo-clipboard') as typeof import('expo-clipboard');
-  } catch {
-    clipboard = undefined;
+  if (nativeModuleAvailable('ExpoClipboard')) {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      clipboard = require('expo-clipboard') as typeof import('expo-clipboard') | undefined;
+    } catch {
+      clipboard = undefined;
+    }
   }
   if (!clipboard) { await shareLink(url); return; }
   await clipboard.setStringAsync(url);

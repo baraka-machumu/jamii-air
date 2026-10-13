@@ -62,3 +62,6 @@ jest.mock('expo-notifications', () => {
     addNotificationResponseReceivedListener: listen('tapped'),
   };
 });
+
+// Native modules are "present" in tests (the packages themselves are mocked above).
+jest.mock('@/native/available', () => ({ inExpoGo: () => false, nativeModuleAvailable: () => true }));

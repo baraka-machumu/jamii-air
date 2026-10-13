@@ -9,8 +9,10 @@
 //  - background / killed: the system shows it; a tap opens the post or profile, through the same
 //    pending-link path as deep links, so it waits for log-in and lands over Home.
 //
-// expo-notifications is a native module added with task 3.10: on a dev build made before it the
-// module is missing, pushes are "unavailable" and the rest of the app works as before.
+// expo-notifications is a native module added with task 3.10. It is loaded only after checking
+// that its native side is there (src/native/available.ts): in Expo Go (no remote push on Android
+// since SDK 53) and on a dev build made before 3.10, pushes are "unavailable" and the rest of the
+// app works as before.
 import { useQueryClient } from '@tanstack/react-query';
 import Constants from 'expo-constants';
 import { useEffect } from 'react';
@@ -20,6 +22,7 @@ import { notificationPath, notificationsKey } from '@/api/notifications';
 import { showToast } from '@/components/Toast';
 import i18n, { resolveLanguage } from '@/i18n';
 import { rememberLink } from '@/links/pendingLink';
+import { inExpoGo, nativeModuleAvailable } from '@/native/available';
 import { useSettings } from '@/stores/settings';
 import { getInstallationId } from './installation';
 
@@ -32,9 +35,11 @@ let loaded: NotificationsModule | null | undefined;
 /** The native module, or null where it does not exist (web, dev builds made before 3.10). */
 export function notificationsModule(): NotificationsModule | null {
   if (loaded === undefined) {
+    const present = Platform.OS !== 'web' && !inExpoGo()
+      && nativeModuleAvailable('ExpoPushTokenManager') && nativeModuleAvailable('ExpoNotificationsEmitter');
     try {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
-      loaded = Platform.OS === 'web' ? null : (require('expo-notifications') as NotificationsModule);
+      loaded = present ? ((require('expo-notifications') as NotificationsModule | undefined) ?? null) : null;
     } catch {
       loaded = null;
     }

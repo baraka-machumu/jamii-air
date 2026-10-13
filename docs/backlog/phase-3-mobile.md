@@ -6,7 +6,7 @@ Tracker for the mobile layer of the [Implementation Plan](../06-implementation-p
 
 Board columns as in Plan §2.3. **Review** = built, every check green locally, committed to `main`; not yet Done (that needs a reviewed PR, green CI on GitHub, and the demo on the reference Android with an EAS `preview` build).
 
-CI on GitHub: the **Mobile** workflow is green for 3.1–3.4 (`bb2002b`, 2026-10-12); what remains for Done is the reviewed PR and the `preview`-build demo.
+CI on GitHub: **Mobile**, **Backend** and **Database** are green for 3.1–3.8 (`e2837bb`, 2026-10-13), and 3.1–3.8 are checked on the reference Android with the dev build; what remains for Done is the reviewed PR and the demo on a `preview` build.
 
 The GitHub board does not exist yet (the `gh` CLI is not installed), so this table is the tracker.
 

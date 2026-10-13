@@ -8,7 +8,7 @@ Board columns as in Plan §2.3. **Review** = built, every check green locally, c
 
 CI on GitHub: **Mobile**, **Backend** and **Database** are green for 3.1–3.8 (`e2837bb`, 2026-10-13), and 3.1–3.8 are checked on the reference Android with the dev build; what remains for Done is the reviewed PR and the demo on a `preview` build. **Mobile** CI is also green for 3.9 (`81bd310`) and 3.10 (`0a6aafd`) (Backend and Database unchanged since). 3.9 and 3.10 are not yet checked on the phone: one new dev build (`npm run build:dev`) covers both (3.9.e, 3.10.e).
 
-**Next on the phone (one session):** install the new dev build (started on EAS 2026-10-13/14, with `expo-clipboard` and `expo-notifications`), run `scripts\dev-phone.bat`, then 3.9.e and 3.10.e with a second account.
+**Next on the phone (one session):** install the new dev build (EAS build `ea7ea3a0`, finished 2026-10-14, with `expo-clipboard` and `expo-notifications`: [install link](https://expo.dev/accounts/bmachumu/projects/jamii-air/builds/ea7ea3a0-42b6-43aa-9050-5611f5541708)), run `scripts\dev-phone.bat`, then 3.9.e and 3.10.e with a second account.
 
 **Next to build:** 3.11 Safety (block / unblock, Blocked accounts, Report sheet with the bottom sheet the ⋯ menus need, Delete account), then 3.12 Quality.
 

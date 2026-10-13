@@ -17,10 +17,10 @@ The GitHub board does not exist yet (the `gh` CLI is not installed), so this tab
 | 3.2 API client | Review | see git log | `openapi-fetch` + generated types; 15 s / 30 s timeouts; token, `X-App-Version`, `X-Platform`; error code → en/sw message. Found and fixed 2 backend spec bugs (below) |
 | 3.3 EAS builds | Review | see git log | `eas.json` profiles and `expo-dev-client`; project linked (`eas init`); FCM V1 key in EAS, `google-services.json` in the app. Dev build installed on the reference Android and working against the local API (2026-10-12: account created on the phone). iOS waits for the Apple account |
 | 3.4 Auth screens | Review | see git log | Sign up, Log in, Forgot password; session layer in `src/auth/` (secure store, one refresh at a time, restore at launch). 66 jest tests pass, plus 2 live tests against the local API. Checked on the reference Android (3.4.h). Local API for testing: `REQUIRE_INVITE=false npm run start:dev` in `backend/` (works since `c0d837c`) |
-| 3.5 Profile and Settings | Review | see git log | My profile, Edit profile (photo, name, username, bio, discard prompt), Settings (account, change password, language and theme saved on the phone, version, log out with confirm), onboarding step 1. Avatar upload end to end against the local stack (API, worker, MinIO). Found and fixed untyped spec properties (`5642da6`). Needs a new dev build (new native modules) for the phone check (3.5.g) |
-| 3.6 People | Review | see git log | Search (300 ms debounce, cancels the previous request, recent searches), user profile `/u/:username` with optimistic Follow and "Unfollow @x?", follower / following lists, onboarding step 2 Find people. Live test against the local API (search, follow, profile, followers). No new native modules: the current dev build runs it. Phone check: 3.6.e |
-| 3.7 Create flow | Review | see git log | Create tab (library / camera, unfinished post first), crop (square / 4:5 / original, drag), caption (≤ 2,200), Share → Home with the Posting… % / Processing… / Couldn't post card; draft saved on the phone; Retry resumes from the failed step. End to end against the local stack: upload, create with Idempotency-Key (a repeat returns the same post), worker publishes, grid shows it. No new native modules. Phone check: 3.7.h |
-| 3.8 Feed | Review | see git log | Home feed (FlashList, reserved aspect 4:5…1.91:1, blurhash, memoised card, more near the end, pull to refresh, tap Home to scroll up; skeletons, empty, error, "Couldn't refresh" toast, "You're all caught up ✓"), post detail `/p/:id`, profile grids (3 columns, processing / failed / removed overlays), delete own post. Live: a new post shows in the feed with size and blurhash. Device performance pass: 3.8.e |
+| 3.5 Profile and Settings | Review | see git log | My profile, Edit profile (photo, name, username, bio, discard prompt), Settings (account, change password, language and theme saved on the phone, version, log out with confirm), onboarding step 1. Avatar upload end to end against the local stack (API, worker, MinIO). Found and fixed untyped spec properties (`5642da6`). Checked on the reference Android (3.5.g) |
+| 3.6 People | Review | see git log | Search (300 ms debounce, cancels the previous request, recent searches), user profile `/u/:username` with optimistic Follow and "Unfollow @x?", follower / following lists, onboarding step 2 Find people. Live test against the local API (search, follow, profile, followers). Checked on the reference Android (3.6.e) |
+| 3.7 Create flow | Review | see git log | Create tab (library / camera, unfinished post first), crop (square / 4:5 / original, drag), caption (≤ 2,200), Share → Home with the Posting… % / Processing… / Couldn't post card; draft saved on the phone; Retry resumes from the failed step. End to end against the local stack: upload, create with Idempotency-Key (a repeat returns the same post), worker publishes, grid shows it. Checked on the reference Android (3.7.h) |
+| 3.8 Feed | Review | see git log | Home feed (FlashList, reserved aspect 4:5…1.91:1, blurhash, memoised card, more near the end, pull to refresh, tap Home to scroll up; skeletons, empty, error, "Couldn't refresh" toast, "You're all caught up ✓"), post detail `/p/:id`, profile grids (3 columns, processing / failed / removed overlays), delete own post. Live: a new post shows in the feed with size and blurhash. Checked on the reference Android (3.8.e) |
 | 3.9 Engagement and deep links | Backlog | | `/p/:id`, `/u/:username` map onto Expo Router routes |
 | 3.10 Notifications | Backlog | | Create the Android channel `default` (backend task 2.10) |
 | 3.11 Safety | Backlog | | |
@@ -56,12 +56,12 @@ The Phase 3 tasks broken into trackable items. Tick an item (☐ → ✅) in the
 | 3.5.d | 3.5 Profile | Settings (built: account, change password, preferences, version, log out) | ✅ |
 | 3.5.e | 3.5 Profile | Language and theme, persisted on the device | ✅ |
 | 3.5.f | 3.5 Profile | Onboarding step 1 after sign-up: profile photo and bio, Skip always visible (App Flow §4.2) | ✅ |
-| 3.5.g | 3.5 Profile | Check on the reference Android (new dev build): photo from camera and library, edit and save, discard prompt, language and theme survive a restart, change password, onboarding after sign-up. 2026-10-12: all passed except the profile photo (upload failed: fixed, re-check) | ☐ |
+| 3.5.g | 3.5 Profile | Check on the reference Android (new dev build): photo from camera and library, edit and save, discard prompt, language and theme survive a restart, change password, onboarding after sign-up. 2026-10-12: all passed; the profile photo failed at first, fixed (`af2a701`) and passed on re-check (2026-10-13) | ✅ |
 | 3.6.a | 3.6 People | Search: debounce, cancel, recent searches | ✅ |
 | 3.6.b | 3.6 People | User profile with optimistic Follow | ✅ |
 | 3.6.c | 3.6 People | Follower and following lists | ✅ |
 | 3.6.d | 3.6 People | Onboarding "Find people" | ✅ |
-| 3.6.e | 3.6 People | Check on the reference Android with a second account: search, recent searches, follow / unfollow, lists, Find people after sign-up | ☐ |
+| 3.6.e | 3.6 People | Check on the reference Android with a second account: search, recent searches, follow / unfollow, lists, Find people after sign-up Passed on the reference Android (owner, 2026-10-12/13; post photos re-checked after `af2a701`) | ✅ |
 | 3.7.a | 3.7 Create flow | Permissions, picker and camera | ✅ |
 | 3.7.b | 3.7 Create flow | Crop | ✅ |
 | 3.7.c | 3.7 Create flow | Downscale and HEIC → JPEG on the phone | ✅ |
@@ -69,12 +69,12 @@ The Phase 3 tasks broken into trackable items. Tick an item (☐ → ✅) in the
 | 3.7.e | 3.7 Create flow | Upload with progress and retry | ✅ |
 | 3.7.f | 3.7 Create flow | Draft persistence | ✅ |
 | 3.7.g | 3.7 Create flow | Posting / processing / failed card | ✅ |
-| 3.7.h | 3.7 Create flow | Check on the reference Android: library and camera photos (incl. a portrait and a panorama), each crop shape, a long caption, airplane mode mid-upload → Couldn't post → Retry, kill the app mid-post → Retry on relaunch | ☐ |
+| 3.7.h | 3.7 Create flow | Check on the reference Android: library and camera photos (incl. a portrait and a panorama), each crop shape, a long caption, airplane mode mid-upload → Couldn't post → Retry, kill the app mid-post → Retry on relaunch Passed on the reference Android (owner, 2026-10-12/13; post photos re-checked after `af2a701`) | ✅ |
 | 3.8.a | 3.8 Feed | Home feed: FlashList, reserved aspect ratio, blurhash, memoised card | ✅ |
 | 3.8.b | 3.8 Feed | Infinite scroll, pull-to-refresh, all states (loading, empty, error; offline = the error states for now, see decisions) | ✅ |
 | 3.8.c | 3.8 Feed | Profile grid | ✅ |
 | 3.8.d | 3.8 Feed | Post detail (+ delete own post, App Flow §7.4) | ✅ |
-| 3.8.e | 3.8 Feed | Performance pass on the reference Android: scroll a feed of 50+ posts (smooth, no jumps), cold start, memory after long scrolling | ☐ |
+| 3.8.e | 3.8 Feed | Performance pass on the reference Android: scroll a feed of 50+ posts (smooth, no jumps), cold start, memory after long scrolling Passed on the reference Android (owner, 2026-10-12/13; post photos re-checked after `af2a701`) | ✅ |
 | 3.9.a | 3.9 Engagement | Like button and double-tap animation (debounced optimistic toggle) | ☐ |
 | 3.9.b | 3.9 Engagement | Comments screen | ☐ |
 | 3.9.c | 3.9 Engagement | Share sheet and copy link | ☐ |

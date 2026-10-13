@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Document** | 06 — Implementation Plan |
-| **Version** | 1.15 (Phase 3: 3.1–3.8 built; 3.1–3.4 checked on the reference Android) |
+| **Version** | 1.16 (Phase 3: 3.1–3.8 built and checked on the reference Android) |
 | **Status** | **Approved** — 2026-10-11 |
 | **Date** | 2026-10-10 |
 | **Team** | 1 engineer building with Claude Code; Product (stakeholder) as product owner |
@@ -355,5 +355,5 @@ If priorities change, these stories are dropped first, in this order: 1) Caption
 9. ✅ 3.5 profile and Settings built (avatar upload end to end locally); phone check after a new dev build.
 10. ✅ 3.6 People built: search, user profiles with optimistic follow, follower lists, onboarding Find people. 
 11. ✅ 3.7 Create flow built: pick or take a photo, crop, caption, share with progress, retry and saved drafts; checked end to end against the local stack. 
-12. ✅ 3.8 Feed built: home feed, post detail, profile grids, delete own post; performance pass on the device still to do. **Next:** 3.9 (Engagement: like, comments, share, deep links). Tracker: [`docs/backlog/phase-3-mobile.md`](backlog/phase-3-mobile.md).
+12. ✅ 3.8 Feed built: home feed, post detail, profile grids, delete own post. 3.1–3.8 all checked on the reference Android (2026-10-13), after fixing photo uploads to go natively from disk. **Next:** 3.9 (Engagement: like, comments, share, deep links). Tracker: [`docs/backlog/phase-3-mobile.md`](backlog/phase-3-mobile.md).
 

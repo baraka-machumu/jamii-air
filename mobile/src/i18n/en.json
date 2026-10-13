@@ -62,9 +62,6 @@
     "activity": "Activity",
     "profile": "Your profile"
   },
-  "placeholder": {
-    "activity": "Activity arrives in task 3.10."
-  },
   "settings": {
     "language": "Language",
     "theme": "Theme",
@@ -84,7 +81,10 @@
     "currentPassword": "Current password",
     "passwordChangedTitle": "Password changed",
     "passwordChangedBody": "You've been logged out on every other device.",
-    "logOutConfirm": "Log out of Jamii Air?"
+    "logOutConfirm": "Log out of Jamii Air?",
+    "notifications": "Notifications",
+    "notificationsOn": "On",
+    "notificationsOff": "Off"
   },
   "common": {
     "back": "Back",
@@ -193,7 +193,11 @@
     "peopleHint": "Follow at least 1 person to fill your feed.",
     "peopleFollowed_one": "You're following {{count}} person.",
     "peopleFollowed_other": "You're following {{count}} people.",
-    "peopleNone": "No one else has joined yet. You can find people later in Search."
+    "peopleNone": "No one else has joined yet. You can find people later in Search.",
+    "notificationsTitle": "Turn on notifications",
+    "notificationsBody": "Know when friends like your posts, comment or follow you.",
+    "turnOn": "Turn on",
+    "notNow": "Not now"
   },
   "search": {
     "placeholder": "Search people",
@@ -296,5 +300,18 @@
     "deleted": "Comment deleted",
     "deleteFailed": "Couldn't delete the comment",
     "counter": "{{length}}/{{max}}"
+  },
+  "activity": {
+    "new": "New",
+    "earlier": "Earlier",
+    "liked": "liked your post.",
+    "commented": "commented: “{{excerpt}}”",
+    "followed": "started following you.",
+    "emptyTitle": "No activity yet",
+    "emptyBody": "When people like or comment on your posts, or follow you, you'll see it here."
+  },
+  "notifications": {
+    "channelName": "Likes, comments and follows",
+    "new": "New activity"
   }
 }

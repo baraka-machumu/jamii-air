@@ -17,6 +17,7 @@ import EditProfile from '@/app/edit-profile';
 import Onboarding from '@/app/onboarding/index';
 import Comments from '@/app/p/[id]/comments';
 import PostDetail from '@/app/p/[id]/index';
+import NotificationsStep from '@/app/onboarding/notifications';
 import FindPeople from '@/app/onboarding/people';
 import Settings from '@/app/settings/index';
 import ChangePassword from '@/app/settings/password';
@@ -41,6 +42,7 @@ export const routes = {
   'settings/password': ChangePassword,
   'onboarding/index': Onboarding,
   'onboarding/people': FindPeople,
+  'onboarding/notifications': NotificationsStep,
   'u/[username]/index': UserProfile,
   'u/[username]/[list]': FollowListScreen,
   'compose/crop': Crop,

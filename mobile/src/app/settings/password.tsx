@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert } from 'react-native';
 import { api, call } from '@/api/client';
+import { getInstallationId } from '@/notifications/installation';
 import { ApiError, errorMessage } from '@/api/errors';
 import { passwordError } from '@/auth/validation';
 import { Button } from '@/components/Button';
@@ -21,7 +22,10 @@ export default function ChangePassword() {
   const [server, setServer] = useState<{ field?: 'current' | 'next'; message: string } | null>(null);
 
   const change = useMutation({
-    mutationFn: () => call(api.POST('/api/v1/auth/password/change', { body: { currentPassword: current, newPassword: next } })),
+    // This phone's push registration stays; every other one goes with its session.
+    mutationFn: async () => call(api.POST('/api/v1/auth/password/change', {
+      body: { currentPassword: current, newPassword: next, installationId: await getInstallationId() },
+    })),
     onSuccess: () => {
       Alert.alert(t('settings.passwordChangedTitle'), t('settings.passwordChangedBody'));
       router.back();

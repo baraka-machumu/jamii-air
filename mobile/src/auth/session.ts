@@ -10,6 +10,7 @@
 import { api, call, onUnauthorized } from '@/api/client';
 import { ApiError } from '@/api/errors';
 import type { components } from '@/api/schema';
+import { getInstallationId } from '@/notifications/installation';
 import { useSession } from '@/stores/session';
 import { tokenStore } from './tokenStore';
 
@@ -77,9 +78,10 @@ export async function signOut(): Promise<void> {
   const refreshToken = await tokenStore.get().catch(() => null);
   await endLocally();
   if (refreshToken && accessToken) {
-    // The push token is removed with the device registration in task 3.10 (installationId).
+    // With this installation's ID the server removes its push token too: no pushes once signed out.
+    const installationId = await getInstallationId().catch(() => undefined);
     void api.POST('/api/v1/auth/logout', {
-      body: { refreshToken },
+      body: { refreshToken, installationId },
       headers: { Authorization: `Bearer ${accessToken}` },
     }).catch(() => undefined);
   }

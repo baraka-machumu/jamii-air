@@ -88,7 +88,7 @@ All components run as one **Docker Compose** stack per environment on our own se
 | Clipboard | `expo-clipboard` | Copy link (Plan 3.9). |
 | Secure storage | `expo-secure-store` | Refresh token. |
 | Media capture & upload | `expo-image-picker` (system photo picker, camera), `expo-image-manipulator`, `expo-file-system` | Upright JPEG ≤ 2048 px (HEIC and EXIF rotation handled), cropped on the phone; the file is PUT to the presigned URL natively from disk (`File.upload`, with progress), never as a JavaScript Blob. |
-| Push | `expo-notifications` | |
+| Push | `expo-notifications` | Expo push token registered per installation (`PUT /me/devices/:installationId`) after the user taps Turn on; Android channel `default`; foreground pushes show an in-app toast, taps open the target (Plan 3.10). |
 | i18n | `i18next` + `expo-localization` | `en`, `sw`. |
 | **Admin portal** | **React + Vite + TypeScript**, React Router, TanStack Query + TanStack Table, Tailwind CSS + shadcn/ui, react-hook-form + zod | Static build served by nginx on our servers; English only. |
 | Backend framework | **NestJS 12**, Node.js 24 LTS, TypeScript, ESM | Existing scaffold in `backend/`. |

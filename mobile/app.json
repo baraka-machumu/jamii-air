@@ -32,6 +32,14 @@
       "expo-font",
       "expo-image",
       [
+        "expo-notifications",
+        {
+          "icon": "./assets/android-icon-monochrome.png",
+          "color": "#C2410C",
+          "defaultChannel": "default"
+        }
+      ],
+      [
         "expo-image-picker",
         {
           "photosPermission": "Jamii Air uses your photos so you can share them and set your profile photo.",

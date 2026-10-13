@@ -135,7 +135,7 @@ describe('User profile (§8.2)', () => {
 });
 
 describe('Onboarding step 2: Find people (§4.2)', () => {
-  it('lists the newest accounts, counts follows, and Continue opens Home', async () => {
+  it('lists the newest accounts, counts follows, and Continue opens step 3, Notifications', async () => {
     useSession.setState({ onboarding: true });
     renderRouter(routes, { initialUrl: '/onboarding/people' });
     expect(await screen.findByText('Follow at least 1 person to fill your feed.')).toBeTruthy();
@@ -143,6 +143,8 @@ describe('Onboarding step 2: Find people (§4.2)', () => {
     fireEvent.press(await screen.findByRole('button', { name: 'Follow juma' }));
     expect(await screen.findByText("You're following 1 person.")).toBeTruthy();
     fireEvent.press(screen.getByRole('button', { name: 'Continue' }));
+    expect(await screen.findByText('Turn on notifications')).toBeTruthy();
+    fireEvent.press(screen.getByRole('button', { name: 'Not now' }));
     expect(await screen.findByTestId('tab-index')).toBeTruthy();
   });
 });

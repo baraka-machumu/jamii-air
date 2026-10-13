@@ -2,7 +2,8 @@
 // routing split between signed-out screens and the tabs (App Flow §2–3). Expo Router guards the
 // groups: a signed-out user can never reach (tabs) and vice versa. At launch the saved session is
 // restored first (src/auth/session.ts); the splash stays up meanwhile (8 s at most). A post or
-// profile link that arrived while signed out opens once the user is in (App Flow §12).
+// profile link that arrived while signed out opens once the user is in (App Flow §12); so does the
+// target of a tapped push (src/notifications/push.ts), in every app state.
 import { Nunito_800ExtraBold, useFonts } from '@expo-google-fonts/nunito';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { type Href, Stack, usePathname, useRouter } from 'expo-router';
@@ -15,6 +16,7 @@ import { Toast } from '@/components/Toast';
 import { resetLikes } from '@/engagement/likes';
 import i18n, { resolveLanguage } from '@/i18n';
 import { rememberLink, usePendingLink } from '@/links/pendingLink';
+import { usePushHandling } from '@/notifications/push';
 import { useFollowStore } from '@/people/follow';
 import { useRecentSearches } from '@/people/recentSearches';
 import { runPosting } from '@/posting/run';
@@ -79,6 +81,7 @@ function RootStack() {
   const signedIn = useSession((s) => s.status === 'signedIn');
   const onboarding = useSession((s) => s.onboarding);
   useOpenPendingLink(signedIn && !onboarding);
+  usePushHandling(signedIn && !onboarding);
   return (
     <>
       <StatusBar style={theme.scheme === 'dark' ? 'light' : 'dark'} />
@@ -98,6 +101,7 @@ function RootStack() {
         <Stack.Protected guard={signedIn && onboarding}>
           <Stack.Screen name="onboarding/index" />
           <Stack.Screen name="onboarding/people" />
+          <Stack.Screen name="onboarding/notifications" />
         </Stack.Protected>
         <Stack.Protected guard={!signedIn}>
           <Stack.Screen name="(auth)" />

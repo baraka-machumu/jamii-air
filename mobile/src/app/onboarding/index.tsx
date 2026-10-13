@@ -1,5 +1,5 @@
 // Onboarding step 1 after sign-up (App Flow §4.2): profile photo and bio, both optional, Skip
-// always visible. Then step 2, Find people; Notifications (task 3.10) will be step 3.
+// always visible. Then step 2, Find people, and step 3, Notifications.
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';

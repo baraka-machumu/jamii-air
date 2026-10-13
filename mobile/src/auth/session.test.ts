@@ -127,7 +127,7 @@ describe('signOut (App Flow §4.5)', () => {
     await new Promise((r) => setTimeout(r, 0));
     const logout = seen.find((s) => s.url.endsWith('/auth/logout'))!;
     expect(logout.headers.authorization).toBe('Bearer access-0');
-    expect(JSON.parse(logout.body!)).toEqual({ refreshToken: 'refresh-0-xxxxxxxxxxxxxxxx' });
+    expect(JSON.parse(logout.body!)).toEqual({ refreshToken: 'refresh-0-xxxxxxxxxxxxxxxx', installationId: expect.stringMatching(/^inst-/) }); // its push token goes too
   });
 
   it('still signs out offline', async () => {

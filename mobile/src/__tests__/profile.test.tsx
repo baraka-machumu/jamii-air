@@ -149,7 +149,7 @@ describe('Change password', () => {
     fireEvent.changeText(screen.getByLabelText('New password'), 'brand-new-pass');
     fireEvent.press(screen.getByRole('button', { name: 'Change password' }));
     await waitFor(() => expect(alert).toHaveBeenCalledWith('Password changed', expect.any(String)));
-    expect(sent('POST', '/api/v1/auth/password/change')[0]!.body).toEqual({ currentPassword: 'old-pass-1', newPassword: 'brand-new-pass' });
+    expect(sent('POST', '/api/v1/auth/password/change')[0]!.body).toEqual({ currentPassword: 'old-pass-1', newPassword: 'brand-new-pass', installationId: expect.stringMatching(/^inst-/) });
     expect(await screen.findByText('Settings')).toBeTruthy();
   });
 });

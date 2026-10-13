@@ -1,6 +1,7 @@
 // Onboarding step 2, Find people (App Flow §4.2): the newest pilot accounts (search narrows them),
-// each with Follow. "Follow at least 1 person to fill your feed"; Continue is always enabled.
+// each with Follow. "Follow at least 1 person to fill your feed"; Continue (always enabled) → step 3.
 // Drives the KPI "% of new users who follow someone".
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, FlatList, StyleSheet, View } from 'react-native';
@@ -15,14 +16,13 @@ import { Text } from '@/components/Text';
 import { UserRow } from '@/components/UserRow';
 import { useFollowStore } from '@/people/follow';
 import { useDebounced } from '@/people/useDebounced';
-import { useSession } from '@/stores/session';
 import { useTheme } from '@/theme/ThemeProvider';
 import { displayFont } from '@/theme/tokens';
 
 export default function FindPeople() {
   const { t } = useTranslation();
   const { colors, space } = useTheme();
-  const finish = useSession((s) => s.finishOnboarding);
+  const router = useRouter();
   const [text, setText] = useState('');
   const query = useDebounced(text.trim());
   const people = useUserSearch(query);
@@ -52,7 +52,7 @@ export default function FindPeople() {
             {query ? t('search.noResults', { query }) : t('onboarding.peopleNone')}</Text>}
           renderItem={({ item }) => <UserRow user={item} right={<FollowButton user={item} following={item.isFollowing} compact />} />} />
       )}
-      <Button label={t('onboarding.continue')} onPress={finish} style={{ marginVertical: space.md }} />
+      <Button label={t('onboarding.continue')} onPress={() => router.push('/onboarding/notifications')} style={{ marginVertical: space.md }} />
     </Screen>
   );
 }

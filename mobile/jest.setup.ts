@@ -35,3 +35,30 @@ jest.mock('expo-clipboard', () => {
     setStringAsync: jest.fn(async (text: string) => { clipboard.text = text; return true; }),
   };
 });
+
+// expo-notifications (native): permission, token and listeners the tests can drive.
+jest.mock('expo-notifications', () => {
+  const state = {
+    permission: 'undetermined' as string,
+    answer: 'granted' as string,
+    lastResponse: null as unknown,
+    received: [] as Array<(event: unknown) => void>,
+    tapped: [] as Array<(event: unknown) => void>,
+  };
+  const listen = (list: 'received' | 'tapped') => jest.fn((listener: (event: unknown) => void) => {
+    state[list].push(listener);
+    return { remove: () => { state[list] = state[list].filter((l) => l !== listener); } };
+  });
+  return {
+    mockState: state,
+    AndroidImportance: { HIGH: 4 },
+    getPermissionsAsync: jest.fn(async () => ({ status: state.permission })),
+    requestPermissionsAsync: jest.fn(async () => { state.permission = state.answer; return { status: state.permission }; }),
+    setNotificationChannelAsync: jest.fn(async () => null),
+    getExpoPushTokenAsync: jest.fn(async () => ({ type: 'expo', data: 'ExponentPushToken[test]' })),
+    setNotificationHandler: jest.fn(),
+    getLastNotificationResponse: jest.fn(() => state.lastResponse),
+    addNotificationReceivedListener: listen('received'),
+    addNotificationResponseReceivedListener: listen('tapped'),
+  };
+});

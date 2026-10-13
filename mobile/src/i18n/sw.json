@@ -62,9 +62,6 @@
     "activity": "Shughuli",
     "profile": "Wasifu wako"
   },
-  "placeholder": {
-    "activity": "Shughuli zinakuja katika kazi 3.10."
-  },
   "settings": {
     "language": "Lugha",
     "theme": "Mandhari",
@@ -84,7 +81,10 @@
     "currentPassword": "Nenosiri la sasa",
     "passwordChangedTitle": "Nenosiri limebadilishwa",
     "passwordChangedBody": "Umetolewa kwenye vifaa vingine vyote.",
-    "logOutConfirm": "Toka kwenye Jamii Air?"
+    "logOutConfirm": "Toka kwenye Jamii Air?",
+    "notifications": "Arifa",
+    "notificationsOn": "Zimewashwa",
+    "notificationsOff": "Zimezimwa"
   },
   "common": {
     "back": "Rudi",
@@ -193,7 +193,11 @@
     "peopleHint": "Fuata angalau mtu 1 ili kujaza habari zako.",
     "peopleFollowed_one": "Unamfuata mtu {{count}}.",
     "peopleFollowed_other": "Unawafuata watu {{count}}.",
-    "peopleNone": "Bado hakuna mwingine aliyejiunga. Utaweza kutafuta watu baadaye kwenye Tafuta."
+    "peopleNone": "Bado hakuna mwingine aliyejiunga. Utaweza kutafuta watu baadaye kwenye Tafuta.",
+    "notificationsTitle": "Washa arifa",
+    "notificationsBody": "Jua marafiki wanapopenda machapisho yako, wanapotoa maoni au wanapokufuata.",
+    "turnOn": "Washa",
+    "notNow": "Si sasa"
   },
   "search": {
     "placeholder": "Tafuta watu",
@@ -296,5 +300,18 @@
     "deleted": "Maoni yamefutwa",
     "deleteFailed": "Imeshindikana kufuta maoni",
     "counter": "{{length}}/{{max}}"
+  },
+  "activity": {
+    "new": "Mpya",
+    "earlier": "Awali",
+    "liked": "amependa chapisho lako.",
+    "commented": "ametoa maoni: “{{excerpt}}”",
+    "followed": "ameanza kukufuata.",
+    "emptyTitle": "Bado hakuna shughuli",
+    "emptyBody": "Watu wakipenda au kutoa maoni kwenye machapisho yako, au wakikufuata, utaona hapa."
+  },
+  "notifications": {
+    "channelName": "Kupendwa, maoni na wafuasi",
+    "new": "Shughuli mpya"
   }
 }

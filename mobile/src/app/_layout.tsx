@@ -1,17 +1,20 @@
 // Root of the app: providers (server state, theme, i18n, safe areas), the brand font, and the
 // routing split between signed-out screens and the tabs (App Flow §2–3). Expo Router guards the
 // groups: a signed-out user can never reach (tabs) and vice versa. At launch the saved session is
-// restored first (src/auth/session.ts); the splash stays up meanwhile (8 s at most).
+// restored first (src/auth/session.ts); the splash stays up meanwhile (8 s at most). A post or
+// profile link that arrived while signed out opens once the user is in (App Flow §12).
 import { Nunito_800ExtraBold, useFonts } from '@expo-google-fonts/nunito';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { Stack } from 'expo-router';
+import { type Href, Stack, usePathname, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { createQueryClient } from '@/api/queryClient';
 import { restoreSession } from '@/auth/session';
 import { Toast } from '@/components/Toast';
+import { resetLikes } from '@/engagement/likes';
 import i18n, { resolveLanguage } from '@/i18n';
+import { rememberLink, usePendingLink } from '@/links/pendingLink';
 import { useFollowStore } from '@/people/follow';
 import { useRecentSearches } from '@/people/recentSearches';
 import { runPosting } from '@/posting/run';
@@ -41,6 +44,7 @@ export default function RootLayout() {
     queryClient.clear();
     // Another account may sign in on this phone next: forget this one's follows and searches.
     useFollowStore.setState({ chosen: {}, pending: {} });
+    resetLikes();
     useRecentSearches.getState().clear();
     usePosting.getState().discard();
   }, [status, queryClient]);
@@ -74,6 +78,7 @@ function RootStack() {
   const theme = useTheme();
   const signedIn = useSession((s) => s.status === 'signedIn');
   const onboarding = useSession((s) => s.onboarding);
+  useOpenPendingLink(signedIn && !onboarding);
   return (
     <>
       <StatusBar style={theme.scheme === 'dark' ? 'light' : 'dark'} />
@@ -87,7 +92,8 @@ function RootStack() {
           <Stack.Screen name="u/[username]/[list]" />
           <Stack.Screen name="compose/crop" />
           <Stack.Screen name="compose/caption" />
-          <Stack.Screen name="p/[id]" />
+          <Stack.Screen name="p/[id]/index" />
+          <Stack.Screen name="p/[id]/comments" />
         </Stack.Protected>
         <Stack.Protected guard={signedIn && onboarding}>
           <Stack.Screen name="onboarding/index" />
@@ -100,4 +106,16 @@ function RootStack() {
       <Toast />
     </>
   );
+}
+
+/** Open the link that waited for log-in or onboarding; unless it is already on screen (a link at launch). */
+function useOpenPendingLink(ready: boolean) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const pending = usePendingLink((s) => s.path);
+  useEffect(() => {
+    if (!ready || !pending) return;
+    rememberLink(null);
+    if (pathname !== pending) router.push(pending as Href);
+  }, [ready, pending, pathname, router]);
 }

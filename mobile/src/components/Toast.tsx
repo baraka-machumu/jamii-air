@@ -13,6 +13,10 @@ export function showToast(message: string): void {
   useToast.setState((s) => ({ message, id: s.id + 1 }));
 }
 
+export function hideToast(): void {
+  useToast.setState({ message: null });
+}
+
 export function Toast() {
   const { message, id } = useToast();
   const { colors, radius } = useTheme();
@@ -20,7 +24,7 @@ export function Toast() {
 
   useEffect(() => {
     if (!message) return;
-    const timer = setTimeout(() => useToast.setState({ message: null }), 2_500);
+    const timer = setTimeout(hideToast, 2_500);
     return () => clearTimeout(timer);
   }, [message, id]);
 

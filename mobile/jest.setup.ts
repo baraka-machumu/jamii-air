@@ -26,3 +26,12 @@ jest.mock('expo-file-system', () => ({
     }
   },
 }));
+
+// expo-clipboard (native): remembers the last copied text for assertions.
+jest.mock('expo-clipboard', () => {
+  const clipboard = { text: '' };
+  return {
+    mockClipboard: clipboard,
+    setStringAsync: jest.fn(async (text: string) => { clipboard.text = text; return true; }),
+  };
+});

@@ -117,6 +117,7 @@ describe('Post detail and delete (§7.4)', () => {
     await screen.findByText(/Caption 2/);
     const mine = screen.getByLabelText('Post by amina');
     fireEvent.press(within(mine).getByLabelText('More options'));
+    answerAlert('Delete');
     expect(alert).toHaveBeenCalledWith('Delete this post?', "This can't be undone.", expect.any(Array));
     answerAlert('Delete');
     expect(await screen.findByText('Post deleted')).toBeTruthy();

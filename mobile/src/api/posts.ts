@@ -1,5 +1,6 @@
-// Posts (App Flow §5, §7.4, §8.2): the home feed, a profile's grid, one post, deleting your own.
-import { type InfiniteData, useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+// Posts (App Flow §5, §7.4, §8.2): the home feed, a profile's grid, one post, deleting your own,
+// and the helpers that change or drop one post in every cache.
+import { type InfiniteData, type QueryClient, useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, call } from './client';
 import { meKey } from './me';
 import { peopleKey } from './people';
@@ -47,19 +48,36 @@ export function useGrid(username: string) {
   });
 }
 
+/** Change one post wherever it is cached (feed, post detail). Other posts keep their objects, so
+ * only that post's card re-renders. */
+export function patchPost(queryClient: QueryClient, id: string, change: (post: Post) => Post): void {
+  queryClient.setQueryData<InfiniteData<FeedPage>>(feedKey, (feed) => feed && {
+    ...feed,
+    pages: feed.pages.map((page) => (page.items.some((post) => post.id === id)
+      ? { ...page, items: page.items.map((post) => (post.id === id ? change(post) : post)) }
+      : page)),
+  });
+  queryClient.setQueryData<Post>(postKey(id), (post) => post && change(post));
+}
+
+/** A post that is gone (deleted, hidden, or now blocked): out of the feed, grids and detail cache. */
+export function forgetPost(queryClient: QueryClient, id: string): void {
+  queryClient.setQueryData<InfiniteData<FeedPage>>(feedKey, (feed) => feed && {
+    ...feed, pages: feed.pages.map((page) => ({ ...page, items: page.items.filter((post) => post.id !== id) })),
+  });
+  queryClient.setQueriesData<InfiniteData<GridPage>>({ queryKey: [...peopleKey, 'grid'] }, (grid) => grid && {
+    ...grid, pages: grid.pages.map((page) => ({ ...page, items: page.items.filter((item) => item.id !== id) })),
+  });
+  queryClient.removeQueries({ queryKey: postKey(id) });
+}
+
 /** Delete your own post (App Flow §7.4): gone from the feed and grids at once, then from the server. */
 export function useDeletePost() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => call(api.DELETE('/api/v1/posts/{id}', { params: { path: { id } } })),
     onSuccess: (_data, id) => {
-      queryClient.setQueryData<InfiniteData<FeedPage>>(feedKey, (feed) => feed && {
-        ...feed, pages: feed.pages.map((page) => ({ ...page, items: page.items.filter((post) => post.id !== id) })),
-      });
-      queryClient.setQueriesData<InfiniteData<GridPage>>({ queryKey: [...peopleKey, 'grid'] }, (grid) => grid && {
-        ...grid, pages: grid.pages.map((page) => ({ ...page, items: page.items.filter((item) => item.id !== id) })),
-      });
-      queryClient.removeQueries({ queryKey: postKey(id) });
+      forgetPost(queryClient, id);
       void queryClient.invalidateQueries({ queryKey: meKey });
     },
   });

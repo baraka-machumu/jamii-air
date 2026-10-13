@@ -268,6 +268,33 @@
     "caughtUp": "Umeona kila kitu ✓",
     "removed": "Imeondolewa",
     "openPost": "Fungua chapisho",
-    "post": "Chapisho"
+    "post": "Chapisho",
+    "like": "Penda",
+    "unlike": "Acha kupenda",
+    "likeFailed": "Imeshindikana kupenda chapisho",
+    "unlikeFailed": "Imeshindikana kuacha kupenda chapisho"
+  },
+  "share": {
+    "share": "Shiriki",
+    "post": "{{username}} kwenye Jamii Air: {{url}}",
+    "profile": "{{username}} kwenye Jamii Air: {{url}}",
+    "copyLink": "Nakili kiungo",
+    "copyProfileLink": "Nakili kiungo cha wasifu",
+    "shareProfile": "Shiriki wasifu",
+    "copied": "Kiungo kimenakiliwa"
+  },
+  "comments": {
+    "title": "Maoni",
+    "placeholder": "Andika maoni…",
+    "send": "Tuma",
+    "sending": "Inatuma…",
+    "notSent": "Haijatumwa · Gusa ujaribu tena",
+    "emptyTitle": "Hakuna maoni bado",
+    "emptyBody": "Anzisha mazungumzo.",
+    "cannotComment": "Huwezi kutoa maoni kwenye chapisho hili",
+    "deleteTitle": "Futa maoni?",
+    "deleted": "Maoni yamefutwa",
+    "deleteFailed": "Imeshindikana kufuta maoni",
+    "counter": "{{length}}/{{max}}"
   }
 }

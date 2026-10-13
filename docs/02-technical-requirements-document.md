@@ -84,7 +84,8 @@ All components run as one **Docker Compose** stack per environment on our own se
 | Client state | Zustand (auth session, preferences, recent searches, the post being made, follow choices) | No server data in Zustand. Saved on the phone with AsyncStorage (`@react-native-async-storage/async-storage`, zustand `persist`): preferences, recent searches, the unfinished post. |
 | Lists | `@shopify/flash-list` | Feed, profile grids, comment lists. Short people lists (search, followers) use `FlatList`. |
 | Images | `expo-image` | Disk + memory cache, blurhash placeholders. |
-| Animation / gestures | Reanimated, Gesture Handler | Double-tap like, transitions (added with Plan 3.9). The crop screen drags with React Native's `PanResponder`. |
+| Animation / gestures | React Native `Animated` (native driver) and `PanResponder` | Double-tap heart and like bounce (Plan 3.9) run on the UI thread through the native driver and fade only under "Reduce motion"; the crop screen drags with `PanResponder`. Reanimated / Gesture Handler wait until a gesture needs them (pinch zoom): they add a native build, and the motion so far is transforms and opacity only ([Phase 3 decisions](backlog/phase-3-mobile.md#decisions-taken-during-phase-3)). |
+| Clipboard | `expo-clipboard` | Copy link (Plan 3.9). |
 | Secure storage | `expo-secure-store` | Refresh token. |
 | Media capture & upload | `expo-image-picker` (system photo picker, camera), `expo-image-manipulator`, `expo-file-system` | Upright JPEG ≤ 2048 px (HEIC and EXIF rotation handled), cropped on the phone; the file is PUT to the presigned URL natively from disk (`File.upload`, with progress), never as a JavaScript Blob. |
 | Push | `expo-notifications` | |

@@ -1,21 +1,24 @@
 // User profile (App Flow §8.2; BR-PR-01, 04, 05): header, Follow / Following, counts that open the
 // follower lists. Unknown, inactive or blocking-you accounts all show "This account isn't available".
-// Below, the posts grid. The ⋯ menu (Report, Block, Copy profile link) comes with tasks 3.9 and 3.11.
-// The route is /u/:username, the same path as the share link (task 3.9).
+// Below, the posts grid. ⋯ → Copy profile link, Share profile (Report and Block join it with task
+// 3.11). The route is /u/:username, the same path as the share link (App Flow §12).
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, StyleSheet, View } from 'react-native';
 import { ApiError, errorMessage } from '@/api/errors';
 import { useProfile } from '@/api/people';
 import { Button } from '@/components/Button';
 import { FollowButton } from '@/components/FollowButton';
 import { Header } from '@/components/Header';
+import { Icon } from '@/components/Icon';
 import { ProfileHeader } from '@/components/ProfileHeader';
 import { ProfilePosts } from '@/components/ProfilePosts';
 import { Screen } from '@/components/Screen';
 import { Text } from '@/components/Text';
+import { copyLink, shareLink } from '@/engagement/share';
 import { adjustedFollowerCount, useFollowStore } from '@/people/follow';
 import { useTheme } from '@/theme/ThemeProvider';
+import { touchTarget } from '@/theme/tokens';
 
 export default function UserProfile() {
   const { username } = useLocalSearchParams<{ username: string }>();
@@ -43,12 +46,21 @@ export default function UserProfile() {
   }
 
   const user = profile.data;
+  const menu = () => Alert.alert(t('feed.moreOptions'), undefined, [
+    { text: t('share.copyProfileLink'), onPress: () => void copyLink(user.shareUrl, t) },
+    { text: t('share.shareProfile'), onPress: () => void shareLink(t('share.profile', { username: user.username, url: user.shareUrl })) },
+    { text: t('common.cancel'), style: 'cancel' },
+  ]);
   const list = (which: 'followers' | 'following') =>
     router.push({ pathname: '/u/[username]/[list]', params: { username: user.username, list: which } });
 
   return (
     <Screen padded={false}>
-      <View style={{ paddingHorizontal: space.md }}><Header title={user.username} /></View>
+      <View style={{ paddingHorizontal: space.md }}><Header title={user.username} right={
+        <Pressable onPress={menu} accessibilityRole="button" accessibilityLabel={t('feed.moreOptions')} hitSlop={8} style={styles.more}>
+          <Icon name="more" color={colors.text} />
+        </Pressable>
+      } /></View>
       <ProfilePosts username={user.username} postCount={user.isBlockedByMe ? 0 : user.postCount}
         refreshing={profile.isRefetching} onRefresh={() => void profile.refetch()}
         header={
@@ -79,4 +91,5 @@ const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: 'center', gap: 16, paddingBottom: 80 },
   textCenter: { textAlign: 'center' },
   action: { minHeight: 40 },
+  more: { width: touchTarget, height: touchTarget, alignItems: 'flex-end', justifyContent: 'center' },
 });

@@ -1,6 +1,6 @@
 // Post detail (App Flow §5, §13): the post on its own; from the feed it shows at once. Deleted,
-// hidden or blocked → "This post is no longer available". Comments arrive with task 3.9.
-// The route is /p/:id, the same path as the share link (task 3.9).
+// hidden or blocked → "This post is no longer available". Its comments open on their own screen
+// (/p/:id/comments). The route is /p/:id, the same path as the share link (App Flow §12).
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';

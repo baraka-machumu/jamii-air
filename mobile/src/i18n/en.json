@@ -268,6 +268,33 @@
     "caughtUp": "You're all caught up ✓",
     "removed": "Removed",
     "openPost": "Open post",
-    "post": "Post"
+    "post": "Post",
+    "like": "Like",
+    "unlike": "Unlike",
+    "likeFailed": "Couldn't like post",
+    "unlikeFailed": "Couldn't unlike post"
+  },
+  "share": {
+    "share": "Share",
+    "post": "{{username}} on Jamii Air: {{url}}",
+    "profile": "{{username}} on Jamii Air: {{url}}",
+    "copyLink": "Copy link",
+    "copyProfileLink": "Copy profile link",
+    "shareProfile": "Share profile",
+    "copied": "Link copied"
+  },
+  "comments": {
+    "title": "Comments",
+    "placeholder": "Add a comment…",
+    "send": "Post",
+    "sending": "Sending…",
+    "notSent": "Not sent · Tap to retry",
+    "emptyTitle": "No comments yet",
+    "emptyBody": "Start the conversation.",
+    "cannotComment": "You can't comment on this post",
+    "deleteTitle": "Delete comment?",
+    "deleted": "Comment deleted",
+    "deleteFailed": "Couldn't delete the comment",
+    "counter": "{{length}}/{{max}}"
   }
 }

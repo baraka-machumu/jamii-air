@@ -1,15 +1,18 @@
 // The post card (App Flow §5; Design Brief §6 Content): avatar + username → profile · ⋯ · photo
-// (full-bleed, its aspect ratio reserved, blurhash until loaded) · likes · caption (2 lines, "more")
-// · "View all N comments" · time. Like / comment / share buttons arrive with task 3.9.
-// Memoised: the feed re-renders a card only when its post changes.
+// (full-bleed, its aspect ratio reserved, blurhash until loaded; double-tap likes) · ❤️ 💬 ↗ · likes ·
+// caption (2 lines, "more") · "View all N comments" · time. A single tap on the photo opens the post
+// once the double-tap window has passed. Memoised: the feed re-renders a card only when its post
+// changes, and the like state comes from a per-post store entry (src/engagement/likes.ts).
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import { memo, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 import type { Post } from '@/api/posts';
 import { formatCount } from '@/i18n/format';
 import { formatRelative } from '@/i18n/time';
+import { useLikeState, useLikeToggle } from '@/engagement/likes';
+import { sharePost } from '@/engagement/share';
 import { MAX_ASPECT, MIN_ASPECT } from '@/posting/crop';
 import { useIsFollowing } from '@/people/follow';
 import { usePostMenu } from '@/posting/usePostMenu';
@@ -17,7 +20,11 @@ import { useTheme } from '@/theme/ThemeProvider';
 import { touchTarget } from '@/theme/tokens';
 import { Avatar } from './Avatar';
 import { Icon } from './Icon';
+import { HeartBurst, type HeartBurstHandle, LikeButton } from './LikeHeart';
 import { Text } from './Text';
+
+/** Two taps on the photo closer than this are a double-tap (like). */
+export const DOUBLE_TAP_MS = 250;
 
 /** Feed images keep their shape within 4:5 … 1.91:1 (Design Brief §10); 1:1 until known. */
 export function feedAspect(width: number | null, height: number | null): number {
@@ -29,7 +36,7 @@ function PostCardView({ post, onOpen, onDeleted, followsAuthor = true }: {
   post: Post;
   onOpen?: (post: Post) => void;
   onDeleted?: () => void;
-  /** The feed only has people you follow; a post opened elsewhere may not be (then no ⋯ yet). */
+  /** The feed only has people you follow; elsewhere the store or a fresh read decides (Unfollow in ⋯). */
   followsAuthor?: boolean;
 }) {
   const { t, i18n } = useTranslation();
@@ -38,10 +45,30 @@ function PostCardView({ post, onOpen, onDeleted, followsAuthor = true }: {
   const openMenu = usePostMenu({ onDeleted });
   const [expanded, setExpanded] = useState(false);
   const following = useIsFollowing(post.author.id, followsAuthor);
-  const hasMenu = post.isMine || following;
+  const like = useLikeState(post);
+  const toggleLike = useLikeToggle();
+  const burst = useRef<HeartBurstHandle>(null);
+  const lastTap = useRef(0);
+  const singleTap = useRef<ReturnType<typeof setTimeout>>(undefined);
+  useEffect(() => () => clearTimeout(singleTap.current), []);
   const media = post.media[0];
   const author = post.author;
+  const published = post.status === 'PUBLISHED';
   const toProfile = () => router.push({ pathname: '/u/[username]', params: { username: author.username } });
+  const toComments = () => router.push({ pathname: '/p/[id]/comments', params: { id: post.id } });
+
+  const onPhotoPress = () => {
+    const now = Date.now();
+    if (published && now - lastTap.current < DOUBLE_TAP_MS) {
+      clearTimeout(singleTap.current);
+      lastTap.current = 0;
+      toggleLike(post, true);
+      burst.current?.play();
+      return;
+    }
+    lastTap.current = now;
+    if (onOpen) singleTap.current = setTimeout(() => onOpen(post), DOUBLE_TAP_MS);
+  };
 
   return (
     <View accessibilityLabel={t('feed.postBy', { username: author.username })}>
@@ -50,15 +77,13 @@ function PostCardView({ post, onOpen, onDeleted, followsAuthor = true }: {
           <Avatar uri={author.avatarUrl} name={author.displayName || author.username} size={32} />
           <Text variant="bodyStrong" numberOfLines={1} style={styles.flex}>{author.username}</Text>
         </Pressable>
-        {hasMenu && (
-          <Pressable onPress={() => openMenu(post)} accessibilityRole="button" accessibilityLabel={t('feed.moreOptions')}
-            hitSlop={8} style={styles.more}>
-            <Icon name="more" color={colors.text} />
-          </Pressable>
-        )}
+        <Pressable onPress={() => openMenu(post, following)} accessibilityRole="button" accessibilityLabel={t('feed.moreOptions')}
+          hitSlop={8} style={styles.more}>
+          <Icon name="more" color={colors.text} />
+        </Pressable>
       </View>
 
-      <Pressable onPress={onOpen ? () => onOpen(post) : undefined} disabled={!onOpen} accessibilityRole={onOpen ? 'button' : 'image'}
+      <Pressable onPress={onPhotoPress} disabled={!onOpen && !published} accessibilityRole={onOpen ? 'button' : 'image'}
         accessibilityLabel={t('feed.photoBy', { username: author.username })}>
         {media?.url ? (
           <Image source={{ uri: media.url }} placeholder={media.blurhash ? { blurhash: media.blurhash } : undefined}
@@ -69,11 +94,24 @@ function PostCardView({ post, onOpen, onDeleted, followsAuthor = true }: {
             <Text muted>{post.status === 'FAILED' ? t('create.failed') : t('create.processing')}</Text>
           </View>
         )}
+        <HeartBurst ref={burst} />
       </Pressable>
 
-      <View style={{ paddingHorizontal: space.md, paddingTop: space.xs, gap: 4 }}>
-        {post.likeCount > 0 && (
-          <Text variant="bodyStrong">{t('feed.likes', { count: post.likeCount, formatted: formatCount(post.likeCount, i18n.language) })}</Text>
+      {published && (
+        <View style={[styles.actions, { paddingHorizontal: space.xs }]}>
+          <LikeButton liked={like.liked} onPress={() => toggleLike(post)} />
+          <Pressable onPress={toComments} accessibilityRole="button" accessibilityLabel={t('comments.title')} hitSlop={4} style={styles.action}>
+            <Icon name="comment" color={colors.text} />
+          </Pressable>
+          <Pressable onPress={() => void sharePost(post, t)} accessibilityRole="button" accessibilityLabel={t('share.share')} hitSlop={4} style={styles.action}>
+            <Icon name="share" color={colors.text} />
+          </Pressable>
+        </View>
+      )}
+
+      <View style={{ paddingHorizontal: space.md, paddingTop: published ? 0 : space.xs, gap: 4 }}>
+        {like.count > 0 && (
+          <Text variant="bodyStrong">{t('feed.likes', { count: like.count, formatted: formatCount(like.count, i18n.language) })}</Text>
         )}
         {post.caption ? (
           <Text numberOfLines={expanded ? undefined : 2} onPress={() => setExpanded(true)}>
@@ -82,7 +120,7 @@ function PostCardView({ post, onOpen, onDeleted, followsAuthor = true }: {
           </Text>
         ) : null}
         {post.commentCount > 0 && (
-          <Text muted onPress={onOpen ? () => onOpen(post) : undefined}>
+          <Text muted onPress={toComments}>
             {t('feed.viewComments', { count: post.commentCount, formatted: formatCount(post.commentCount, i18n.language) })}
           </Text>
         )}
@@ -117,6 +155,8 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', minHeight: 52, gap: 8 },
   author: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: touchTarget },
+  actions: { flexDirection: 'row', alignItems: 'center' },
+  action: { width: touchTarget, height: touchTarget, alignItems: 'center', justifyContent: 'center' },
   more: { width: touchTarget, height: touchTarget, alignItems: 'flex-end', justifyContent: 'center' },
   pending: { width: '100%', aspectRatio: 1, alignItems: 'center', justifyContent: 'center' },
   skeletonAvatar: { width: 32, height: 32, borderRadius: 16 },

@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Document** | 02 — Technical Requirements Document |
-| **Version** | 1.5 (Phase 3: Expo Router for navigation, §3; Phase 2: admin sign-in §8.2 and API review endpoints, see [07](07-api-review.md)) |
+| **Version** | 1.6 (Phase 3: mobile stack as built, §3: Expo Router, on-device storage, native photo upload; Phase 2: admin sign-in §8.2 and API review endpoints, see [07](07-api-review.md)) |
 | **Status** | **Approved** — 2026-10-11 |
 | **Date** | 2026-10-10 |
 | **Scope** | Release 1 (MVP) in detail; R1.1–R4 as forward-compatibility requirements |
@@ -81,12 +81,12 @@ All components run as one **Docker Compose** stack per environment on our own se
 | Mobile framework | **React Native + Expo** (current SDK), **TypeScript** strict | EAS Build for binaries; EAS Update for OTA JS updates. |
 | Navigation | Expo Router (file-based routes, built on React Navigation: native stack + bottom tabs) | Chosen in Phase 3: Expo's default for SDK 57; gives deep links and typed routes ([Phase 3 decisions](backlog/phase-3-mobile.md#decisions-taken-during-phase-3)) |
 | Server state | TanStack Query | Caching, dedupe, infinite queries, optimistic updates. |
-| Client state | Zustand (auth session, preferences only) | No server data in Zustand. |
-| Lists | `@shopify/flash-list` | All feeds, grids, comment lists. |
+| Client state | Zustand (auth session, preferences, recent searches, the post being made, follow choices) | No server data in Zustand. Saved on the phone with AsyncStorage (`@react-native-async-storage/async-storage`, zustand `persist`): preferences, recent searches, the unfinished post. |
+| Lists | `@shopify/flash-list` | Feed, profile grids, comment lists. Short people lists (search, followers) use `FlatList`. |
 | Images | `expo-image` | Disk + memory cache, blurhash placeholders. |
-| Animation / gestures | Reanimated, Gesture Handler | Double-tap like, transitions. |
+| Animation / gestures | Reanimated, Gesture Handler | Double-tap like, transitions (added with Plan 3.9). The crop screen drags with React Native's `PanResponder`. |
 | Secure storage | `expo-secure-store` | Refresh token. |
-| Media capture | `expo-image-picker`, `expo-image-manipulator` | Client-side downscale to ≤ 2048 px before upload. |
+| Media capture & upload | `expo-image-picker` (system photo picker, camera), `expo-image-manipulator`, `expo-file-system` | Upright JPEG ≤ 2048 px (HEIC and EXIF rotation handled), cropped on the phone; the file is PUT to the presigned URL natively from disk (`File.upload`, with progress), never as a JavaScript Blob. |
 | Push | `expo-notifications` | |
 | i18n | `i18next` + `expo-localization` | `en`, `sw`. |
 | **Admin portal** | **React + Vite + TypeScript**, React Router, TanStack Query + TanStack Table, Tailwind CSS + shadcn/ui, react-hook-form + zod | Static build served by nginx on our servers; English only. |

@@ -361,5 +361,12 @@
     "deletedTitle": "Your account is scheduled for deletion",
     "deletedBody": "It will be deleted on {{date}}. Log in before then to cancel.",
     "suspendedTitle": "Your account is suspended"
+  },
+  "update": {
+    "title": "Update required",
+    "body": "This version of Jamii Air is no longer supported. Update to the latest version to continue.",
+    "minVersion": "Version {{version}} or newer is needed.",
+    "openStore": "Update now",
+    "noStoreLink": "Please install the latest build to continue."
   }
 }

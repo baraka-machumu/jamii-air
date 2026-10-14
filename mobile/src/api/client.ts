@@ -7,11 +7,13 @@
 // Every request carries the access token (when signed in), X-App-Version and X-Platform
 // (TRD API-03, API-07) and gives up after 15 s (reads) or 30 s (writes) (App Flow §13). A 401 on
 // any other route refreshes the session once (shared by all requests) and sends the request again;
-// a 403 ACCOUNT_SUSPENDED there signs the user out (App Flow §13).
+// a 403 ACCOUNT_SUSPENDED there signs the user out (App Flow §13), and a 426 on any route raises
+// the blocking Update required gate (App Flow §3, src/app-version/required.ts).
 // Photo bytes never go through here: they are PUT straight to storage (task 3.7).
 import Constants from 'expo-constants';
 import createClient from 'openapi-fetch';
 import { Platform } from 'react-native';
+import { requireUpdate } from '@/app-version/required';
 import { useSession } from '@/stores/session';
 import { ApiError } from './errors';
 import type { paths } from './schema';
@@ -105,6 +107,20 @@ async function isSuspended(response: Response): Promise<boolean> {
   return body?.error?.code === 'ACCOUNT_SUSPENDED';
 }
 
+/**
+ * 426 APP_VERSION_UNSUPPORTED: this build is older than the server's MIN_APP_VERSION (TRD API-07).
+ * Returns the version the server asks for, so the app can show the blocking Update required
+ * screen (App Flow §3.3).
+ */
+async function unsupportedVersion(response: Response): Promise<string | null> {
+  if (response.status !== 426) return null;
+  const body = await response.clone().json().catch(() => null) as
+    { error?: { code?: string; details?: { minVersion?: unknown } } } | null;
+  if (body?.error?.code !== 'APP_VERSION_UNSUPPORTED') return null;
+  const min = body.error.details?.minVersion;
+  return typeof min === 'string' && min ? min : '';
+}
+
 /** The auth routes answer 401 for wrong credentials or a dead session: never refresh-and-retry those. */
 const isAuthRoute = (url: string) => url.includes('/api/v1/auth/');
 
@@ -115,6 +131,9 @@ export function createApiClient(baseUrl = apiBaseUrl(), baseFetch: typeof fetch 
     fetch: async (request) => {
       const out = await toOutgoing(request);
       const response = await send(out, baseFetch);
+      // Before the auth-route exit: the 426 may answer the refresh call at launch (App Flow §3).
+      const minVersion = await unsupportedVersion(response);
+      if (minVersion !== null) requireUpdate(minVersion);
       if (isAuthRoute(out.url)) return response;
       if (suspendedHandler && await isSuspended(response)) suspendedHandler();
       if (response.status !== 401 || !unauthorizedHandler) return response;

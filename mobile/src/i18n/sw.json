@@ -361,5 +361,12 @@
     "deletedTitle": "Akaunti yako imepangwa kufutwa",
     "deletedBody": "Itafutwa tarehe {{date}}. Ingia kabla ya hapo ili kusitisha.",
     "suspendedTitle": "Akaunti yako imesimamishwa"
+  },
+  "update": {
+    "title": "Inahitaji kusasishwa",
+    "body": "Toleo hili la Jamii Air halitumiki tena. Sasisha hadi toleo la hivi punde ili kuendelea.",
+    "minVersion": "Toleo {{version}} au jipya zaidi linahitajika.",
+    "openStore": "Sasisha sasa",
+    "noStoreLink": "Tafadhali sakinisha toleo la hivi punde ili kuendelea."
   }
 }

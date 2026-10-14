@@ -3,7 +3,8 @@
 // groups: a signed-out user can never reach (tabs) and vice versa. At launch the saved session is
 // restored first (src/auth/session.ts); the splash stays up meanwhile (8 s at most). A post or
 // profile link that arrived while signed out opens once the user is in (App Flow §12); so does the
-// target of a tapped push (src/notifications/push.ts), in every app state.
+// target of a tapped push (src/notifications/push.ts), in every app state. A build the API no
+// longer supports gets the blocking Update required screen instead of the router (§3.3).
 import { Nunito_800ExtraBold, useFonts } from '@expo-google-fonts/nunito';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { type Href, Stack, usePathname, useRouter } from 'expo-router';
@@ -11,9 +12,11 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { createQueryClient } from '@/api/queryClient';
+import { useUpdateRequired } from '@/app-version/required';
 import { restoreSession } from '@/auth/session';
 import { closeSheet, SheetHost } from '@/components/Sheet';
 import { Toast } from '@/components/Toast';
+import { UpdateRequired } from '@/components/UpdateRequired';
 import { resetLikes } from '@/engagement/likes';
 import i18n, { resolveLanguage } from '@/i18n';
 import { rememberLink, usePendingLink } from '@/links/pendingLink';
@@ -32,6 +35,8 @@ export default function RootLayout() {
   const language = useSettings((s) => s.language);
 
   const status = useSession((s) => s.status);
+  // 426 APP_VERSION_UNSUPPORTED from any request, including the refresh at launch (App Flow §3.3).
+  const updateRequired = !!useUpdateRequired((s) => s.minVersion);
 
   useEffect(() => {
     void i18n.changeLanguage(resolveLanguage(language));
@@ -64,14 +69,14 @@ export default function RootLayout() {
   }, [status, queryClient]);
 
   // The splash screen stays up until the brand font is ready (a few ms, bundled) and the saved
-  // session is restored.
-  if (!fontsLoaded || status === 'restoring') return null;
+  // session is restored. A 426 that answered the refresh ends the wait: the gate replaces the app.
+  if (!fontsLoaded || (status === 'restoring' && !updateRequired)) return null;
 
   return (
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
-          <RootStack />
+          {updateRequired ? <UpdateRequired /> : <RootStack />}
         </ThemeProvider>
       </QueryClientProvider>
     </SafeAreaProvider>

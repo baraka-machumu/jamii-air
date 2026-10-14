@@ -1,3 +1,4 @@
+import { resetUpdateRequired } from '@/app-version/required';
 import { useSession } from '@/stores/session';
 import { apiBaseUrl, appVersion, call, createApiClient, fetchWithTimeout, READ_TIMEOUT_MS } from './client';
 import { ApiError } from './errors';
@@ -27,6 +28,7 @@ describe('API client', () => {
   beforeEach(() => {
     seen = [];
     useSession.setState({ status: 'signedOut', accessToken: null });
+    resetUpdateRequired(); // the 426 case below raises the Update required gate (task 3.12.d)
   });
 
   it('sends the app version and platform, and the token once signed in', async () => {

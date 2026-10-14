@@ -9,6 +9,7 @@
 //  - signOut: local data is always cleared; telling the server is best effort. After deleting the
 //    account it carries a notice for Welcome; so does a suspension noticed mid-session (any
 //    request answered 403 ACCOUNT_SUSPENDED, App Flow §13).
+import { identify } from '@/analytics';
 import { api, call, onSuspended, onUnauthorized } from '@/api/client';
 import { ApiError } from '@/api/errors';
 import type { components } from '@/api/schema';
@@ -26,12 +27,15 @@ export const RESTORE_WAIT_MS = 8_000;
 export async function startSession(session: SessionResponse, { newAccount = false } = {}): Promise<void> {
   await tokenStore.set(session.refreshToken);
   useSession.getState().signIn(session.accessToken, session.user, newAccount || undefined);
+  // KPI events are keyed by the user from here on, not by the installation (TRD PA-01).
+  identify(session.user?.id ?? null);
 }
 
 /** Clear this phone only: for when the server has already ended every session (account deleted). */
 export async function endLocally(notice?: SignOutNotice): Promise<void> {
   await tokenStore.clear().catch(() => undefined);
   useSession.getState().signOut(notice);
+  identify(null); // and anything queued is dropped: it belonged to the session that just ended
 }
 
 let inflight: Promise<RefreshOutcome> | null = null;

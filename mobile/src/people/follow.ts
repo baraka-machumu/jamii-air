@@ -6,6 +6,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import type { TFunction } from 'i18next';
 import { Alert } from 'react-native';
 import { create } from 'zustand';
+import { track } from '@/analytics';
 import { api, call } from '@/api/client';
 import { errorMessage } from '@/api/errors';
 import { meKey } from '@/api/me';
@@ -42,6 +43,7 @@ export function useFollowToggle(t: TFunction) {
     try {
       const params = { params: { path: { id: userId } } };
       await call(follow ? api.PUT('/api/v1/users/{id}/follow', params) : api.DELETE('/api/v1/users/{id}/follow', params));
+      if (follow) track('follow');
       // Counts (profiles, my following count) come back right on the next read.
       void queryClient.invalidateQueries({ queryKey: peopleKey, refetchType: 'active' });
       void queryClient.invalidateQueries({ queryKey: meKey });

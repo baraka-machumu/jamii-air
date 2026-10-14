@@ -9,6 +9,7 @@ import type { TFunction } from 'i18next';
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { create } from 'zustand';
+import { track } from '@/analytics';
 import { api, call } from '@/api/client';
 import { ApiError } from '@/api/errors';
 import { forgetPost, patchPost, type Post } from '@/api/posts';
@@ -65,6 +66,7 @@ async function flush(id: string, queryClient: QueryClient, t: TFunction): Promis
     const params = { params: { path: { id } } };
     const result = await call(want.liked ? api.PUT('/api/v1/posts/{id}/like', params) : api.DELETE('/api/v1/posts/{id}/like', params));
     onServer.set(id, result.liked);
+    if (result.liked) track('like');
     patchPost(queryClient, id, (post) => ({ ...post, likedByMe: result.liked, likeCount: result.likeCount }));
     // The entry goes after the cache has told the cards (its notices are batched), so the count never flickers.
     notifyManager.schedule(() => {

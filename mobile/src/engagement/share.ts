@@ -3,6 +3,7 @@
 // The link opens the post or profile in the app, else a landing page with store links (Plan 2.9).
 import type { TFunction } from 'i18next';
 import { Share } from 'react-native';
+import { track } from '@/analytics';
 import { showToast } from '@/components/Toast';
 import { nativeModuleAvailable } from '@/native/available';
 
@@ -16,6 +17,7 @@ export async function shareLink(message: string): Promise<void> {
 }
 
 export function sharePost(post: { shareUrl: string; author: { username: string } }, t: TFunction): Promise<void> {
+  track('share_tapped', { from: 'post' });
   return shareLink(t('share.post', { username: post.author.username, url: post.shareUrl }));
 }
 

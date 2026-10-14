@@ -10,7 +10,9 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { type Href, Stack, usePathname, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
+import { AppState } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { flush, track } from '@/analytics';
 import { createQueryClient } from '@/api/queryClient';
 import { useUpdateRequired } from '@/app-version/required';
 import { restoreSession } from '@/auth/session';
@@ -44,6 +46,17 @@ export default function RootLayout() {
 
   useEffect(() => {
     void restoreSession();
+  }, []);
+
+  // app_open: at launch, and whenever the app comes back to the foreground (TRD PA-01). Going to
+  // the background is the moment to send what is queued: the app may not be opened again soon.
+  useEffect(() => {
+    track('app_open');
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') track('app_open');
+      else void flush();
+    });
+    return () => sub.remove();
   }, []);
 
   // Signing out (by the user, or a session the server ended) drops every cached response.

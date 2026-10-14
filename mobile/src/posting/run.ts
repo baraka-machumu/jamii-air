@@ -4,6 +4,7 @@
 // an uploaded photo is not uploaded again, and a created post is not created twice.
 import type { QueryClient } from '@tanstack/react-query';
 import { api, call } from '@/api/client';
+import { track } from '@/analytics';
 import { ApiError } from '@/api/errors';
 import { meKey } from '@/api/me';
 import { peopleKey } from '@/api/people';
@@ -65,6 +66,7 @@ async function run(queryClient: QueryClient, delays: number[]): Promise<void> {
         headers: { 'Idempotency-Key': current.key },
       }));
       update({ postId: post.id });
+      track('post_created');
       if (post.status === 'PUBLISHED') { discard(); refresh(); return; }
     }
 
@@ -73,6 +75,7 @@ async function run(queryClient: QueryClient, delays: number[]): Promise<void> {
     if (outcome === 'FAILED') {
       // The server could not use this photo. Retry starts over: new upload, new post, new key.
       update({ phase: 'failed', failure: 'PROCESSING_FAILED' });
+      track('upload_failed', { reason: 'PROCESSING_FAILED' });
       return;
     }
     // PUBLISHED, or still processing after the last try: the post exists and shows up in the
@@ -85,6 +88,7 @@ async function run(queryClient: QueryClient, delays: number[]): Promise<void> {
     if (MEDIA_GONE.has(code)) changes.mediaId = undefined;
     if (code === 'IDEMPOTENCY_KEY_REUSED') changes.key = newDraftKey();
     update(changes);
+    track('upload_failed', { reason: code });
   }
 }
 

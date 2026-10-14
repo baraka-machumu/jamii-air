@@ -8,6 +8,7 @@ import type { TextInput } from 'react-native';
 import { api, call } from '@/api/client';
 import { ApiError, errorMessage } from '@/api/errors';
 import type { components } from '@/api/schema';
+import { track } from '@/analytics';
 import { startSession } from '@/auth/session';
 import { latestAdultDob, type SignUpField, type SignUpForm, signUpErrors, toIsoDate } from '@/auth/validation';
 import { Button } from '@/components/Button';
@@ -41,8 +42,10 @@ export default function SignUp() {
   const password = useRef<TextInput>(null);
 
   const register = useMutation({
-    mutationFn: async (body: components['schemas']['RegisterDto']) =>
-      startSession(await call(api.POST('/api/v1/auth/register', { body })), { newAccount: true }),
+    mutationFn: async (body: components['schemas']['RegisterDto']) => {
+      await startSession(await call(api.POST('/api/v1/auth/register', { body })), { newAccount: true });
+      track('signup');
+    },
     // Success: the session flips to signed in and the router opens onboarding.
     onError: (error) => {
       const code = error instanceof ApiError ? error.code : '';

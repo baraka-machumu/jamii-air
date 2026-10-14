@@ -4,9 +4,10 @@
 // profile (§10). A blocked account shows "You blocked this account." with Unblock and no posts.
 // The route is /u/:username, the same path as the share link (App Flow §12).
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
+import { track } from '@/analytics';
 import { ApiError, errorMessage } from '@/api/errors';
 import { useProfile } from '@/api/people';
 import { Button } from '@/components/Button';
@@ -28,6 +29,7 @@ import { touchTarget } from '@/theme/tokens';
 
 export default function UserProfile() {
   const { username } = useLocalSearchParams<{ username: string }>();
+  useEffect(() => { track('profile_view'); }, [username]);
   const { t } = useTranslation();
   const router = useRouter();
   const { colors, space } = useTheme();
@@ -63,7 +65,10 @@ export default function UserProfile() {
   const menu = () => {
     const links: SheetAction[] = [
       { label: t('share.copyProfileLink'), onPress: () => void copyLink(user.shareUrl, t) },
-      { label: t('share.shareProfile'), onPress: () => void shareLink(t('share.profile', { username: user.username, url: user.shareUrl })) },
+      { label: t('share.shareProfile'), onPress: () => {
+        track('share_tapped', { from: 'profile' });
+        void shareLink(t('share.profile', { username: user.username, url: user.shareUrl }));
+      } },
     ];
     showActions(user.isMe ? links : [
       { label: t('safety.report'), destructive: true, onPress: () => openReport({ type: 'USER', id: user.id, user, blocked }) },

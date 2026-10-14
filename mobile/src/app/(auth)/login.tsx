@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { Alert, type TextInput } from 'react-native';
 import { api, call } from '@/api/client';
 import { ApiError, errorMessage } from '@/api/errors';
+import { track } from '@/analytics';
 import { startSession } from '@/auth/session';
 import { Button } from '@/components/Button';
 import { FormMessage, FormScreen } from '@/components/FormScreen';
@@ -21,9 +22,12 @@ export default function LogIn() {
   const passwordInput = useRef<TextInput>(null);
 
   const login = useMutation({
-    mutationFn: async (cancelDeletion: boolean) => startSession(await call(api.POST('/api/v1/auth/login', {
-      body: { identifier: identifier.trim(), password, ...(cancelDeletion && { cancelDeletion }) },
-    }))),
+    mutationFn: async (cancelDeletion: boolean) => {
+      await startSession(await call(api.POST('/api/v1/auth/login', {
+        body: { identifier: identifier.trim(), password, ...(cancelDeletion && { cancelDeletion }) },
+      })));
+      track('login');
+    },
     onError: (error) => {
       if (error instanceof ApiError && error.code === 'ACCOUNT_PENDING_DELETION') {
         const due = typeof error.details?.deletionDueAt === 'string' ? new Date(error.details.deletionDueAt) : null;

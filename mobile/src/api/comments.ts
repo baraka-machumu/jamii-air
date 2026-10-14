@@ -2,6 +2,7 @@
 // shows them oldest → newest), adding one (retry-safe with an Idempotency-Key) and deleting one.
 // Adding or deleting writes straight into the cached list and the post's comment count.
 import { type InfiniteData, type QueryClient, useInfiniteQuery } from '@tanstack/react-query';
+import { track } from '@/analytics';
 import { api, call } from './client';
 import { patchPost } from './posts';
 import type { components } from './schema';
@@ -44,6 +45,7 @@ export async function addComment(queryClient: QueryClient, postId: string, body:
     return { ...data, pages: [{ ...first!, items: [comment, ...first!.items] }, ...rest] };
   });
   patchPost(queryClient, postId, (post) => ({ ...post, commentCount: created.commentCount }));
+  track('comment');
   return comment;
 }
 

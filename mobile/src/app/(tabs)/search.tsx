@@ -4,13 +4,14 @@
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, FlatList, Keyboard, Pressable, StyleSheet, type TextInput, View } from 'react-native';
+import { FlatList, Keyboard, Pressable, StyleSheet, type TextInput, View } from 'react-native';
 import { errorMessage } from '@/api/errors';
 import { type UserSummary, useUserSearch } from '@/api/people';
 import { Button } from '@/components/Button';
 import { Icon } from '@/components/Icon';
 import { Screen } from '@/components/Screen';
 import { SearchField } from '@/components/SearchField';
+import { Spinner } from '@/components/Spinner';
 import { Text } from '@/components/Text';
 import { UserRow } from '@/components/UserRow';
 import { type RecentAccount, useRecentSearches } from '@/people/recentSearches';
@@ -81,7 +82,7 @@ export default function SearchTab() {
           <Button kind="secondary" label={t('common.retry')} onPress={() => void search.refetch()} />
         </View>
       ) : !search.data || typing ? (
-        <ActivityIndicator style={{ marginTop: space.lg }} color={colors.textMuted} />
+        <Spinner style={{ marginTop: space.lg }} />
       ) : search.data.items.length === 0 ? (
         <View style={styles.center}><Text muted style={styles.textCenter}>{t('search.noResults', { query })}</Text></View>
       ) : (

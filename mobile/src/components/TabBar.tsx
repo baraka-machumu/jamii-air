@@ -5,7 +5,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import type Tabs from 'expo-router/js-tabs';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/theme/ThemeProvider';
-import { touchTarget } from '@/theme/tokens';
+import { maxFontScale, touchTarget } from '@/theme/tokens';
 import { Icon, type IconName } from './Icon';
 import { Text } from './Text';
 
@@ -49,7 +49,8 @@ export function TabBar({ state, navigation, insets, badge }: TabBarProps & { bad
             )}
             {showBadge && (
               <View style={[styles.badge, { backgroundColor: colors.primary, borderColor: colors.bg }]}>
-                <Text variant="caption" color={colors.onPrimary} style={styles.badgeText}>{badge > 99 ? '99+' : badge}</Text>
+                <Text variant="caption" color={colors.onPrimary} maxFontSizeMultiplier={maxFontScale.compact}
+                  style={styles.badgeText}>{badge > 99 ? '99+' : badge}</Text>
               </View>
             )}
           </Pressable>

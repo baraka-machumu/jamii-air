@@ -6,7 +6,7 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { ApiError, errorMessage } from '@/api/errors';
 import { useProfile } from '@/api/people';
 import { Button } from '@/components/Button';
@@ -17,6 +17,7 @@ import { ProfileHeader } from '@/components/ProfileHeader';
 import { ProfilePosts } from '@/components/ProfilePosts';
 import { Screen } from '@/components/Screen';
 import { type SheetAction, showActions } from '@/components/Sheet';
+import { Spinner } from '@/components/Spinner';
 import { Text } from '@/components/Text';
 import { copyLink, shareLink } from '@/engagement/share';
 import { adjustedFollowerCount, useFollowStore } from '@/people/follow';
@@ -46,7 +47,7 @@ export default function UserProfile() {
               <Text muted style={styles.textCenter}>{gone ? t('people.unavailable') : errorMessage(profile.error, t)}</Text>
               {!gone && <Button kind="secondary" label={t('common.retry')} onPress={() => void profile.refetch()} />}
             </>
-          ) : <ActivityIndicator color={colors.textMuted} />}
+          ) : <Spinner />}
         </View>
       </Screen>
     );

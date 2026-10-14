@@ -7,6 +7,7 @@ import { ActivityIndicator, RefreshControl, StyleSheet, View } from 'react-nativ
 import { useGrid } from '@/api/posts';
 import { useTheme } from '@/theme/ThemeProvider';
 import { GRID_COLUMNS, GridThumb } from './PostGrid';
+import { Spinner } from './Spinner';
 import { Text } from './Text';
 
 export function ProfilePosts({ username, header, postCount, empty, refreshing, onRefresh }: {
@@ -31,8 +32,8 @@ export function ProfilePosts({ username, header, postCount, empty, refreshing, o
       renderItem={({ item, index }) => <GridThumb item={item} index={index} />}
       ListHeaderComponent={<View style={{ paddingHorizontal: space.md, paddingBottom: space.md }}>{header}</View>}
       ListEmptyComponent={
-        grid.isPending && postCount > 0 ? <ActivityIndicator style={{ marginTop: space.lg }} color={colors.textMuted} />
-        : grid.isError ? <Text muted style={[styles.center, { marginTop: space.lg }]}>{t('feed.loadFailed')}</Text>
+        grid.isPending && postCount > 0 ? <Spinner style={{ marginTop: space.lg }} />
+        : grid.isError ? <Text muted accessibilityLiveRegion="polite" style={[styles.center, { marginTop: space.lg }]}>{t('feed.loadFailed')}</Text>
         : <View style={[styles.empty, { borderTopColor: colors.border }]}>{empty}</View>
       }
       ListFooterComponent={grid.isFetchingNextPage ? <ActivityIndicator style={{ margin: space.md }} color={colors.textMuted} /> : null}

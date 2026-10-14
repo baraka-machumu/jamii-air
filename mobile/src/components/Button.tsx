@@ -1,6 +1,6 @@
 import { ActivityIndicator, Pressable, type PressableProps, StyleSheet } from 'react-native';
 import { useTheme } from '@/theme/ThemeProvider';
-import { touchTarget } from '@/theme/tokens';
+import { maxFontScale, touchTarget } from '@/theme/tokens';
 import { Text } from './Text';
 
 export type ButtonKind = 'primary' | 'secondary' | 'tertiary' | 'destructive';
@@ -36,7 +36,9 @@ export function Button({ label, kind = 'primary', loading, disabled, style, ...r
       ]}
       {...rest}
     >
-      {loading ? <ActivityIndicator color={fg} /> : <Text variant="button" color={fg} style={styles.label}>{label}</Text>}
+      {loading
+        ? <ActivityIndicator color={fg} />
+        : <Text variant="button" color={fg} maxFontSizeMultiplier={maxFontScale.compact} style={styles.label}>{label}</Text>}
     </Pressable>
   );
 }

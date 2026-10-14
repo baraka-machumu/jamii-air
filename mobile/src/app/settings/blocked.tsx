@@ -9,6 +9,7 @@ import { type BlockedUser, useBlockedAccounts } from '@/api/safety';
 import { Button } from '@/components/Button';
 import { Header } from '@/components/Header';
 import { Screen } from '@/components/Screen';
+import { Spinner } from '@/components/Spinner';
 import { Text } from '@/components/Text';
 import { UserRow } from '@/components/UserRow';
 import { useUnblock } from '@/safety/block';
@@ -22,7 +23,7 @@ export default function BlockedAccounts() {
 
   let body;
   if (blocked.isPending) {
-    body = <ActivityIndicator style={styles.center} color={colors.textMuted} />;
+    body = <Spinner style={styles.center} />;
   } else if (blocked.isError && items.length === 0) {
     body = (
       <View style={[styles.center, { gap: space.md }]}>

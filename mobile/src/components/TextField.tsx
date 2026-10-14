@@ -2,7 +2,7 @@ import { type Ref, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, TextInput, type TextInputProps, View } from 'react-native';
 import { useTheme } from '@/theme/ThemeProvider';
-import { touchTarget } from '@/theme/tokens';
+import { maxFontScale, touchTarget } from '@/theme/tokens';
 import { Text } from './Text';
 
 export interface TextFieldProps extends Omit<TextInputProps, 'secureTextEntry'> {
@@ -30,6 +30,7 @@ export function TextField({ label, error, helper, secure, style, ref, onFocus, o
         <TextInput
           ref={ref}
           accessibilityLabel={label}
+          maxFontSizeMultiplier={maxFontScale.compact}
           accessibilityHint={error ?? helper}
           placeholderTextColor={colors.textMuted}
           secureTextEntry={secure && hidden}
@@ -41,7 +42,9 @@ export function TextField({ label, error, helper, secure, style, ref, onFocus, o
         {secure && (
           <Pressable onPress={() => setHidden((h) => !h)} accessibilityRole="button" hitSlop={8} style={styles.toggle}
             accessibilityLabel={hidden ? t('common.showPassword') : t('common.hidePassword')}>
-            <Text variant="button" color={colors.primary}>{hidden ? t('common.show') : t('common.hide')}</Text>
+            <Text variant="button" color={colors.primary} maxFontSizeMultiplier={maxFontScale.compact}>
+              {hidden ? t('common.show') : t('common.hide')}
+            </Text>
           </Pressable>
         )}
       </View>

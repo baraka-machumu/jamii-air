@@ -24,6 +24,7 @@ import { Header } from '@/components/Header';
 import { useAndroidKeyboardHeight } from '@/components/keyboard';
 import { Screen } from '@/components/Screen';
 import { type SheetAction, showActions } from '@/components/Sheet';
+import { Spinner } from '@/components/Spinner';
 import { Text } from '@/components/Text';
 import { showToast } from '@/components/Toast';
 import { formatRelative } from '@/i18n/time';
@@ -108,7 +109,7 @@ export default function Comments() {
   if (gone(post.error) || (gone(comments.error) && !post.data)) {
     list = <View style={styles.center}><Text muted style={styles.textCenter}>{t('errors.POST_NOT_FOUND')}</Text></View>;
   } else if (comments.isPending) {
-    list = <ActivityIndicator style={styles.center} color={colors.textMuted} />;
+    list = <Spinner style={styles.center} />;
   } else if (comments.isError && rows.length === 0) {
     list = (
       <View style={[styles.center, { padding: space.md }]}>

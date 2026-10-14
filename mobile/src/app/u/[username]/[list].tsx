@@ -9,6 +9,7 @@ import { Button } from '@/components/Button';
 import { FollowButton } from '@/components/FollowButton';
 import { Header } from '@/components/Header';
 import { Screen } from '@/components/Screen';
+import { Spinner } from '@/components/Spinner';
 import { Text } from '@/components/Text';
 import { UserRow } from '@/components/UserRow';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -33,7 +34,7 @@ export default function FollowListScreen() {
       </View>
     );
   } else if (!query.data) {
-    body = <ActivityIndicator style={{ marginTop: space.lg }} color={colors.textMuted} />;
+    body = <Spinner style={{ marginTop: space.lg }} />;
   } else {
     body = (
       <FlatList data={items} keyExtractor={(u) => u.id}

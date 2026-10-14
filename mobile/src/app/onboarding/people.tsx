@@ -4,7 +4,7 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, FlatList, StyleSheet, View } from 'react-native';
+import { FlatList, StyleSheet, View } from 'react-native';
 import { errorMessage } from '@/api/errors';
 import { useUserSearch } from '@/api/people';
 import { Button } from '@/components/Button';
@@ -12,6 +12,7 @@ import { FollowButton } from '@/components/FollowButton';
 import { Header } from '@/components/Header';
 import { Screen } from '@/components/Screen';
 import { SearchField } from '@/components/SearchField';
+import { Spinner } from '@/components/Spinner';
 import { Text } from '@/components/Text';
 import { UserRow } from '@/components/UserRow';
 import { useFollowStore } from '@/people/follow';
@@ -21,7 +22,7 @@ import { displayFont } from '@/theme/tokens';
 
 export default function FindPeople() {
   const { t } = useTranslation();
-  const { colors, space } = useTheme();
+  const { space } = useTheme();
   const router = useRouter();
   const [text, setText] = useState('');
   const query = useDebounced(text.trim());
@@ -44,7 +45,7 @@ export default function FindPeople() {
           <Button kind="secondary" label={t('common.retry')} onPress={() => void people.refetch()} />
         </View>
       ) : !people.data ? (
-        <ActivityIndicator style={{ marginTop: space.lg }} color={colors.textMuted} />
+        <Spinner style={{ marginTop: space.lg }} />
       ) : (
         <FlatList data={people.data.items} keyExtractor={(u) => u.id} keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ paddingVertical: space.xs }} style={styles.flex}

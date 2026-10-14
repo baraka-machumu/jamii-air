@@ -95,7 +95,8 @@
     "cancel": "Ghairi",
     "retry": "Jaribu tena",
     "save": "Hifadhi",
-    "clear": "Futa"
+    "clear": "Futa",
+    "loading": "Inapakia"
   },
   "errors": {
     "ACCOUNT_NOT_ACTIVE": "Akaunti hii haitumiki. Tafadhali ingia tena.",

@@ -2,7 +2,7 @@
 // The counts open the follower lists; below, the posts grid (with processing / failed posts).
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { errorMessage } from '@/api/errors';
 import { useMe } from '@/api/me';
 import { Button } from '@/components/Button';
@@ -10,6 +10,7 @@ import { Icon } from '@/components/Icon';
 import { ProfileHeader } from '@/components/ProfileHeader';
 import { ProfilePosts } from '@/components/ProfilePosts';
 import { Screen } from '@/components/Screen';
+import { Spinner } from '@/components/Spinner';
 import { Text } from '@/components/Text';
 import { useTheme } from '@/theme/ThemeProvider';
 import { touchTarget } from '@/theme/tokens';
@@ -37,7 +38,7 @@ export default function MyProfile() {
               <Text muted style={styles.textCenter}>{errorMessage(me.error, t)}</Text>
               <Button kind="secondary" label={t('common.retry')} onPress={() => void me.refetch()} />
             </>
-          ) : <ActivityIndicator color={colors.textMuted} />}
+          ) : <Spinner />}
         </View>
       </Screen>
     );

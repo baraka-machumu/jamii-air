@@ -15,6 +15,7 @@ import { Avatar } from '@/components/Avatar';
 import { Button } from '@/components/Button';
 import { FollowButton } from '@/components/FollowButton';
 import { Screen } from '@/components/Screen';
+import { Spinner } from '@/components/Spinner';
 import { Text } from '@/components/Text';
 import { showToast } from '@/components/Toast';
 import { formatRelative } from '@/i18n/time';
@@ -56,7 +57,7 @@ export default function ActivityTab() {
 
   let body;
   if (list.isPending) {
-    body = <ActivityIndicator style={styles.center} color={colors.textMuted} />;
+    body = <Spinner style={styles.center} />;
   } else if (list.isError && items.length === 0) {
     body = (
       <View style={[styles.center, { padding: space.md }]}>

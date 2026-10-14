@@ -72,3 +72,12 @@ export type TypeVariant = keyof typeof type;
 
 /** Minimum touch target (Design Brief §8). */
 export const touchTarget = 44;
+
+/**
+ * How far text may grow with the OS font size (task 3.12.c). Android and iOS allow roughly 2x,
+ * which a screen that can scroll handles: `text` lets it grow nearly that far. `compact` is for
+ * text inside something of a fixed height - a pill button, an input row, a badge, a tab - where a
+ * larger size would be clipped instead of read. The cap is a ceiling, not a target: at the phone's
+ * default (1) nothing changes.
+ */
+export const maxFontScale = { text: 1.8, compact: 1.3 } as const;

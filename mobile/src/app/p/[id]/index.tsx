@@ -3,21 +3,20 @@
 // (/p/:id/comments). The route is /p/:id, the same path as the share link (App Flow §12).
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { ApiError, errorMessage } from '@/api/errors';
 import { usePost } from '@/api/posts';
 import { Button } from '@/components/Button';
 import { Header } from '@/components/Header';
 import { PostCard } from '@/components/PostCard';
 import { Screen } from '@/components/Screen';
+import { Spinner } from '@/components/Spinner';
 import { Text } from '@/components/Text';
-import { useTheme } from '@/theme/ThemeProvider';
 
 export default function PostDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useTranslation();
   const router = useRouter();
-  const { colors } = useTheme();
   const post = usePost(id);
 
   const gone = post.error instanceof ApiError && post.error.status === 404;
@@ -30,7 +29,7 @@ export default function PostDetail() {
         <Text muted style={styles.textCenter}>{errorMessage(post.error, t)}</Text>
         <Button kind="secondary" label={t('common.retry')} onPress={() => void post.refetch()} />
       </View>
-    ) : <ActivityIndicator style={styles.center} color={colors.textMuted} />;
+    ) : <Spinner style={styles.center} />;
   } else {
     body = (
       <ScrollView refreshControl={<RefreshControl refreshing={post.isRefetching} onRefresh={() => void post.refetch()} />}>

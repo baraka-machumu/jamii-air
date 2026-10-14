@@ -95,7 +95,8 @@
     "cancel": "Cancel",
     "retry": "Try again",
     "save": "Save",
-    "clear": "Clear"
+    "clear": "Clear",
+    "loading": "Loading"
   },
   "errors": {
     "ACCOUNT_NOT_ACTIVE": "This account is not active. Please log in again.",

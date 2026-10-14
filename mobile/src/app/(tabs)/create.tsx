@@ -4,12 +4,13 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Alert, StyleSheet, View } from 'react-native';
+import { Alert, StyleSheet, View } from 'react-native';
 import { errorMessage } from '@/api/errors';
 import { Button } from '@/components/Button';
 import { Icon } from '@/components/Icon';
 import { PostingCard } from '@/components/PostingCard';
 import { Screen } from '@/components/Screen';
+import { Spinner } from '@/components/Spinner';
 import { Text } from '@/components/Text';
 import { type PhotoSource, pickImage } from '@/media/pickImage';
 import { normalizeImage } from '@/media/upload';
@@ -58,7 +59,7 @@ export default function CreateTab() {
           <Button kind="secondary" label={t('create.discard')} onPress={discard} />
         </View>
       ) : opening ? (
-        <ActivityIndicator style={styles.center} color={colors.textMuted} />
+        <Spinner style={styles.center} />
       ) : (
         <View style={[styles.center, { gap: space.sm }]}>
           <Icon name="camera" size={48} color={colors.textMuted} />

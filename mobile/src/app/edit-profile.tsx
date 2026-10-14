@@ -13,6 +13,7 @@ import { Button } from '@/components/Button';
 import { FormMessage } from '@/components/FormScreen';
 import { Header } from '@/components/Header';
 import { Screen } from '@/components/Screen';
+import { Spinner } from '@/components/Spinner';
 import { Text } from '@/components/Text';
 import { TextField } from '@/components/TextField';
 import { useAvatar } from '@/media/useAvatar';
@@ -20,9 +21,8 @@ import { useTheme } from '@/theme/ThemeProvider';
 
 export default function EditProfile() {
   const me = useMe();
-  const { colors } = useTheme();
   if (!me.data) {
-    return <Screen><Header title="" /><ActivityIndicator color={colors.textMuted} style={{ flex: 1 }} /></Screen>;
+    return <Screen><Header title="" /><Spinner style={{ flex: 1 }} /></Screen>;
   }
   return <EditForm me={me.data} />;
 }

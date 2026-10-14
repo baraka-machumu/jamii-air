@@ -211,6 +211,8 @@
     "follow": "Follow",
     "following": "Following",
     "followUser": "Follow {{username}}",
+    "followBack": "Follow back",
+    "followBackUser": "Follow {{username}} back",
     "followingUser": "Following {{username}}. Tap to unfollow",
     "unfollow": "Unfollow",
     "unfollowConfirm": "Unfollow @{{username}}?",

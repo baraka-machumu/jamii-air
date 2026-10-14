@@ -1,16 +1,17 @@
 // Comments (App Flow §7.2; BR-FD-04, 05). The post's caption is pinned at the top; the list runs
 // oldest → newest with the newest at the bottom (an inverted list: the API's newest-first pages
 // fit it as they come, and older pages load on scrolling up). The input bar stays above the
-// keyboard. Send: the comment shows at once as "Sending…", then is confirmed; a failure turns it
-// into "Not sent · Tap to retry" (same Idempotency-Key, so a retry never posts twice). Long-press
-// a comment → a sheet: Report (someone else's comment, §10.2) and Delete → confirm (yours, or any
-// on your post). Max 1,000 characters, counter from 900. A post you can no longer see (deleted, or
-// a block) hides the input.
+// keyboard (on Android by the reported keyboard height: src/components/keyboard.ts). Send: the
+// comment shows at once as "Sending…", then is confirmed; a failure turns it into "Not sent · Tap
+// to retry" (same Idempotency-Key, so a retry never posts twice). Long-press a comment → a sheet:
+// Report (someone else's comment, §10.2) and Delete → confirm (yours, or any on your post). Max
+// 1,000 characters, counter from 900. A post you can no longer see (deleted, or a block) hides the
+// input.
 import { useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams } from 'expo-router';
 import { memo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Alert, FlatList, KeyboardAvoidingView, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import {
   addComment, type Comment, COMMENT_COUNTER_FROM, deleteComment, MAX_COMMENT, newCommentKey, useComments,
 } from '@/api/comments';
@@ -20,6 +21,7 @@ import { usePost } from '@/api/posts';
 import { Avatar } from '@/components/Avatar';
 import { Button } from '@/components/Button';
 import { Header } from '@/components/Header';
+import { useAndroidKeyboardHeight } from '@/components/keyboard';
 import { Screen } from '@/components/Screen';
 import { type SheetAction, showActions } from '@/components/Sheet';
 import { Text } from '@/components/Text';
@@ -46,6 +48,7 @@ export default function Comments() {
   const [draft, setDraft] = useState('');
   const [pending, setPending] = useState<Pending[]>([]);
   const [closed, setClosed] = useState(false);
+  const keyboard = useAndroidKeyboardHeight();
 
   const gone = (error: unknown) => error instanceof ApiError && error.status === 404;
   const cannotComment = closed || gone(post.error) || gone(comments.error);
@@ -143,7 +146,7 @@ export default function Comments() {
 
   return (
     <Screen padded={false} edges={['top', 'bottom']}>
-      <KeyboardAvoidingView style={styles.fill} behavior="padding">
+      <KeyboardAvoidingView style={[styles.fill, { paddingBottom: keyboard }]} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={{ paddingHorizontal: space.md }}><Header title={t('comments.title')} /></View>
         {caption && (
           <View style={[styles.row, styles.pinned, { paddingHorizontal: space.md, borderColor: colors.border }]}>

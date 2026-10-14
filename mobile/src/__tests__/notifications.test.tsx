@@ -89,7 +89,8 @@ describe('Activity (§9)', () => {
     expect(screen.getByText(/liked your post\./)).toBeTruthy();
     expect(screen.getByText(/commented: “nice!”/)).toBeTruthy();
     expect(screen.getByText(/started following you\./)).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Follow neema' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Follow neema back' })).toBeTruthy();
+    expect(screen.getByText('Follow back')).toBeTruthy();
   });
 
   it('marks everything read after 1 s and clears the badge', async () => {
@@ -117,7 +118,7 @@ describe('Activity (§9)', () => {
 
   it('opens the profile of a follower, and follows back', async () => {
     renderRouter(routes, { initialUrl: '/activity' });
-    fireEvent.press(await screen.findByRole('button', { name: 'Follow neema' }));
+    fireEvent.press(await screen.findByRole('button', { name: 'Follow neema back' }));
     await waitFor(() => expect(sent('PUT', '/api/v1/users/id-neema/follow')).toHaveLength(1));
     fireEvent.press(screen.getByText(/started following you\./));
     expect(await screen.findByText('Follows you')).toBeTruthy();

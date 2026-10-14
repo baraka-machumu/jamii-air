@@ -92,7 +92,7 @@ describe('User profile (§8.2)', () => {
   it('follows at once (button and count), then tells the server', async () => {
     renderRouter(routes, { initialUrl: '/u/juma' });
     expect(await screen.findByText('Follows you')).toBeTruthy();
-    fireEvent.press(screen.getByRole('button', { name: 'Follow juma' }));
+    fireEvent.press(screen.getByRole('button', { name: 'Follow juma back' }));
     expect(screen.getByRole('button', { name: 'Following juma. Tap to unfollow' })).toBeTruthy();
     expect(screen.getByLabelText('42 Followers')).toBeTruthy();
     await waitFor(() => expect(sent('PUT', '/api/v1/users/u2/follow')).toHaveLength(1));
@@ -105,7 +105,7 @@ describe('User profile (§8.2)', () => {
     expect(alert).toHaveBeenCalledWith('Unfollow @juma?', undefined, expect.any(Array));
     expect(sent('DELETE', '/api/v1/users/u2/follow')).toHaveLength(0);
     answerAlert('Unfollow');
-    expect(await screen.findByRole('button', { name: 'Follow juma' })).toBeTruthy();
+    expect(await screen.findByRole('button', { name: 'Follow juma back' })).toBeTruthy();
     expect(screen.getByLabelText('41 Followers')).toBeTruthy();
     await waitFor(() => expect(sent('DELETE', '/api/v1/users/u2/follow')).toHaveLength(1));
   });
@@ -113,9 +113,9 @@ describe('User profile (§8.2)', () => {
   it('rolls back a follow the server refused', async () => {
     api((req) => (req.path === '/api/v1/users/u2/follow' ? apiError(500, 'INTERNAL_ERROR') : undefined));
     renderRouter(routes, { initialUrl: '/u/juma' });
-    fireEvent.press(await screen.findByRole('button', { name: 'Follow juma' }));
+    fireEvent.press(await screen.findByRole('button', { name: 'Follow juma back' }));
     await waitFor(() => expect(alert).toHaveBeenCalledWith("Couldn't follow", expect.any(String)));
-    expect(await screen.findByRole('button', { name: 'Follow juma' })).toBeTruthy();
+    expect(await screen.findByRole('button', { name: 'Follow juma back' })).toBeTruthy();
     expect(screen.getByLabelText('41 Followers')).toBeTruthy();
   });
 

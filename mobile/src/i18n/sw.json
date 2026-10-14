@@ -211,6 +211,8 @@
     "follow": "Fuata",
     "following": "Unamfuata",
     "followUser": "Mfuate {{username}}",
+    "followBack": "Mfuate pia",
+    "followBackUser": "Mfuate {{username}} pia",
     "followingUser": "Unamfuata {{username}}. Gusa kuacha kumfuata",
     "unfollow": "Acha kumfuata",
     "unfollowConfirm": "Acha kumfuata @{{username}}?",

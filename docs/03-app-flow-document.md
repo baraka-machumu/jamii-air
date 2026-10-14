@@ -209,7 +209,7 @@ Search tab → input autofocus → debounce 300 ms, min 1 char → `GET /users/s
 
 ### 8.2 User profile (BR-PR-01, 04, 05)
 
-Header: avatar, display name, username, bio, counts (posts · followers · following). Button: **Follow** / **Following** (tap → confirm sheet "Unfollow @x?") . ⋯ → *Report*, *Block*, *Copy profile link*.
+Header: avatar, display name, username, bio, counts (posts · followers · following). Button: **Follow** / **Following** (tap → confirm sheet "Unfollow @x?"); **Follow back** when they follow you and you don't follow them. ⋯ → *Report*, *Block*, *Copy profile link*.
 Body: 3-column grid of `thumb` images (FlashList, paginated). Tap → Post detail.
 Followers/Following counts → list screens with follow buttons.
 Empty grid → "No posts yet".

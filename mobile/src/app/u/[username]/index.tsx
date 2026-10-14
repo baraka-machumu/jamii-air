@@ -98,7 +98,7 @@ export default function UserProfile() {
                   <Button kind="secondary" label={t('safety.unblock')} onPress={() => void doUnblock()} loading={unblocking} style={styles.action} />
                 </View>
               ) : (
-                <FollowButton user={user} following={user.isFollowing} />
+                <FollowButton user={user} following={user.isFollowing} followsMe={user.followsMe} />
               )}
               {!user.isMe && user.followsMe && !blocked && (
                 <Text variant="caption" muted style={[styles.textCenter, { marginTop: space.xs }]}>{t('people.followsYou')}</Text>

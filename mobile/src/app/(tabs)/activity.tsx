@@ -123,7 +123,7 @@ const ActivityRow = memo(function ActivityRow({ item, onOpen, onProfile }: {
         </Text>
       </Pressable>
       {item.type === 'FOLLOW' ? (
-        actor.isFollowing ? null : <FollowButton user={actor} following={false} compact />
+        actor.isFollowing ? null : <FollowButton user={actor} following={false} followsMe compact />
       ) : (
         <Pressable onPress={() => onOpen(item)} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
           {item.postThumbUrl ? (

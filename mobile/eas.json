@@ -16,7 +16,8 @@
       },
       "env": {
         "APP_VARIANT": "development"
-      }
+      },
+      "channel": "development"
     },
     "preview": {
       "extends": "base",
@@ -27,14 +28,16 @@
       "env": {
         "APP_VARIANT": "preview",
         "EXPO_PUBLIC_API_URL": "http://192.168.0.65:3000"
-      }
+      },
+      "channel": "preview"
     },
     "production": {
       "extends": "base",
       "autoIncrement": true,
       "env": {
         "APP_VARIANT": "production"
-      }
+      },
+      "channel": "production"
     }
   },
   "submit": {

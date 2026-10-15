@@ -29,11 +29,19 @@ GitHub, and one session clicking the portal through in a browser with a real aut
 (4.2.h, and the `.f` / `.j` / `.l` items that ride along with it). The Playwright run covers the
 exit path itself and has passed locally.
 
-**Checked against the running API** (2026-10-15): `npm run portal:check` in `backend/` drives
-sign-in, 2FA enrollment with a real code, `GET /admin/dashboard`, the page-load refresh and sign-out
-against the local stack — 19/19 checks pass. The portal has **not** been clicked through in a
-browser with an authenticator app yet (4.2.h), and the Vite dev server has only been confirmed to
-serve and compile, not looked at.
+**Checked against the running API** (2026-10-15):
+
+- `npm run portal:check` in `backend/` drives sign-in, 2FA enrollment with a real code,
+  `GET /admin/dashboard`, the page-load refresh and sign-out against the local stack — 19/19 pass.
+- `npm run e2e` in `admin/` (task 4.8) drives a **real Chromium against the real API**: sign-in with
+  an authenticator code, the report queue and one report, a post, an account, invite codes and the
+  audit log — 6/6 pass. So those screens have now been rendered and operated in a browser, not only
+  against stubs.
+
+What is still **not** done by hand: a person looking at the portal — scanning the QR code with a
+real authenticator app (4.2.h), the dashboard's KPI tiles, trend lines and daily-numbers table
+against real data (4.3.f), and the Admins page, which the end-to-end run does not visit (4.6.l).
+Those are a visual and credential check, not a functional one.
 
 ## To-do checklist
 
@@ -73,7 +81,7 @@ its checks are green, move the task to **Review** in the Status table above.
 | 4.4.i | 4.4 Reports | `409` says who handled it first and shows what they decided | ✅ |
 | 4.4.j | 4.4 Reports | Post view (`/posts/:id`): photo, caption, counts, its reports and history, hide / restore | ✅ |
 | 4.4.k | 4.4 Reports | Unit and route tests | ✅ |
-| 4.4.l | 4.4 Reports | Worked through in a browser against the local API (with 4.2.h) | ☐ |
+| 4.4.l | 4.4 Reports | Worked through in a browser against the local API | ✅ (by the 4.8 run) |
 | 4.5.a | 4.5 Users | List: debounced search, status filter, paging, open-reports column | ✅ |
 | 4.5.b | 4.5 Users | Account detail: status, joined, counts, language, invite code, active sessions | ✅ |
 | 4.5.c | 4.5 Users | Confirmed 18+ shown without the date of birth | ✅ |
@@ -83,7 +91,7 @@ its checks are green, move the task to **Review** in the Status table above.
 | 4.5.g | 4.5 Users | Suspend / reinstate with a reason note | ✅ |
 | 4.5.h | 4.5 Users | Revoke all sessions with a reason note | ✅ |
 | 4.5.i | 4.5 Users | Unit and route tests | ✅ |
-| 4.5.j | 4.5 Users | Looked at in a browser against the local API (with 4.2.h) | ☐ |
+| 4.5.j | 4.5 Users | Looked at in a browser against the local API | ✅ (by the 4.8 run) |
 | 4.6.a | 4.6 Invites | List: code, status, uses of max, expiry, who created it, who used it | ✅ |
 | 4.6.b | 4.6 Invites | Create (uses, expiry, note) and show the code once with Copy | ✅ |
 | 4.6.c | 4.6 Invites | Revoke an active code with a note | ✅ |
@@ -95,7 +103,7 @@ its checks are green, move the task to **Review** in the Status table above.
 | 4.6.i | 4.6 Admins | A super-admin cannot demote or disable themselves | ✅ |
 | 4.6.j | 4.6 Admins | A moderator reaching `/admins` is turned away, and no request is made | ✅ |
 | 4.6.k | 4.6 | Unit and route tests | ✅ |
-| 4.6.l | 4.6 | Looked at in a browser against the local API (with 4.2.h) | ☐ |
+| 4.6.l | 4.6 | Looked at in a browser against the local API | ✅ for invite codes and the audit log (the 4.8 run); ☐ for Admins |
 | 4.8.a | 4.8 E2E | Playwright set up against the Vite dev server on localhost, one worker, no retries | ✅ |
 | 4.8.b | 4.8 E2E | Fixture seed (`npm run e2e:seed`): an enrolled admin, an author with a published post, an open report | ✅ |
 | 4.8.c | 4.8 E2E | Sign in with a real authenticator code | ✅ |

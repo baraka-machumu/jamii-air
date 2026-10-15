@@ -101,6 +101,14 @@ npm run admin:bootstrap -- --email you@example.com --name "Your Name"
 
 This works only while there are no admins; it prints a one-time password. Sign in to the portal, set up 2FA, then change the password. The e2e tests create admins in the local database, so run `npm run infra:reset` first if you want a real first admin locally.
 
+**Checking the portal against this API** (development only):
+
+```bash
+npm run portal:check
+```
+
+Drives what the admin portal does - sign in, 2FA enrollment with a real code, `GET /admin/dashboard`, the refresh a page load uses, sign out - and prints a pass/fail line per check. It writes one clearly-named super-admin (`portal-check@jamiiair.test`), replacing it on each run, so it needs neither a browser nor an authenticator app. Never point it at a real deployment.
+
 ### OpenAPI spec
 
 ```bash

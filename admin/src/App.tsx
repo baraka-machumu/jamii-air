@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import { Navigate, Route, Routes } from 'react-router';
 import { restore } from '@/auth/session';
 import { AppLayout } from '@/components/AppLayout';
+import Dashboard from '@/routes/Dashboard';
 import Login from '@/routes/Login';
 import { Placeholder } from '@/routes/placeholder';
 import { useSession } from '@/stores/session';
@@ -35,7 +36,7 @@ export function App() {
     <Routes>
       <Route path="/login" element={<Navigate to="/" replace />} />
       <Route element={<AppLayout />}>
-        <Route index element={<Placeholder title="Dashboard" task="4.3" />} />
+        <Route index element={<Dashboard />} />
         <Route path="reports" element={<Placeholder title="Reports" task="4.4" />} />
         <Route path="reports/:id" element={<Placeholder title="Report" task="4.4" />} />
         <Route path="users" element={<Placeholder title="Users" task="4.5" />} />

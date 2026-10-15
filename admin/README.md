@@ -18,7 +18,10 @@ keep opening the portal on `localhost`, though, because the admin refresh cookie
 `SameSite=strict`, and a browser only treats `localhost` as a secure origin over plain HTTP. Opening
 the portal itself on a LAN address would sign you out on every reload.
 
-The API must allow admin sign-in: see `backend/README.md` for seeding the first admin.
+The API must allow admin sign-in: see `backend/README.md` for seeding the first admin. To check the
+portal's calls against a running API without a browser or an authenticator app, run
+`npm run portal:check` in `backend/` — it signs in, enrolls 2FA with a real code, reads the
+dashboard, refreshes and signs out, printing a pass/fail line per check.
 
 | Command | What it does |
 |---|---|
@@ -39,5 +42,6 @@ The API must allow admin sign-in: see `backend/README.md` for seeding the first 
 | Errors | `src/api/errors.ts` | The API's `code` → the text a moderator reads; the server's `message` is never shown (TRD API-05) |
 | Session | `src/stores/session.ts` | Access token in memory only; the refresh token is an HttpOnly cookie |
 | Tokens | `src/index.css` | Jamii colours mapped onto the shadcn/ui variable names, so `npx shadcn@latest add <name>` matches without edits |
+| Charts | `src/components/Sparkline.tsx` | One series, one hue, no axes; hover and keyboard focus show the same point, and every value is also in the dashboard's table view |
 
 English only, light mode only (Design Brief §13).

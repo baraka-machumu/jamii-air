@@ -33,7 +33,8 @@
     "db:fn-migration": "node scripts/db/fn-migration.ts",
     "db:drift-check": "node scripts/db/drift-check.ts",
     "db:perf": "node scripts/db/perf.ts",
-    "admin:bootstrap": "node scripts/admin/bootstrap.ts"
+    "admin:bootstrap": "node scripts/admin/bootstrap.ts",
+    "portal:check": "node scripts/admin/portal-check.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1149.0",

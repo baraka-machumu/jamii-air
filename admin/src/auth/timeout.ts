@@ -1,4 +1,4 @@
-// Session expiry (App Flow §15.2 step 5): 30 minutes idle, with a warning at 25 and a "Stay signed
+// Session expiry (App Flow §15.2 step 5): 60 minutes idle, with a warning at 55 and a "Stay signed
 // in" button, or 12 hours in total whatever the admin does.
 //
 // The server enforces both limits on the refresh cookie, so this is not the authority - it is here
@@ -9,8 +9,8 @@ import { refreshSession } from '@/api/client';
 import { logout } from '@/auth/session';
 import { useSession } from '@/stores/session';
 
-export const IDLE_MS = 30 * 60_000;
-export const WARN_AFTER_MS = 25 * 60_000;
+export const IDLE_MS = 60 * 60_000;
+export const WARN_AFTER_MS = 55 * 60_000;
 export const ABSOLUTE_MS = 12 * 3_600_000;
 /** How often the clock is checked: fine enough for a countdown, cheap enough to ignore. */
 export const TICK_MS = 10_000;

@@ -56,7 +56,7 @@ export class AdminAuthController {
   @HttpCode(200)
   @Throttle({ default: { limit: 120, ttl: 3_600_000 } })
   @ApiHeader({ name: 'X-Admin-Client', required: true, description: '1' })
-  @ApiOperation({ summary: 'Rotate the session cookie (extends the 30-minute idle timeout, never past 12 h)' })
+  @ApiOperation({ summary: 'Rotate the session cookie (extends the 60-minute idle timeout, never past 12 h)' })
   @ApiResponse({ status: 200, type: AdminSessionResponse })
   async refresh(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
     assertAdminClient(req);

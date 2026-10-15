@@ -1618,7 +1618,7 @@
             }
           }
         },
-        "summary": "Rotate the session cookie (extends the 30-minute idle timeout, never past 12 h)",
+        "summary": "Rotate the session cookie (extends the 60-minute idle timeout, never past 12 h)",
         "tags": [
           "admin auth"
         ]

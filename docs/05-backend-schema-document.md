@@ -491,7 +491,7 @@ model AdminSession {
   familyId       String    @map("family_id") @db.Uuid
   tokenHash      String    @unique @map("token_hash") @db.Char(64)
   userAgent      String?   @map("user_agent") @db.VarChar(255)
-  idleExpiresAt  DateTime  @map("idle_expires_at") @db.Timestamptz      // now() + 30 min, extended on use
+  idleExpiresAt  DateTime  @map("idle_expires_at") @db.Timestamptz      // now() + 60 min, extended on use
   absoluteExpiresAt DateTime @map("absolute_expires_at") @db.Timestamptz // login + 12 h
   revokedAt      DateTime? @map("revoked_at") @db.Timestamptz
   replacedById   String?   @map("replaced_by_id") @db.Uuid

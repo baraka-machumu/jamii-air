@@ -323,7 +323,7 @@ Layout: left sidebar (Dashboard · Reports *(open count badge)* · Users · Invi
 2. **Login:** email + password → `POST /admin/auth/login`. Wrong credentials → generic "Incorrect email or password"; 10 consecutive failures lock the account (super-admin unlocks).
 3. **First login:** forced 2FA enrollment — QR code + manual key → enter code to confirm → session starts.
 4. **Later logins:** enter 6-digit TOTP code → session starts.
-5. Session ends after 30 min idle (warning at 25 min with **Stay signed in**) or 12 h total → back to Login with "Your session expired".
+5. Session ends after 60 min idle (warning at 55 min with **Stay signed in**) or 12 h total → back to Login with "Your session expired".
 
 ### 15.3 Dashboard
 

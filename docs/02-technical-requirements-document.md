@@ -343,7 +343,7 @@ Each module has a thin typed wrapper; services never write SQL strings inline.
 | AP-04 | **TOTP two-factor authentication is mandatory**; enrollment enforced on first login. Super-admin can reset another admin's 2FA (audited). |
 | AP-05 | Defence in depth: nginx serves the portal and `/api/v1/admin/*` only to an **IP allowlist** (office network) in UAT and production; all other addresses get `403`. The allowlist is kept in the deployment config, and changes are reviewed like code. |
 | AP-06 | Every admin mutation requires a reason note and is written to `moderation_actions` (content/user actions) or `admin_audit_log` (logins, admin management, invite changes) inside the same stored procedure. |
-| AP-07 | Admin sessions: idle timeout 30 min, absolute 12 h; failed logins rate-limited (5 / 15 min) and locked after 10 consecutive failures. |
+| AP-07 | Admin sessions: idle timeout 60 min, absolute 12 h; failed logins rate-limited (5 / 15 min) and locked after 10 consecutive failures. |
 | AP-08 | Admins see hidden content and reporter identities; users never see who reported them. |
 
 ### 8.2 Admin session model
@@ -351,7 +351,7 @@ Each module has a thin typed wrapper; services never write SQL strings inline.
 - Sign-in: email + password → a **5-minute challenge token** (`aud=admin-challenge`), then a TOTP code (`/totp/verify`), or on the first sign-in the authenticator enrolment (`/totp/enroll`, QR code + manual key). Wrong passwords **and** wrong codes count towards the lock after 10 failures; the count resets only when the whole sign-in succeeds. A code is accepted once (replay within its window refused).
 - TOTP: RFC 6238 (SHA-1, 6 digits, 30 s, ±1 step). Secrets are stored AES-256-GCM sealed with a key outside the database (`ADMIN_TOTP_KEY`).
 - Access token: JWT (15 min, `aud=admin`, claims `sub`, `role`, `sid`, `email`) signed with its own key (`ADMIN_JWT_SECRET`), held in memory in the browser.
-- Refresh: opaque token in an **`HttpOnly; Secure; SameSite=Strict` cookie** scoped to `Path=/api/v1/admin/auth`, rotated on use (`admin_sessions`, reuse detection). Idle timeout 30 min, absolute 12 h.
+- Refresh: opaque token in an **`HttpOnly; Secure; SameSite=Strict` cookie** scoped to `Path=/api/v1/admin/auth`, rotated on use (`admin_sessions`, reuse detection). Idle timeout 60 min, absolute 12 h.
 - New admins: a super-admin creates the account and receives a **one-time temporary password** (App Flow §15.8). The first super-admin is created with `npm run admin:bootstrap`.
 - CSRF: SameSite=Strict + refresh and logout require header `X-Admin-Client: 1`.
 - CORS: only the admin origin (`ADMIN_ORIGIN`), `credentials: true`, only on `/api/v1/admin/*`; mobile routes do not enable CORS.

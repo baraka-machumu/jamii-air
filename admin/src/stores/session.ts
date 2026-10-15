@@ -2,7 +2,7 @@
 // an HttpOnly cookie the browser sends by itself, so nothing is kept in localStorage where a
 // cross-site script could read it. A reload therefore starts with no token and refreshes once.
 //
-// The idle and absolute timeouts (30 min idle with a warning at 25, 12 h total) are enforced in
+// The idle and absolute timeouts (60 min idle with a warning at 55, 12 h total) are enforced in
 // src/auth/timeout.ts, which needs to know when this session started.
 import { create } from 'zustand';
 import type { components } from '@/api/schema';

@@ -600,7 +600,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Rotate the session cookie (extends the 30-minute idle timeout, never past 12 h) */
+        /** Rotate the session cookie (extends the 60-minute idle timeout, never past 12 h) */
         post: operations["AdminAuthController_refresh"];
         delete?: never;
         options?: never;

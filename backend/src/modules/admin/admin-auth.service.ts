@@ -21,7 +21,7 @@ import { REDIS } from '../../infrastructure/queue/queue.module.js';
 import { isCommonPassword } from '../auth/common-passwords.js';
 
 export const ADMIN_ACCESS_TTL_SECONDS = 15 * 60;
-export const ADMIN_IDLE_MS = 30 * 60_000;
+export const ADMIN_IDLE_MS = 60 * 60_000;
 export const ADMIN_ABSOLUTE_MS = 12 * 3_600_000;
 const CHALLENGE_TTL_SECONDS = 5 * 60;
 export const MIN_ADMIN_PASSWORD = 12;

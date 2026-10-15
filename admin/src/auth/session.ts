@@ -6,7 +6,7 @@
 //                                       HttpOnly cookie the browser keeps
 //   3. restore() on every page load   → one refresh with that cookie, so a reload is not a sign-in
 //
-// The timeouts (30 min idle, 12 h absolute) live in src/auth/timeout.ts; the server enforces the
+// The timeouts (60 min idle, 12 h absolute) live in src/auth/timeout.ts; the server enforces the
 // same limits, so the portal is only being honest about them, never the authority.
 import { ADMIN_CLIENT_HEADER, api, call, refreshSession } from '@/api/client';
 import type { components } from '@/api/schema';

@@ -20,5 +20,9 @@ export default defineConfig({
     setupFiles: ['./src/test/setup.ts'],
     globals: true,
     css: false,
+    // Vitest owns the unit tests under src/; Playwright owns e2e/*.spec.ts (`npm run e2e`).
+    // Without this, vitest's default pattern also collects the Playwright spec and every
+    // `npm test` ends in a failed suite, which would hide a real one.
+    include: ['src/**/*.test.{ts,tsx}'],
   },
 });

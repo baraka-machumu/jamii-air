@@ -47,7 +47,7 @@ Visual design (Design Brief, doc 04) is produced by the engineer with Claude Cod
 |---|---|---|
 | 0 Docs | ✅ Complete | §4 Phase 0 |
 | 1 Database design | Built and tested locally; in **Review** | [Phase 1 backlog](backlog/phase-1-database-E0-E1.md#status) |
-| 2 Backend | Built and tested locally; exit gate met locally (UAT deferred); in **Review** | [Phase 2 backlog](backlog/phase-2-backend.md#status) |
+| 2 Backend | Built and tested locally; **running on UAT since 2026-10-15**; exit gate met; in **Review** | [Phase 2 backlog](backlog/phase-2-backend.md#status) |
 | 3 Mobile | **In progress.** Designs approved; 3.1 foundation, 3.2 API client, 3.3 EAS builds, 3.4 auth, 3.5 profile and Settings, 3.6 People, 3.7 Create flow, 3.8 Feed, 3.9 Engagement and deep links, 3.10 Notifications, 3.11 Safety built (Review). 3.1–3.11 all checked on the reference Android (the 3.9–3.11 session passed 2026-10-14 on the new dev build, with two fixes: Follow back, comment input above the keyboard). 3.12 Quality built: the Update required screen (3.12.d), the accessibility pass (3.12.c), the EAS Update channel (3.12.e), the KPI events (3.12.b, off until a PostHog key is set) and the Maestro core-loop flow (3.12.a; it runs locally against the phone, CI wiring deferred to 5.1b). **Phase 3 is built end to end**; what remains for Done is the reviewed PR, green CI and the `preview` demo | [Phase 3 backlog](backlog/phase-3-mobile.md#status) |
 | 4 Admin portal | **In progress.** 4.1 app setup, 4.2 auth flow and 4.3 dashboard built (Review): Vite + React + TS, Tailwind + shadcn/ui, routing behind the session, the typed API client, sign-in with mandatory 2FA (QR enrollment, 6-digit code, idle and 12 h expiry), and the dashboard (attention tiles, twelve KPI tiles with trend lines, 7/30/90-day selector, daily-numbers table). Sign-in and the dashboard are checked against the running local API with `npm run portal:check` (19/19); not yet clicked through in a browser. Next: 4.4 Reports | [Phase 4 backlog](backlog/phase-4-admin.md#status) |
 | 5–6 Release, pilot | Not started | §4 Phases 5–6 |
@@ -59,7 +59,7 @@ Visual design (Design Brief, doc 04) is produced by the engineer with Claude Cod
   - ✅ `main` pushed, CI green on GitHub (2026-10-12, `bb2002b`); review the commits;
   - make the **Database**, **Backend** and **Mobile** checks required in `main`'s branch protection;
   - create the GitHub board (the `gh` CLI is not installed yet; §9).
-- **Deferred (local dev only until development is finished):** the UAT deploy, Sentry and metrics (task 2.16).
+- **UAT is live (2026-10-15):** the API (`http://41.59.227.223:4011`), the admin portal (`https://41.59.227.223:4012`, self-signed TLS) and media (`http://41.59.227.223:4013`) run on the shared UAT host, so remote testers can use a `preview` APK. Deployed and verified end to end from outside; see [deploy/uat/README.md](../deploy/uat/README.md). **Still deferred:** Sentry and metrics (task 2.16), the portal IP allowlist (4.7) and real TLS, all of which need Plan 5.0.
 - **Repository:** [`baraka-machumu/jamii-air`](https://github.com/baraka-machumu/jamii-air) on GitHub. `backend/` holds the API, worker and database; `mobile/` holds the Expo app (tasks 3.1–3.10); `admin/` is a placeholder.
 
 ## 2. Agile delivery model
@@ -215,7 +215,7 @@ NestJS API and workers on top of the finished procedures. The API layer validate
 | 2.13 | ✅ Maintenance worker loops calling the `fn_maint_*` procedures on schedule (BullMQ job schedulers, East Africa Time; object deletions removed from storage between claim and complete) |
 | 2.14 | ✅ OpenAPI spec published as a build artifact for mobile and admin type generation; reviewed against App Flow (doc 03) so every screen has the endpoints it needs ([review record](07-api-review.md): 10 gaps fixed, incl. change password, profile share link, 426 version gate, hidden posts on the author's grid) |
 | 2.15 | ✅ Tests: API e2e for every endpoint (enforced: a route without an e2e call fails `openapi.e2e-spec`); upload security tests (oversized, wrong type, renamed non-image, another user's `mediaId`, expired intent, replayed idempotency key); **authorization sweep** — every endpoint × (owner, other user, blocked, suspended, user token on admin route, moderator on super-admin route) |
-| 2.16 | ✅ Dockerfile (multi-stage), `worker.ts`; ✅ CI (lint, typecheck, tests, build — `.github/workflows/backend.yml`); **deferred (local dev only until development is finished):** UAT deploy to `$UAT_SERVER_IP` (Docker Compose: pull image from GHCR, run migrations, restart); Sentry (enabled once its DSN is set — optional until production) and per-route / per-procedure latency (`pg_stat_statements`, `track_functions`), queue metrics, alerts |
+| 2.16 | ✅ Dockerfile (multi-stage), `worker.ts`; ✅ CI (lint, typecheck, tests, build — `.github/workflows/backend.yml`); ✅ **UAT deploy done 2026-10-15** (ports 4011 API / 4012 portal / 4013 media on the shared host; image built locally and shipped because the host's `/` is 95% full, migrations over an SSH tunnel — [deploy/uat/README.md](../deploy/uat/README.md)); **still deferred:** Sentry (enabled once its DSN is set — optional until production) and per-route / per-procedure latency (`pg_stat_statements`, `track_functions`), queue metrics, alerts |
 
 **Status (2026-10-11): met locally** — 77 e2e (incl. the spec-driven authorization sweep and upload security), 123 procedure and 47 unit tests pass; the UAT part waits for the deferred deploy (local dev only until development is finished).
 
@@ -254,7 +254,7 @@ The moderation web app in `admin/`, against the finished admin API.
 | 4.4 | ✅ Reports queue & detail; post view; hide / restore content (a comment is moderated from the report that names it: the admin API has no endpoint to fetch one on its own) |
 | 4.5 | ✅ Users list & detail; suspend / reinstate; revoke all sessions |
 | 4.6 | ✅ Invite codes; Audit log; Admins management (super-admin only) |
-| 4.7 | **Blocked on 5.0 (servers, domain).** Hosting: build in CI, serve the static files from nginx on our servers; **IP allowlist** for the portal and `/api/v1/admin/*` |
+| 4.7 | **Part done 2026-10-15:** the portal is served by nginx on the UAT host (`https://41.59.227.223:4012`, self-signed TLS, `/api` reverse-proxied so the admin cookie stays same-origin). **Still blocked on 5.0:** real certificates, the **IP allowlist** for the portal and `/api/v1/admin/*`, and building it in CI |
 | 4.8 | ✅ Playwright E2E in CI: the exit path in one browser session against the real API, with a real authenticator code (6/6 locally, 2026-10-15); fixtures from `npm run e2e:seed` |
 
 **Exit:** from the portal, an admin (with 2FA) resolves a report, hides a post, suspends and reinstates a user, and creates an invite code; each action appears in the audit log; Playwright E2E green.

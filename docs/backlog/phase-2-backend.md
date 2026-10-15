@@ -8,7 +8,7 @@ Board columns as in Plan §2.3. **Review** = built, every check green locally, c
 
 The GitHub board does not exist yet, so this table is the tracker (the `gh` CLI is available: `gh run list` shows CI).
 
-**Phase gate:** met locally on 2026-10-11, apart from "runs on UAT" (deploy deferred: local dev only until development is finished). Plan §4 Phase 2 has the exit status.
+**Phase gate:** met locally on 2026-10-11; "runs on UAT" met on 2026-10-15. Plan §4 Phase 2 has the exit status.
 
 | Task | Epic | Column | Commit | Notes |
 |---|---|---|---|---|
@@ -25,7 +25,7 @@ The GitHub board does not exist yet, so this table is the tracker (the `gh` CLI 
 | 2.13 Maintenance schedule | E8 | Review | `e01f5cb` | 10 BullMQ job schedulers, East Africa Time |
 | 2.14 OpenAPI spec and App Flow review | E8 | Review | `ee2a901` | [Review record](../07-api-review.md): 10 gaps fixed, migration `api_review_fixes` |
 | 2.15 Test sweep | E8 | Review | `4e3ce30` | Spec-driven authorization sweep, upload security, every operation has an e2e call |
-| 2.16 Docker image, worker, CI | E0 | Review (deploy deferred) | `1b73e2d`, `c0d837c` | **Deferred:** UAT deploy, Sentry, latency metrics and alerts. Fix 2026-10-12: the API and worker load `backend/.env` on the host (`npm run start` failed with missing config); `dotenv` moved to runtime dependencies |
+| 2.16 Docker image, worker, CI | E0 | Review (on UAT) | `1b73e2d`, `c0d837c` | **UAT deploy done 2026-10-15** (API 4011, portal 4012, media 4013 on the shared host; see [deploy/uat/README.md](../../deploy/uat/README.md)). **Still deferred:** Sentry, latency metrics and alerts. Fix 2026-10-12: the API and worker load `backend/.env` on the host (`npm run start` failed with missing config); `dotenv` moved to runtime dependencies |
 
 ## Test totals at the phase gate
 
@@ -43,7 +43,7 @@ Also green: lint, type-check, build, `npm run db:drift-check` (94 functions) and
 2. In `main`'s branch protection, make the **Database**, **Backend** and **Mobile** checks required.
 3. Create the board and issues (install the `gh` CLI, see Plan §9).
 4. Rebuild the image (`docker compose --profile app up -d --build`) and check the API and worker containers still start after the `.env` loading fix (`c0d837c`); not yet run.
-5. When development is finished: the UAT deploy and the rest of task 2.16.
+5. ✅ UAT deploy done 2026-10-15. Still open from 2.16: Sentry, latency metrics and alerts (need the accounts in Plan 5.0).
 
 ## Decisions taken during Phase 2
 

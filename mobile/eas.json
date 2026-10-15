@@ -27,7 +27,7 @@
       },
       "env": {
         "APP_VARIANT": "preview",
-        "EXPO_PUBLIC_API_URL": "http://192.168.0.65:3000"
+        "EXPO_PUBLIC_API_URL": "http://41.59.227.223:4011"
       },
       "channel": "preview"
     },

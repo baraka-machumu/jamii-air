@@ -61,6 +61,13 @@ function server(reply: (path: string, method: string) => Response) {
   global.fetch = vi.fn(async (input: Request | string) => {
     const request = typeof input === 'string' ? new Request(input) : input;
     const url = new URL(request.url, 'http://portal.test');
+    // Every page load refreshes from the cookie (`restore()`), so the stub answers it with the
+    // session already in the store - otherwise the admin is signed out mid-test and screens that
+    // depend on the role see nobody.
+    if (url.pathname === '/api/v1/admin/auth/refresh') {
+      const current = useSession.getState().admin;
+      return json(200, { accessToken: 'token-1', expiresIn: 900, admin: current });
+    }
     const raw = request.method === 'GET' ? null : await request.text();
     sent.push({ method: request.method, path: url.pathname + url.search, body: raw ? (JSON.parse(raw) as unknown) : null });
     return reply(url.pathname, request.method);

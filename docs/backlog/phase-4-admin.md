@@ -19,11 +19,11 @@ Done also needs a reviewed PR, a green CI run on GitHub and the portal demonstra
 | 4.3 Dashboard | E7 | Review | see git log | “Needs attention” first (open reports with the oldest age, suspended users, invites remaining, each linking to the screen that acts on it), then the twelve pilot KPIs as stat tiles with trend lines, a 7 / 30 / 90-day selector above everything, and a **Show daily numbers** table so no value is hover-only. 18 new tests (53 pass) |
 | 4.4 Reports queue and detail | E6 | Review | see git log | Queue (default Open, oldest first; status / type filters on the server, reason in the portal; `j`/`k` move focus through the rows and Enter opens one), report detail (content preview blurred until clicked, the reporter's own words, other reports on the same target, the account's moderation history), hide / restore a post or comment, suspend / reinstate the account, resolve / dismiss — each with a reason note, and hiding or suspending closes the report in the same call. Opening a report marks it `REVIEWING`; a `409` names the admin who got there first. Post view at `/posts/:id` with hide / restore. 18 new tests (71 pass) |
 | 4.5 Users list and detail | E6 | Review | see git log | Search (debounced 300 ms) over username, display name and email, status filter, open-reports column; account detail (email, joined, language, invite code, last active, counts, active sessions, bio; recent posts as a grid with hidden and failed ones badged; reports against them linking back to the report; moderation history), suspend / reinstate and revoke all sessions, each with a reason note. The date of birth is never shown — only "confirmed 18+ at sign-up". 12 new tests (83 pass) |
-| 4.6 Invites, audit log, admins | E6 | Backlog | | Invite codes (create, copy, revoke, used-by), audit log, admins management for super-admins incl. reset 2FA (App Flow §15.6–15.8) |
+| 4.6 Invites, audit log, admins | E6 | Review | see git log | Invite codes (list with uses / expiry / used-by, create with uses + expiry + note → the code shown once with Copy, revoke with a note), audit log (read-only, newest first, filters for admin / action / target id / date range, target links, the note on every row), admins (list with role, 2FA state, locked and last sign-in; add → the one-time password shown once with Copy; change role; disable / enable, which also unlocks; reset 2FA — each with a note). A super-admin cannot demote or disable themselves, and a moderator reaching `/admins` is turned away without a request being made. 18 new tests (101 pass) |
 | 4.7 Hosting | E0 | Backlog | | Build in CI, static files from nginx, IP allowlist for the portal and `/api/v1/admin/*`. **Waits for the servers and domain (Plan 5.0)** |
 | 4.8 Playwright E2E | E8 | Backlog | | The exit path in CI: resolve a report, hide a post, suspend and reinstate a user, create an invite code |
 
-**Next to build:** 4.6 Invites, audit log and admins.
+**Next to build:** 4.8 Playwright E2E. 4.7 (hosting) waits for the servers and domain (Plan 5.0).
 
 **Checked against the running API** (2026-10-15): `npm run portal:check` in `backend/` drives
 sign-in, 2FA enrollment with a real code, `GET /admin/dashboard`, the page-load refresh and sign-out
@@ -80,11 +80,30 @@ its checks are green, move the task to **Review** in the Status table above.
 | 4.5.h | 4.5 Users | Revoke all sessions with a reason note | ✅ |
 | 4.5.i | 4.5 Users | Unit and route tests | ✅ |
 | 4.5.j | 4.5 Users | Looked at in a browser against the local API (with 4.2.h) | ☐ |
+| 4.6.a | 4.6 Invites | List: code, status, uses of max, expiry, who created it, who used it | ✅ |
+| 4.6.b | 4.6 Invites | Create (uses, expiry, note) and show the code once with Copy | ✅ |
+| 4.6.c | 4.6 Invites | Revoke an active code with a note | ✅ |
+| 4.6.d | 4.6 Audit log | Read-only, newest first, with the note and a link to the target | ✅ |
+| 4.6.e | 4.6 Audit log | Filters: admin (super-admins only), action, target id, date range | ✅ |
+| 4.6.f | 4.6 Admins | List with role, 2FA state, locked, last sign-in | ✅ |
+| 4.6.g | 4.6 Admins | Add an admin; the one-time password shown once with Copy | ✅ |
+| 4.6.h | 4.6 Admins | Change role; disable / enable (enabling also unlocks); reset 2FA — each with a note | ✅ |
+| 4.6.i | 4.6 Admins | A super-admin cannot demote or disable themselves | ✅ |
+| 4.6.j | 4.6 Admins | A moderator reaching `/admins` is turned away, and no request is made | ✅ |
+| 4.6.k | 4.6 | Unit and route tests | ✅ |
+| 4.6.l | 4.6 | Looked at in a browser against the local API (with 4.2.h) | ☐ |
 
 ## Decisions taken during Phase 4
 
 | Topic | Decision | Why |
 |---|---|---|
+| The admin filter is for super-admins only (4.6) | The audit log offers a list of admins to a super-admin and nothing to a moderator, who still has the action, target and date filters | `GET /admin/admins` is a super-admin endpoint (2.12), so a moderator cannot be offered names they are not allowed to read. A free-text admin id box would have been a worse version of the target id box |
+| A gated query, not a guarded render (4.6) | Both the audit log and the Admins page pass `enabled` into `useAdmins()` rather than relying on an early return | Hooks run before the early return, so the guarded version still sent the request and had it refused. Found by the test that asserts a moderator's visit makes no request |
+| A moderator reaching `/admins` is told, not redirected (4.6) | The page renders "You don't have access to this page." | App Flow §15.9 names this state. A redirect to the dashboard would read as a broken link rather than as a boundary, and the sidebar already hides the entry |
+| The invite code is shown in a dialog *and* stays in the table (4.6) | The create dialog shows the new code with Copy, and says it is also in the table | The code is not a secret the way an admin password is — it is handed to a person who types it into the app. The dialog saves hunting for the row that was just created; the table means a lost dialog is not a lost code |
+| The one-time admin password is shown once and never stored (4.6) | It lives in the dialog's state and goes when the dialog closes, with the advice to hand it over in person or end-to-end encrypted, not by email | App Flow §15.8. It is a credential for the one surface that can suspend accounts, so it must not reach a query cache, the audit log or a re-openable screen. If it is lost, disable the account and add them again |
+| Self-demotion and self-disabling are not offered (4.6) | The role select and Disable are disabled on the signed-in admin's own row | The server refuses both (`fn_admin_update_admin`), and a locked-out super-admin is a recovery problem. Finding out by being signed out would be the worst way to learn it |
+| Copy confirms on the button (4.6) | `CopyButton` says "Copied" on itself for two seconds, with a live region for screen readers, and "Could not copy" where the clipboard is refused | The admin is looking at the button they just pressed. A refused clipboard — an insecure origin, a denied permission — would otherwise look like a button that does nothing; the value is always printed beside it as the fallback |
 | The date of birth never reaches the portal (4.5) | The account page says "Confirmed 18+ at sign-up" and the API sends no birth date | App Flow §15.5 asks for exactly that. The 18+ rule is enforced by a CHECK constraint at registration (Plan 1.4), so the date adds nothing a moderator can act on and is the most sensitive field on the account |
 | Hidden and failed posts are badged, not filtered (4.5) | The recent-posts grid shows every post with a badge on anything not `PUBLISHED` | A grid that quietly left them out would hide exactly what a moderator opened the account to check, and a hidden post is the evidence that someone already acted |
 | Search is debounced, not cancelled (4.5) | 300 ms after the typing stops, and no `signal` is handed to the API client | The client wraps every request in its own abort controller for the 20 s timeout, which replaces a caller's signal — passing TanStack Query's in would read as cancellation that never happens. Each query string is its own cache key, so a slow page cannot overwrite a newer one either way (found by the 4.5 tests, where the handed-in signal made every search fail) |

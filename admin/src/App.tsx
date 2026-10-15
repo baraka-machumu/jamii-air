@@ -5,14 +5,16 @@ import { useEffect } from 'react';
 import { Navigate, Route, Routes } from 'react-router';
 import { restore } from '@/auth/session';
 import { AppLayout } from '@/components/AppLayout';
+import Admins from '@/routes/Admins';
+import AuditLog from '@/routes/AuditLog';
 import Dashboard from '@/routes/Dashboard';
+import Invites from '@/routes/Invites';
 import Login from '@/routes/Login';
 import Post from '@/routes/Post';
 import Report from '@/routes/Report';
 import Reports from '@/routes/Reports';
 import User from '@/routes/User';
 import Users from '@/routes/Users';
-import { Placeholder } from '@/routes/placeholder';
 import { useSession } from '@/stores/session';
 
 export function App() {
@@ -47,9 +49,9 @@ export function App() {
         <Route path="posts/:id" element={<Post />} />
         <Route path="users" element={<Users />} />
         <Route path="users/:id" element={<User />} />
-        <Route path="invites" element={<Placeholder title="Invite codes" task="4.6" />} />
-        <Route path="audit-log" element={<Placeholder title="Audit log" task="4.6" />} />
-        <Route path="admins" element={<Placeholder title="Admins" task="4.6" />} />
+        <Route path="invites" element={<Invites />} />
+        <Route path="audit-log" element={<AuditLog />} />
+        <Route path="admins" element={<Admins />} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>

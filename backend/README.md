@@ -109,6 +109,16 @@ npm run portal:check
 
 Drives what the admin portal does - sign in, 2FA enrollment with a real code, `GET /admin/dashboard`, the refresh a page load uses, sign out - and prints a pass/fail line per check. It writes one clearly-named super-admin (`portal-check@jamiiair.test`), replacing it on each run, so it needs neither a browser nor an authenticator app. Never point it at a real deployment.
 
+Add `-- --prepare` to only create that admin and stop, which is how you get the QR code at a first sign-in when looking at the portal by hand.
+
+**Fixtures for the portal's end-to-end run** (development only):
+
+```bash
+npm run e2e:seed
+```
+
+Writes what `npm run e2e` in `admin/` needs (Plan 4.8): a super-admin already enrolled for 2FA, an account with a published post, and an open report about it. Everything it writes is clearly named (`e2e-*@jamiiair.test`, usernames `e2e_*`) and replaced on each run, so a finished run cannot leave a resolved report behind and fail the next one. It writes to the database directly, so the API does not have to be up, and it clears the Redis `rl:*` keys because admin sign-in allows five attempts per fifteen minutes. The TOTP secret it hands over goes to `admin/e2e/.seed.json`, which is git-ignored. Never point it at a real deployment.
+
 ### OpenAPI spec
 
 ```bash

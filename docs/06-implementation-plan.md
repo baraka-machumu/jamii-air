@@ -254,8 +254,8 @@ The moderation web app in `admin/`, against the finished admin API.
 | 4.4 | ✅ Reports queue & detail; post view; hide / restore content (a comment is moderated from the report that names it: the admin API has no endpoint to fetch one on its own) |
 | 4.5 | ✅ Users list & detail; suspend / reinstate; revoke all sessions |
 | 4.6 | ✅ Invite codes; Audit log; Admins management (super-admin only) |
-| 4.7 | Hosting: build in CI, serve the static files from nginx on our servers; **IP allowlist** for the portal and `/api/v1/admin/*` |
-| 4.8 | Playwright E2E in CI |
+| 4.7 | **Blocked on 5.0 (servers, domain).** Hosting: build in CI, serve the static files from nginx on our servers; **IP allowlist** for the portal and `/api/v1/admin/*` |
+| 4.8 | ✅ Playwright E2E in CI: the exit path in one browser session against the real API, with a real authenticator code (6/6 locally, 2026-10-15); fixtures from `npm run e2e:seed` |
 
 **Exit:** from the portal, an admin (with 2FA) resolves a report, hides a post, suspends and reinstates a user, and creates an invite code; each action appears in the audit log; Playwright E2E green.
 

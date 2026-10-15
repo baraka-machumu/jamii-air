@@ -3,3 +3,9 @@ dist/
 .env
 .env.local
 *.local
+
+# Playwright (task 4.8). The seed file holds a TOTP secret for the local e2e admin.
+e2e/.seed.json
+playwright-report/
+test-results/
+.playwright/

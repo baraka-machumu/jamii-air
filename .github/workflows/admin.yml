@@ -1,16 +1,19 @@
-# Admin portal checks (Plan task 4.1): type-check, lint, unit tests, production build.
-# Playwright E2E (4.8) and the nginx deploy (4.7) come later.
+# Admin portal checks (Plan tasks 4.1, 4.8): type-check, lint, unit tests, production build, and
+# the Playwright end-to-end run of the Phase 4 exit path. The nginx deploy (4.7) waits for the
+# servers and domain (Plan 5.0).
 name: Admin
 
 on:
   pull_request:
     paths:
       - admin/**
+      - backend/**
       - .github/workflows/admin.yml
   push:
     branches: [main]
     paths:
       - admin/**
+      - backend/**
       - .github/workflows/admin.yml
 
 concurrency:
@@ -51,3 +54,85 @@ jobs:
 
       - name: Build
         run: npm run build
+
+  # The exit path from a real browser, against a real API and database (Plan §4 Phase 4 exit):
+  # resolve a report, hide a post, suspend and reinstate a user, create an invite code, and find
+  # each of them in the audit log. Separate from the job above so a stack failure is not reported
+  # as a type error, and so the fast checks still answer a pull request while this one runs.
+  e2e:
+    name: Admin E2E
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            backend/package-lock.json
+            admin/package-lock.json
+
+      - name: Install the backend
+        working-directory: backend
+        run: npm ci
+
+      - name: Start the local stack and apply migrations
+        working-directory: backend
+        run: |
+          sed "s/change-me/ci$(openssl rand -hex 16)/g" .env.example > .env
+          npm run infra:up
+          npm run db:migrate
+
+      - name: Generate Prisma Client and TypedSQL
+        working-directory: backend
+        run: npm run db:generate
+
+      - name: Build the API
+        working-directory: backend
+        run: npm run build
+
+      # Started in the background and waited for: the seed writes straight to the database, but the
+      # portal needs the API answering before the browser opens.
+      - name: Start the API
+        working-directory: backend
+        run: |
+          npm run start:prod &
+          for _ in $(seq 1 60); do
+            if curl -fsS -o /dev/null http://localhost:3000/api/v1/admin/dashboard \
+              || [ "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3000/api/v1/admin/dashboard)" = "401" ]; then
+              echo "the API is answering"; exit 0
+            fi
+            sleep 2
+          done
+          echo "the API did not start"; exit 1
+
+      - name: Seed the fixtures
+        working-directory: backend
+        run: npm run e2e:seed
+
+      - name: Install the portal
+        working-directory: admin
+        run: npm ci
+
+      - name: Install the browser
+        working-directory: admin
+        run: npx playwright install --with-deps chromium
+
+      - name: End-to-end run
+        working-directory: admin
+        run: npm run e2e
+
+      # Traces and screenshots of whatever failed, which is the only way to read a browser failure
+      # that happened on a runner.
+      - name: Upload the report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: admin-e2e-report
+          path: |
+            admin/playwright-report/
+            admin/test-results/
+            backend/api.log
+          if-no-files-found: ignore

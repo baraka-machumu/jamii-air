@@ -26,7 +26,7 @@ export default tseslint.config(
     // Config and scripts are outside the app's tsconfig, so they are linted without type info.
     // The spread comes first: it carries its own languageOptions, which would otherwise replace
     // the Node globals set here.
-    files: ['scripts/**/*.mjs', 'vite.config.ts', 'eslint.config.js'],
+    files: ['scripts/**/*.mjs', 'vite.config.ts', 'playwright.config.ts', 'eslint.config.js', 'e2e/**/*.ts'],
     ...tseslint.configs.disableTypeChecked,
     languageOptions: { ...tseslint.configs.disableTypeChecked.languageOptions, globals: globals.node },
   },

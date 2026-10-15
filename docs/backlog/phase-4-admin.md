@@ -20,10 +20,14 @@ Done also needs a reviewed PR, a green CI run on GitHub and the portal demonstra
 | 4.4 Reports queue and detail | E6 | Review | see git log | Queue (default Open, oldest first; status / type filters on the server, reason in the portal; `j`/`k` move focus through the rows and Enter opens one), report detail (content preview blurred until clicked, the reporter's own words, other reports on the same target, the account's moderation history), hide / restore a post or comment, suspend / reinstate the account, resolve / dismiss — each with a reason note, and hiding or suspending closes the report in the same call. Opening a report marks it `REVIEWING`; a `409` names the admin who got there first. Post view at `/posts/:id` with hide / restore. 18 new tests (71 pass) |
 | 4.5 Users list and detail | E6 | Review | see git log | Search (debounced 300 ms) over username, display name and email, status filter, open-reports column; account detail (email, joined, language, invite code, last active, counts, active sessions, bio; recent posts as a grid with hidden and failed ones badged; reports against them linking back to the report; moderation history), suspend / reinstate and revoke all sessions, each with a reason note. The date of birth is never shown — only "confirmed 18+ at sign-up". 12 new tests (83 pass) |
 | 4.6 Invites, audit log, admins | E6 | Review | see git log | Invite codes (list with uses / expiry / used-by, create with uses + expiry + note → the code shown once with Copy, revoke with a note), audit log (read-only, newest first, filters for admin / action / target id / date range, target links, the note on every row), admins (list with role, 2FA state, locked and last sign-in; add → the one-time password shown once with Copy; change role; disable / enable, which also unlocks; reset 2FA — each with a note). A super-admin cannot demote or disable themselves, and a moderator reaching `/admins` is turned away without a request being made. 18 new tests (101 pass) |
-| 4.7 Hosting | E0 | Backlog | | Build in CI, static files from nginx, IP allowlist for the portal and `/api/v1/admin/*`. **Waits for the servers and domain (Plan 5.0)** |
-| 4.8 Playwright E2E | E8 | Backlog | | The exit path in CI: resolve a report, hide a post, suspend and reinstate a user, create an invite code |
+| 4.7 Hosting | E0 | **Blocked** | | Build in CI, static files from nginx, IP allowlist for the portal and `/api/v1/admin/*`. **Waits for the servers and domain (Plan 5.0)** — the only Phase 4 task not built |
+| 4.8 Playwright E2E | E8 | Review | see git log | The exit path in one browser session against the real API, with a real authenticator code: sign in → resolve a report → hide and restore a post → suspend and reinstate a user → create and revoke an invite code → find every one of those in the audit log with its note. `npm run e2e` in `admin/` after `npm run e2e:seed` in `backend/`. **Run locally 2026-10-15: 6/6 pass**, twice in a row. Added to the `Admin` CI workflow as its own job (stack, migrations, API, seed, browser) |
 
-**Next to build:** 4.8 Playwright E2E. 4.7 (hosting) waits for the servers and domain (Plan 5.0).
+**Nothing left to build in Phase 4** except 4.7 (hosting), which waits for the servers and domain
+(Plan 5.0). What remains for **Done** on 4.1–4.6 and 4.8 is the reviewed PR, a green CI run on
+GitHub, and one session clicking the portal through in a browser with a real authenticator app
+(4.2.h, and the `.f` / `.j` / `.l` items that ride along with it). The Playwright run covers the
+exit path itself and has passed locally.
 
 **Checked against the running API** (2026-10-15): `npm run portal:check` in `backend/` drives
 sign-in, 2FA enrollment with a real code, `GET /admin/dashboard`, the page-load refresh and sign-out
@@ -92,11 +96,28 @@ its checks are green, move the task to **Review** in the Status table above.
 | 4.6.j | 4.6 Admins | A moderator reaching `/admins` is turned away, and no request is made | ✅ |
 | 4.6.k | 4.6 | Unit and route tests | ✅ |
 | 4.6.l | 4.6 | Looked at in a browser against the local API (with 4.2.h) | ☐ |
+| 4.8.a | 4.8 E2E | Playwright set up against the Vite dev server on localhost, one worker, no retries | ✅ |
+| 4.8.b | 4.8 E2E | Fixture seed (`npm run e2e:seed`): an enrolled admin, an author with a published post, an open report | ✅ |
+| 4.8.c | 4.8 E2E | Sign in with a real authenticator code | ✅ |
+| 4.8.d | 4.8 E2E | Resolve a report | ✅ |
+| 4.8.e | 4.8 E2E | Hide a post, and restore it | ✅ |
+| 4.8.f | 4.8 E2E | Suspend and reinstate a user | ✅ |
+| 4.8.g | 4.8 E2E | Create an invite code, and revoke it | ✅ |
+| 4.8.h | 4.8 E2E | Every action in the audit log, with its note, and the filter narrowing it | ✅ |
+| 4.8.i | 4.8 E2E | Passing locally against the running stack (2026-10-15, 6/6) | ✅ |
+| 4.8.j | 4.8 E2E | Green in CI on GitHub | ☐ |
 
 ## Decisions taken during Phase 4
 
 | Topic | Decision | Why |
 |---|---|---|
+| The E2E admin is seeded already enrolled (4.8) | The seed writes the TOTP secret sealed with the server's own `SecretBox` and `ADMIN_TOTP_KEY`, rather than enrolling through the API | Enrolling through the API spends one of the five sign-in attempts per fifteen minutes (AP-07) **and** one 30-second TOTP window — and the server refuses a code it has already seen, so the browser's sign-in then had to wait for the next window, which is exactly how the first version failed. Sealing directly uses the same crypto module, so nothing can drift, and the seed needs no running API |
+| The codes are computed with the server's own TOTP module (4.8) | `e2e/fixtures.ts` imports `backend/src/infrastructure/crypto/totp.ts` instead of a TOTP implementation of its own | The same reasoning as `portal:check` (4.2): SHA-1, 6 digits and 30 s cannot drift apart if there is only one copy. It is the one place the portal reaches into the backend's source, and only from test code |
+| One session for the whole path (4.8) | `test.describe.serial` with a page created in `beforeAll`, signed in once | Signing in per test needs a fresh authenticator code each time, and the server refuses a code it has already seen: six tests would have meant three minutes of waiting for windows. One session is also what the exit criterion describes — an admin signs in and does the job |
+| One worker, no retries (4.8) | Playwright is configured with `workers: 1` and `retries: 0` | The run drives one shared database: two workers would fight over the same seeded report, and a retry would try to resolve a report that the first attempt had already closed. A failure here is a real failure |
+| The seed clears the rate-limit keys (4.8) | `DELETE` on `rl:*` in Redis before it writes | Admin sign-in allows five attempts per fifteen minutes, and a run that failed, was fixed and run again spends one each time. The same workaround the mobile live tests document for the registration limit, and another reason this script must never be pointed at a deployment |
+| The portal is served by Vite, not a preview of the build (4.8) | `playwright.config.ts` starts `npm run dev` on port 5174 | The admin refresh cookie is `Secure` + `SameSite=strict`, and only `localhost` counts as a secure origin over plain HTTP — the same reason development runs there (4.2). Vite proxies `/api`, so the browser makes same-origin requests exactly as it will behind nginx (4.7) |
+| E2E is its own CI job (4.8) | A second job in the `Admin` workflow, after the fast checks, with the stack, migrations, the API and the browser | A stack failure should not be reported as a type error, and a pull request still gets the type-check, lint, unit tests and build answered quickly while the browser run goes on. The traces and screenshots upload on failure, which is the only way to read a browser failure that happened on a runner |
 | The admin filter is for super-admins only (4.6) | The audit log offers a list of admins to a super-admin and nothing to a moderator, who still has the action, target and date filters | `GET /admin/admins` is a super-admin endpoint (2.12), so a moderator cannot be offered names they are not allowed to read. A free-text admin id box would have been a worse version of the target id box |
 | A gated query, not a guarded render (4.6) | Both the audit log and the Admins page pass `enabled` into `useAdmins()` rather than relying on an early return | Hooks run before the early return, so the guarded version still sent the request and had it refused. Found by the test that asserts a moderator's visit makes no request |
 | A moderator reaching `/admins` is told, not redirected (4.6) | The page renders "You don't have access to this page." | App Flow §15.9 names this state. A redirect to the dashboard would read as a broken link rather than as a boundary, and the sidebar already hides the entry |

@@ -2,8 +2,10 @@
 // name, role and Log out, content capped at 1440 px. Admins-only links are hidden for a
 // moderator - the API refuses them anyway, and a dead link is worse than no link.
 import { Link, NavLink, Outlet, useLocation } from 'react-router';
+import { SessionExpiryWarning } from '@/components/SessionExpiryWarning';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { logout } from '@/auth/session';
 import { useSession } from '@/stores/session';
 
 interface NavItem {
@@ -23,7 +25,6 @@ const NAV: NavItem[] = [
 
 export function AppLayout() {
   const admin = useSession((s) => s.admin);
-  const signOut = useSession((s) => s.signOut);
   const { pathname } = useLocation();
   const items = NAV.filter((item) => !item.superAdminOnly || admin?.role === 'SUPER_ADMIN');
 
@@ -59,8 +60,9 @@ export function AppLayout() {
               {admin.displayName} · {admin.role === 'SUPER_ADMIN' ? 'Super-admin' : 'Moderator'}
             </span>
           )}
-          <Button variant="outline" size="sm" onClick={() => signOut()}>Log out</Button>
+          <Button variant="outline" size="sm" onClick={() => logout()}>Log out</Button>
         </header>
+        <SessionExpiryWarning />
         <main className="mx-auto w-full max-w-[1440px] flex-1 p-6">
           <Outlet />
         </main>

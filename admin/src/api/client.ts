@@ -18,6 +18,14 @@ import type { components, paths } from './schema';
 export const REQUEST_TIMEOUT_MS = 20_000;
 
 /**
+ * The refresh and logout routes act on the cookie, so the server wants proof the call came from
+ * the portal's own code and not from a form on another site (it answers CSRF_CHECK_FAILED
+ * otherwise). The spec marks the header required, so those two calls also pass it as a typed
+ * parameter - `ADMIN_CLIENT_HEADER` below - while the middleware sets it on everything.
+ */
+export const ADMIN_CLIENT_HEADER = { header: { 'X-Admin-Client': '1' } } as const;
+
+/**
  * Requests go to the origin that served the portal. It is spelled out rather than left relative
  * because openapi-fetch builds a `URL` from it, which needs an origin; tests pass their own.
  */
@@ -41,14 +49,25 @@ async function send(request: Request, baseFetch: typeof fetch): Promise<Response
   }
 }
 
+/**
+ * The global fetch is looked up per request rather than captured when this module loads, so tests
+ * (and anything else that replaces it) are actually used. `api` below is built at load time, which
+ * would otherwise freeze whatever fetch existed then.
+ */
+const globalFetch: typeof fetch = (input, init) => fetch(input, init);
+
 let inflightRefresh: Promise<boolean> | null = null;
 
 /** Rotate the session with the refresh cookie. Shared: however many requests hit a 401 together,
  * only one refresh goes out. */
-export function refreshSession(baseFetch: typeof fetch = fetch, baseUrl = apiOrigin()): Promise<boolean> {
+export function refreshSession(baseFetch: typeof fetch = globalFetch, baseUrl = apiOrigin()): Promise<boolean> {
   inflightRefresh ??= (async () => {
     try {
-      const response = await baseFetch(`${baseUrl}/api/v1/admin/auth/refresh`, { method: 'POST', credentials: 'include' });
+      const response = await baseFetch(`${baseUrl}/api/v1/admin/auth/refresh`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'X-Admin-Client': '1' },
+      });
       if (!response.ok) return false;
       const session = await response.json() as components['schemas']['AdminSessionResponse'];
       useSession.getState().signIn(session.accessToken, session.admin);
@@ -62,7 +81,7 @@ export function refreshSession(baseFetch: typeof fetch = fetch, baseUrl = apiOri
   return inflightRefresh;
 }
 
-export function createApiClient(baseUrl = apiOrigin(), baseFetch: typeof fetch = fetch) {
+export function createApiClient(baseUrl = apiOrigin(), baseFetch: typeof fetch = globalFetch) {
   const client = createClient<paths>({
     baseUrl,
     credentials: 'include',
@@ -85,6 +104,7 @@ function withToken(headers: Headers): Headers {
   const next = new Headers(headers);
   const token = useSession.getState().accessToken;
   if (token) next.set('Authorization', `Bearer ${token}`);
+  next.set('X-Admin-Client', '1');
   return next;
 }
 
@@ -92,6 +112,10 @@ const authHeader: Middleware = {
   onRequest({ request }) {
     const token = useSession.getState().accessToken;
     if (token) request.headers.set('Authorization', `Bearer ${token}`);
+    // The refresh and logout routes refuse a request without this header (CSRF_CHECK_FAILED):
+    // they act on the cookie, so the server wants proof the call came from the portal's own code
+    // and not from a form on another site. Sent on everything, to not have to remember which.
+    request.headers.set('X-Admin-Client', '1');
     return request;
   },
 };

@@ -26,15 +26,31 @@ export class ApiError extends Error {
 
 /** What a moderator reads. Codes with no entry fall back to `unknown`. */
 const MESSAGES: Record<string, string> = {
-  ADMIN_INVALID_CREDENTIALS: 'Incorrect email or password.',
+  // Sign-in (App Flow §15.2). The message for wrong credentials is deliberately vague: it must not
+  // say whether the email exists.
+  INVALID_CREDENTIALS: 'Incorrect email or password.',
   ADMIN_LOCKED: 'This account is locked after too many failed attempts. A super-admin can unlock it.',
-  ADMIN_TOTP_INVALID: 'That code is not right. Check your authenticator and try again.',
-  ADMIN_TOTP_REQUIRED: 'Enter the 6-digit code from your authenticator.',
+  INVALID_TOTP: 'That code is not right. Check your authenticator and try again.',
+  CHALLENGE_EXPIRED: 'That took too long. Please sign in again.',
+  SESSION_EXPIRED: 'Your session expired. Please sign in again.',
+  SESSION_INVALID: 'Your session is no longer valid. Please sign in again.',
+  UNAUTHORIZED: 'Please sign in again.',
+  CSRF_CHECK_FAILED: 'The portal could not prove this request came from it. Reload the page.',
+  // Permissions and lookups
   ADMIN_FORBIDDEN: 'Your role does not allow this action.',
   ADMIN_NOT_FOUND: 'That admin no longer exists.',
-  ADMIN_SESSION_EXPIRED: 'Your session expired. Please sign in again.',
+  FORBIDDEN: 'You are not allowed to do that.',
+  NOT_FOUND: 'That is no longer there.',
+  // Input
   VALIDATION_FAILED: 'Some details need fixing.',
+  NOTE_REQUIRED: 'A reason note is required.',
+  PASSWORD_TOO_SHORT: 'Use at least 12 characters.',
+  PASSWORD_TOO_COMMON: 'That password is too easy to guess. Choose another.',
+  INVALID_PASSWORD: 'That password is not right.',
+  // Everything else
   RATE_LIMITED: 'Too many attempts. Wait a moment and try again.',
+  SERVICE_UNAVAILABLE: 'The server is busy. Try again in a moment.',
+  INTERNAL_ERROR: 'Something went wrong on the server. Try again.',
   NETWORK_ERROR: "Couldn't reach the server. Check your connection.",
   TIMEOUT: 'The server took too long to answer.',
   UNKNOWN: 'Something went wrong. Please try again.',

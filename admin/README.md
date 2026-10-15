@@ -11,9 +11,12 @@ npm install
 npm run dev          # http://localhost:5173, /api proxied to http://localhost:3000
 ```
 
-Point it at another API with `ADMIN_API_URL=http://192.168.0.65:3000 npm run dev`. The portal makes
-**same-origin** requests — Vite proxies `/api` in development, and in production nginx serves the
-portal and the API on one host (Plan 4.7) — so the refresh cookie needs no CORS setup.
+The portal makes **same-origin** requests — Vite proxies `/api` in development, and in production
+nginx serves the portal and the API on one host (Plan 4.7) — so the refresh cookie needs no CORS
+setup. Point the proxy at another API with `ADMIN_API_URL=http://192.168.0.65:3000 npm run dev`;
+keep opening the portal on `localhost`, though, because the admin refresh cookie is `Secure` and
+`SameSite=strict`, and a browser only treats `localhost` as a secure origin over plain HTTP. Opening
+the portal itself on a LAN address would sign you out on every reload.
 
 The API must allow admin sign-in: see `backend/README.md` for seeding the first admin.
 

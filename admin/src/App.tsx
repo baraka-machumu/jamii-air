@@ -1,7 +1,9 @@
 // The portal's routes (App Flow §15.1). Everything but Login sits behind the session: a signed-out
 // admin is sent to /login, and /login redirects into the portal once signed in, so no screen can
 // be reached with no session (the API would refuse it anyway).
+import { useEffect } from 'react';
 import { Navigate, Route, Routes } from 'react-router';
+import { restore } from '@/auth/session';
 import { AppLayout } from '@/components/AppLayout';
 import Login from '@/routes/Login';
 import { Placeholder } from '@/routes/placeholder';
@@ -9,6 +11,12 @@ import { useSession } from '@/stores/session';
 
 export function App() {
   const status = useSession((s) => s.status);
+
+  // The access token is memory-only, so every page load asks the refresh cookie whether a session
+  // is still running (App Flow §15.2). It runs once, not per route.
+  useEffect(() => {
+    void restore();
+  }, []);
 
   // The access token is memory-only, so a reload has none until the refresh lands (task 4.2
   // starts it). Showing nothing for that moment avoids a flash of Login for a signed-in admin.

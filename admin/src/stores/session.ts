@@ -2,7 +2,8 @@
 // an HttpOnly cookie the browser sends by itself, so nothing is kept in localStorage where a
 // cross-site script could read it. A reload therefore starts with no token and refreshes once.
 //
-// Idle and absolute timeouts (30 min idle with a warning at 25, 12 h total) belong to task 4.2.
+// The idle and absolute timeouts (30 min idle with a warning at 25, 12 h total) are enforced in
+// src/auth/timeout.ts, which needs to know when this session started.
 import { create } from 'zustand';
 import type { components } from '@/api/schema';
 
@@ -14,6 +15,8 @@ interface SessionState {
   status: SessionStatus;
   accessToken: string | null;
   admin: AdminIdentity | null;
+  /** When this sign-in happened, for the 12 h absolute limit. */
+  startedAt: number | null;
   /** Why the last sign-out happened, for the message on Login. */
   notice: 'expired' | null;
   signIn: (accessToken: string, admin: AdminIdentity) => void;
@@ -24,7 +27,16 @@ export const useSession = create<SessionState>((set) => ({
   status: 'restoring',
   accessToken: null,
   admin: null,
+  startedAt: null,
   notice: null,
-  signIn: (accessToken, admin) => set({ status: 'signedIn', accessToken, admin, notice: null }),
-  signOut: (notice = null) => set({ status: 'signedOut', accessToken: null, admin: null, notice }),
+  // A refresh keeps the session that is already running: startedAt moves only on a real sign-in,
+  // or the 12 h limit would never be reached.
+  signIn: (accessToken, admin) => set((s) => ({
+    status: 'signedIn',
+    accessToken,
+    admin,
+    startedAt: s.startedAt ?? Date.now(),
+    notice: null,
+  })),
+  signOut: (notice = null) => set({ status: 'signedOut', accessToken: null, admin: null, startedAt: null, notice }),
 }));

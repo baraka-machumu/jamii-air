@@ -1,7 +1,18 @@
 /* The portal's tokens (Design Brief §13): Tailwind v4 with the Jamii colours mapped onto the
    shadcn/ui variable names, so components added with the shadcn CLI match without edits.
-   Light mode is required; dark mode is optional and not built. English only. */
+
+   Dark mode is now built. It is *selected*, not an automatic flip: every dark value is its own
+   step chosen against the dark surface. It resolves in this order, and the viewer's choice wins
+   over the OS either way — `html[data-theme]` is stamped by src/stores/theme.ts.
+
+   The chart series colours are a separate, validated set (see --chart-1…4). They are not the UI
+   primary: brand terracotta is chrome (buttons, focus ring), while chart data uses hues that were
+   run through the data-viz checks for lightness band, chroma floor, colourblind separation and
+   contrast against each surface. Light slots 3 and 4 came back under 3:1, which obliges visible
+   labels or a table view — the dashboard keeps both (direct end labels and Show daily numbers). */
 @import "tailwindcss";
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 @theme {
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -33,25 +44,101 @@
   --color-input: #e5e7eb;
   --color-ring: #c2410c;
 
+  /* The app frame sits a step back from the cards it holds. */
+  --color-canvas: #f7f7f8;
+  --color-sidebar: #fbfbfc;
+
+  /* Chart series, validated for the light surface. Slot 1 is orange so trends read as Jamii. */
+  --color-chart-1: #eb6834;
+  --color-chart-2: #2a78d6;
+  --color-chart-3: #1baf7a;
+  --color-chart-4: #eda100;
+  --color-chart-grid: #ececed;
+
   --radius-sm: 0.375rem;
   --radius-md: 0.5rem;
   --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+
+  /* Flat tools look unfinished; heavy shadows look like a toy. Two steps, both subtle. */
+  --shadow-card: 0 1px 2px 0 rgb(17 24 39 / 0.04), 0 1px 3px 0 rgb(17 24 39 / 0.06);
+  --shadow-raised: 0 4px 6px -1px rgb(17 24 39 / 0.07), 0 2px 4px -2px rgb(17 24 39 / 0.05);
+}
+
+/* Dark mode: each value is its own step, and the series hues are re-stepped for the dark
+   surface (band L 0.48–0.67), not lightened copies of the light ones. */
+@layer theme {
+  [data-theme="dark"] {
+    --color-background: #0e0e12;
+    --color-foreground: #f3f4f6;
+    --color-card: #15151c;
+    --color-card-foreground: #f3f4f6;
+    --color-popover: #1a1a22;
+    --color-popover-foreground: #f3f4f6;
+    --color-primary: #f97316;
+    --color-primary-foreground: #1b1206;
+    --color-secondary: #22222c;
+    --color-secondary-foreground: #f3f4f6;
+    --color-muted: #22222c;
+    --color-muted-foreground: #9ca3af;
+    --color-destructive: #f87171;
+    --color-destructive-foreground: #1b0707;
+    --color-success: #4ade80;
+    --color-warning: #fbbf24;
+    --color-info: #60a5fa;
+    --color-border: #2a2a33;
+    --color-input: #2a2a33;
+    --color-ring: #f97316;
+
+    --color-canvas: #0a0a0d;
+    --color-sidebar: #111118;
+
+    --color-chart-1: #d95926;
+    --color-chart-2: #3987e5;
+    --color-chart-3: #199e70;
+    --color-chart-4: #c98500;
+    --color-chart-grid: #26262f;
+
+    --shadow-card: 0 1px 2px 0 rgb(0 0 0 / 0.5), 0 1px 3px 0 rgb(0 0 0 / 0.4);
+    --shadow-raised: 0 4px 6px -1px rgb(0 0 0 / 0.6), 0 2px 4px -2px rgb(0 0 0 / 0.5);
+  }
 }
 
 @layer base {
   * {
     border-color: var(--color-border);
   }
+  html {
+    color-scheme: light;
+  }
+  html[data-theme="dark"] {
+    color-scheme: dark;
+  }
   body {
-    background-color: var(--color-background);
+    background-color: var(--color-canvas);
     color: var(--color-foreground);
     /* Compact tool, not a brand showcase: 14 px body text (Design Brief §13 Density). */
     font-size: 0.875rem;
     line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
   }
   /* Every interactive element keeps a visible focus ring: the reports queue is driven by keyboard. */
   :focus-visible {
     outline: 2px solid var(--color-ring);
     outline-offset: 2px;
+  }
+  /* Counts, dates and money line up column to column without being asked each time. */
+  th, td {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer utilities {
+  /* A moderator reads this screen for an hour at a time; honour the OS setting. */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }

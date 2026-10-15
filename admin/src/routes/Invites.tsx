@@ -9,6 +9,7 @@ import { Link } from 'react-router';
 import { type CreatedInvite, useCreateInvite, useInvites, useRevokeInvite } from '@/api/invites';
 import { CopyButton } from '@/components/CopyButton';
 import { ErrorBanner } from '@/components/ErrorBanner';
+import { PageHeader } from '@/components/PageHeader';
 import { Modal } from '@/components/Modal';
 import { NoteDialog } from '@/components/NoteDialog';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -31,16 +32,11 @@ export default function Invites() {
 
   return (
     <section>
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-semibold">Invite codes</h1>
-          <p className="mt-1 text-muted-foreground">
-            The app is invite-only during the pilot. A code can be used by more than one person if
-            you let it.
-          </p>
-        </div>
-        <Button onClick={() => setCreating(true)}>Create a code</Button>
-      </div>
+      <PageHeader
+        title="Invite codes"
+        description="The app is invite-only during the pilot. A code can be used by more than one person if you let it."
+        actions={<Button onClick={() => setCreating(true)}>Create a code</Button>}
+      />
 
       {invites.isError && <ErrorBanner error={invites.error} onRetry={() => void invites.refetch()} />}
 

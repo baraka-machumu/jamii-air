@@ -10,6 +10,7 @@ import {
   DEFAULT_USER_FILTERS, type UserFilters, USER_STATUSES, useDebounced, useUsers,
 } from '@/api/users';
 import { ErrorBanner } from '@/components/ErrorBanner';
+import { PageHeader } from '@/components/PageHeader';
 import { SkeletonRows } from '@/components/SkeletonRows';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
@@ -30,7 +31,10 @@ export default function Users() {
 
   return (
     <section>
-      <h1 className="text-xl font-semibold">Users</h1>
+      <PageHeader
+        title="Users"
+        description="Everyone who has an account. Search by username, display name or email."
+      />
 
       <div className="mt-3 flex flex-wrap items-end gap-3">
         <div className="min-w-64 flex-1">

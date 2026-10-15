@@ -9,6 +9,7 @@ import { Link } from 'react-router';
 import { DEFAULT_AUDIT_FILTERS, type AuditFilters, targetPath, useAudit } from '@/api/audit';
 import { useAdmins } from '@/api/admins';
 import { ErrorBanner } from '@/components/ErrorBanner';
+import { PageHeader } from '@/components/PageHeader';
 import { SkeletonRows } from '@/components/SkeletonRows';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,10 +33,10 @@ export default function AuditLog() {
 
   return (
     <section>
-      <h1 className="text-xl font-semibold">Audit log</h1>
-      <p className="mt-1 text-muted-foreground">
-        Every moderation and admin action, newest first. Nothing here can be changed.
-      </p>
+      <PageHeader
+        title="Audit log"
+        description="Every moderation and admin action, newest first. Nothing here can be changed."
+      />
 
       <div className="mt-3 flex flex-wrap items-end gap-3">
         {isSuperAdmin && (

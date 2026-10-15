@@ -188,10 +188,12 @@ describe('the audit log', () => {
     server(stack({ '/api/v1/admin/audit-log': { items: [auditEntry()], nextCursor: null } }));
     renderAt(<App />, '/audit-log');
 
-    expect(await screen.findByText('Zawadi')).toBeInTheDocument();
-    // Scoped to the table: the action filter lists the same words as its options.
-    const log = within(screen.getByRole('table'));
-    expect(log.getByText('Suspended the account')).toBeInTheDocument();
+    // Wait for a cell of the log itself, not for an admin's name: the names also fill the Who
+    // filter, which is fed by a different request and can arrive while the log is still loading.
+    const table = screen.getByRole('table');
+    const log = within(table);
+    expect(await log.findByText('Suspended the account')).toBeInTheDocument();
+    expect(log.getByText('Zawadi')).toBeInTheDocument();
     expect(log.getByText('Repeated harassment')).toBeInTheDocument();
     expect(log.getByRole('link', { name: /user aaaaaaaa/ }))
       .toHaveAttribute('href', '/users/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee');

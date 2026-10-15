@@ -43,7 +43,9 @@ describe('once signed in', () => {
     useSession.getState().signIn('token', admin);
     renderAt(<App />, '/');
 
-    expect(screen.getByText('Moda · Moderator')).toBeInTheDocument();
+    // The admin's name and role now sit on the account menu's trigger.
+    expect(screen.getByRole('button', { name: 'Account: Moda' })).toBeInTheDocument();
+    expect(screen.getByText('Moderator')).toBeInTheDocument();
     for (const section of ['Dashboard', 'Reports', 'Users', 'Invite codes', 'Audit log']) {
       expect(screen.getByRole('link', { name: section })).toBeInTheDocument();
     }
@@ -55,7 +57,8 @@ describe('once signed in', () => {
     useSession.getState().signIn('token', superAdmin);
     renderAt(<App />, '/');
     expect(screen.getByRole('link', { name: 'Admins' })).toBeInTheDocument();
-    expect(screen.getByText('Bosi · Super-admin')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Account: Bosi' })).toBeInTheDocument();
+    expect(screen.getByText('Super-admin')).toBeInTheDocument();
   });
 
   it('marks the open section for a screen reader, not just visually', () => {
@@ -73,7 +76,9 @@ describe('once signed in', () => {
   it('logs out to Login', async () => {
     useSession.getState().signIn('token', admin);
     renderAt(<App />, '/');
-    await userEvent.click(screen.getByRole('button', { name: 'Log out' }));
+    // Log out lives in the account menu now, so it has to be opened first.
+    await userEvent.click(screen.getByRole('button', { name: 'Account: Moda' }));
+    await userEvent.click(await screen.findByRole('menuitem', { name: 'Log out' }));
     expect(useSession.getState().status).toBe('signedOut');
     expect(screen.getByRole('heading', { name: 'Jamii Air Admin' })).toBeInTheDocument();
   });

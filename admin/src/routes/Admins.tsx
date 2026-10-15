@@ -14,6 +14,7 @@ import {
 import { errorMessage } from '@/api/errors';
 import { CopyButton } from '@/components/CopyButton';
 import { ErrorBanner } from '@/components/ErrorBanner';
+import { PageHeader } from '@/components/PageHeader';
 import { Field } from '@/components/Field';
 import { Modal } from '@/components/Modal';
 import { NoteDialog } from '@/components/NoteDialog';
@@ -59,15 +60,11 @@ export default function Admins() {
 
   return (
     <section>
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-semibold">Admins</h1>
-          <p className="mt-1 text-muted-foreground">
-            Everyone who can sign in to this portal. 2FA is mandatory for all of them.
-          </p>
-        </div>
-        <Button onClick={() => setCreating(true)}>Add an admin</Button>
-      </div>
+      <PageHeader
+        title="Admins"
+        description="Everyone who can sign in to this portal. 2FA is mandatory for all of them."
+        actions={<Button onClick={() => setCreating(true)}>Add an admin</Button>}
+      />
 
       {admins.isError && <ErrorBanner error={admins.error} onRetry={() => void admins.refetch()} />}
 

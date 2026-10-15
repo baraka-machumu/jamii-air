@@ -29,6 +29,35 @@ GitHub, and one session clicking the portal through in a browser with a real aut
 (4.2.h, and the `.f` / `.j` / `.l` items that ride along with it). The Playwright run covers the
 exit path itself and has passed locally.
 
+**Design pass and a longer session (2026-10-16).** Asked for after the first UAT sign-in: the
+portal worked but looked function-first, and 30 minutes of idle was too short for real moderation.
+
+- **Sessions idle out after 60 minutes** (warning at 55), changed in both places that enforce it -
+  `ADMIN_IDLE_MS` on the server and `IDLE_MS` in the portal - so the portal cannot promise an hour
+  the server will not honour. The 12-hour absolute limit is unchanged.
+- **A dashboard shell, not a page with links.** Sidebar grouped into Moderation and Administration
+  with lucide icons, collapsible (remembered per browser) and an overlay below `lg`; a top bar that
+  names the section and carries an account menu; one `PageHeader` shape across every screen; cards
+  and tables with sticky headers, hover rows and real elevation.
+- **Dark mode**, selected rather than flipped: every value is its own step against the dark
+  surface, including the chart hues, and the choice (light / dark / system) is stamped on `<html>`
+  before first paint.
+- **A headline chart** (recharts) for one KPI at a time, with a grid, dated ticks, a crosshair and
+  a tooltip. The twelve tiles keep the hand-built 36 px sparkline - at that size axes are noise -
+  now drawn in the validated series colour. The chart colours were run through the data-viz checks
+  (lightness band, chroma floor, colourblind separation, contrast) rather than picked by eye; two
+  light-mode slots came back under 3:1, which obliges visible labels or a table view, and the
+  dashboard keeps both. recharts is lazy-loaded, so the first load is 170 kB gzipped rather than
+  280 kB.
+
+Tests: 101 pass. The three suites that broke were asserting on markup rather than meaning, so the
+fix was better handles, not looser ones - each stat tile is now a named `group`, which both a test
+and a screen reader can ask for. `npm test` also no longer ends in a failed suite: vitest's default
+include was collecting the Playwright spec, which would have hidden a real failure.
+
+**The Playwright exit path was re-run after the redesign: 6/6 pass** against the real API in
+Chromium, and the dashboard and reports screens were captured in both themes and looked at.
+
 **Checked against the running API** (2026-10-15):
 
 - `npm run portal:check` in `backend/` drives sign-in, 2FA enrollment with a real code,

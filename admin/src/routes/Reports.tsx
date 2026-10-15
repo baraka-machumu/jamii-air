@@ -13,6 +13,7 @@ import {
   reasonLabel, targetLabel, useReports,
 } from '@/api/reports';
 import { ErrorBanner } from '@/components/ErrorBanner';
+import { PageHeader } from '@/components/PageHeader';
 import { SkeletonRows } from '@/components/SkeletonRows';
 import { StatusBadge } from '@/components/StatusBadge';
 import { statusLabel } from '@/lib/status';
@@ -60,15 +61,11 @@ export default function Reports() {
 
   return (
     <section>
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-semibold">Reports</h1>
-          <p className="mt-1 text-muted-foreground">
-            Oldest first. Press <Key>j</Key> and <Key>k</Key> to move through the queue, <Key>Enter</Key> to open one.
-          </p>
-        </div>
-        <Filters filters={filters} onChange={setFilters} />
-      </div>
+      <PageHeader
+        title="Reports"
+        description={<>Oldest first. Press <Key>j</Key> and <Key>k</Key> to move through the queue, <Key>Enter</Key> to open one.</>}
+        actions={<Filters filters={filters} onChange={setFilters} />}
+      />
 
       {reports.isError && <ErrorBanner error={reports.error} onRetry={() => void reports.refetch()} />}
 

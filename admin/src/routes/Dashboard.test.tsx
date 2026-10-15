@@ -71,7 +71,7 @@ describe('what needs attention', () => {
     server(dashboardOnly(dashboard()));
     renderAt(<App />, '/');
 
-    const tile = (await screen.findByText('Open reports')).closest('div')!;
+    const tile = await screen.findByRole('group', { name: 'Open reports' });
     expect(within(tile).getByText('3')).toBeInTheDocument();
     expect(within(tile).getByText(/Oldest waiting/)).toHaveTextContent('4 days');
   });
@@ -80,7 +80,7 @@ describe('what needs attention', () => {
     server(dashboardOnly(dashboard({ openReports: 0, oldestOpenReportAt: null })));
     renderAt(<App />, '/');
 
-    const tile = (await screen.findByText('Open reports')).closest('div')!;
+    const tile = await screen.findByRole('group', { name: 'Open reports' });
     expect(within(tile).getByText('Nothing waiting')).toBeInTheDocument();
   });
 
@@ -100,19 +100,21 @@ describe('the KPI tiles', () => {
     server(dashboardOnly(dashboard()));
     renderAt(<App />, '/');
 
+    // By tile, not by text: each label also appears in the headline chart's metric picker, so
+    // plain text would match more than one element.
     for (const label of [
       'Registered users', 'Daily active users', 'New sign-ups', 'Posts', 'Likes', 'Comments',
       'Follows', 'D1 retention', 'D7 retention', 'D30 retention',
       'New users who followed', 'New users who posted',
     ]) {
-      expect(await screen.findByText(label)).toBeInTheDocument();
+      expect(await screen.findByRole('group', { name: label })).toBeInTheDocument();
     }
 
-    const posts = (await screen.findByText('Posts')).closest('div')!;
+    const posts = await screen.findByRole('group', { name: 'Posts' });
     expect(within(posts).getByText('51')).toBeInTheDocument();
     expect(within(posts).getByText(/\+11 vs 30 days ago/)).toBeInTheDocument();
 
-    const retention = (await screen.findByText('D1 retention')).closest('div')!;
+    const retention = await screen.findByRole('group', { name: 'D1 retention' });
     expect(within(retention).getByText('46%')).toBeInTheDocument();
   });
 
@@ -120,7 +122,7 @@ describe('the KPI tiles', () => {
     server(dashboardOnly(dashboard({ metrics: { posts: points(1, 2, 3) } })));
     renderAt(<App />, '/');
 
-    const likes = (await screen.findByText('Likes')).closest('div')!;
+    const likes = await screen.findByRole('group', { name: 'Likes' });
     expect(within(likes).getByText('No data yet')).toBeInTheDocument();
   });
 

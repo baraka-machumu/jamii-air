@@ -1,7 +1,8 @@
 // The trend line in a stat tile (App Flow §15.3 "simple trend lines").
 //
-// One series, so one hue: a recessive line for the range with the latest point in the accent, and
-// no axes, grid or per-point labels - the tile's own value is the endpoint, and every number is
+// One series, so one hue - the validated chart-1 slot, not the UI primary (src/index.css) - with
+// the latest point marked, and no axes, grid or per-point labels: the tile's own value is the
+// endpoint, and every number is
 // also in the dashboard's table view, so the tooltip only ever enhances.
 //
 // Hover and keyboard focus show the same thing. The pointer is matched to the nearest point across
@@ -68,11 +69,11 @@ export function Sparkline({ points, label, format }: {
         onBlur={() => setActive(null)}
       >
         {/* 2px line, no fill: an area under a 36px sparkline reads as a block, not a trend. */}
-        <path d={path} fill="none" stroke="var(--color-muted-foreground)" strokeWidth="2"
+        <path d={path} fill="none" stroke="var(--color-chart-1)" strokeWidth="2"
           strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
         {/* The point being read, in the accent, with a surface ring so it clears the line. */}
         <circle cx={x(shown)} cy={y(point.value)} r="3"
-          fill="var(--color-primary)" stroke="var(--color-card)" strokeWidth="2" />
+          fill="var(--color-chart-1)" stroke="var(--color-card)" strokeWidth="2" />
       </svg>
       {active !== null && (
         <p id={tooltipId} role="status"

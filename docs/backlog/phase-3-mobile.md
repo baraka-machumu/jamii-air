@@ -12,6 +12,27 @@ Board columns as in Plan §2.3. **Review** = built, every check green locally, c
 
 **Nothing left to build in Phase 3.** The **new dev build is done**: `8eae3ca2` ([install link](https://expo.dev/accounts/bmachumu/projects/jamii-air/builds/8eae3ca2-3c49-4459-95a9-15f2a2c31083)), built 2026-10-15 from `6864cbb`, the first build with `expo-updates` in the native layer. What is left is one phone session on it: a smoke test of the new native layer (sign in, feed, like, comment, camera and library, Copy link, one backgrounded push), the Update required screen against the API started with `MIN_APP_VERSION=9.9.9` (3.12.d), the accessibility pass on the real OS at maximum font and display size plus a TalkBack pass (3.12.c), and the first `npm run e2e` run (3.12.a). **3.12.a needs `adb`**, so it needs USB or wireless debugging; `adb` is not on the PATH on this laptop (it is at `%LOCALAPPDATA%\Android\Sdk\platform-tools`). The fixes from the 2026-10-14 session need no re-check: a dev build serves JS from Metro, so they were already running when they passed. Then Phase 3 wants its reviewed PR, green CI and the `preview` demo for **Done**, and Phase 4 (admin portal) can start.
 
+**First fixes from UAT (2026-10-15).** With the app on the UAT API, two faults showed up that local
+testing had not:
+
+- **The keyboard covered the lower half of every form.** `KeyboardAvoidingView` was given
+  `behavior={undefined}` on Android, where it does nothing under edge-to-edge, so a form kept the
+  full window height and its `ScrollView` never gained room for the keyboard — on Sign up the
+  Password field (the fourth) could not be reached at all. Every affected container now shrinks by
+  the reported keyboard height, the same fix as the comment input in 3.9. It was not only Sign up:
+  `FormScreen` (Sign up, Log in, Forgot password, Change password, Delete account), the Create-flow
+  caption screen, Edit profile, onboarding and the bottom sheet (so the **report details field**)
+  each had their own copy.
+- **The Profile tab was all but invisible.** It is the only tab drawn as a ring rather than a
+  stroked icon, and it opted out of the colour system: unfocused, the ring was `transparent`,
+  leaving a `surface` disc on `bg` — about 1.1:1 in both themes, below the 3:1 WCAG asks of a
+  control. It now takes the same `color` as the other four tabs.
+
+Both are JavaScript only, so they went to the installed `preview` APK over **EAS Update**
+(`c87145ce`, runtime 1.0.0) with no rebuild — the first time 3.12.e earned its keep. 210 jest tests
+pass (+4); each new test was confirmed to fail with its fix reverted. **Still wants a look on the
+phone:** both are layout and contrast, which tests can only approximate.
+
 The GitHub board does not exist yet, so this table is the tracker (the `gh` CLI is available: `gh run list` shows CI).
 
 | Task | Column | Commit | Notes |
@@ -110,6 +131,7 @@ The Phase 3 tasks broken into trackable items. Tick an item (☐ → ✅) in the
 | Minimum version (3.12.d) | A 426 `APP_VERSION_UNSUPPORTED` from **any** route raises a gate that is set once and never cleared, and the root layout renders it **instead of the router**, so no screen and no deep link can get behind it. The check runs before the API client's auth-route exit, because the 426 may answer the refresh at launch, and it ends the splash wait. The button is the Play Store page built from the package name; iOS has no store listing yet (Plan 5.0), so the screen shows a note instead of a dead button | App Flow §3.3, TRD API-07; nothing in the app works against an API that refuses the build |
 | Accessibility (3.12.c) | The audit found the labels, roles, states and 44 pt targets already in place, so the pass added what was missing: caps on OS font growth (`maxFontScale.text` 1.8 by default, `compact` 1.3 inside anything of a fixed height — pill buttons, input rows, the tab badge, the wordmark), and `Spinner`, which announces itself, for waits that are the whole screen or list. Paging footers stay silent on purpose: content is already on screen and an announcement per page talks over the reading. A sweep test renders Welcome, Sign up and the feed and fails if any reachable control has no name | Design Brief §8; a clipped label and a silent screen are the two failures a phone's accessibility settings actually produce |
 | EAS Update (3.12.e) | One channel per build profile (`development`, `preview`, `production`), `runtimeVersion` policy `appVersion`: an update only reaches builds with the same version, so JS can never land on a different native side. The app waits at most 8 s for an update at launch (the same budget as the session restore) and otherwise starts on what it has. `expo-updates` is a native module, so **the dev build on the phone is stale until the next `npm run build:dev`**; dev builds ignore updates anyway, so this is for `preview` and `production` | Plan 3.12; a JS-only fix (like the two from the 3.9 phone session) can then reach installed builds without a rebuild |
+| Keyboard and contrast faults found on UAT (2026-10-15) | The keyboard fix is **one shared mechanism**, not a patch per screen: every container that holds an input shrinks by the height `useAndroidKeyboardHeight()` reports, which is what `adjustResize` did before edge-to-edge made the window stop resizing. The Profile tab now derives its ring colour from the same `focused ? text : textMuted` the other four tabs use, rather than keeping its own `transparent` case | The existing contrast test checks **text pairs** (task 3.1), which is why a non-text control at 1.1:1 slipped through; the new test asserts the ring colour directly, and the keyboard test drives a real Sign up render rather than the hook. Both failures only appeared once the app ran against a remote API on a real phone, which is the argument for the UAT deploy |
 | Design tool | The screens were designed on a Claude design canvas, not in Figma (Design Brief §12). The tokens live in `mobile/src/theme/tokens.ts`, checked by tests | One engineer with Claude Code (D-11); the canvas is clickable and was approved as is |
 | Navigation | **Expo Router** (file routes in `mobile/src/app/`) instead of hand-wired React Navigation (TRD §3) | It is built on React Navigation, is Expo's default for SDK 57, and gives the deep links (`/p/:id`, `/u/:username`) and typed routes needed in task 3.9. Signed-out and signed-in screens are separated with `Stack.Protected` guards |
 | Display font | Nunito ExtraBold, logo and onboarding headlines only | The brief asks for one rounded display face; proposed on the design canvas and approved |

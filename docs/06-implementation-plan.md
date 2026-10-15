@@ -41,26 +41,51 @@ flowchart LR
 
 Visual design (Design Brief, doc 04) is produced by the engineer with Claude Code: the mobile designs as the first increment of Phase 3, the admin wireframes as the first increment of Phase 4.
 
-**Status (2026-10-13):**
+**Status (2026-10-16):**
 
 | Phase | State | Tracker |
 |---|---|---|
 | 0 Docs | ✅ Complete | §4 Phase 0 |
-| 1 Database design | Built and tested locally; in **Review** | [Phase 1 backlog](backlog/phase-1-database-E0-E1.md#status) |
-| 2 Backend | Built and tested locally; **running on UAT since 2026-10-15**; exit gate met; in **Review** | [Phase 2 backlog](backlog/phase-2-backend.md#status) |
-| 3 Mobile | **In progress.** Designs approved; 3.1 foundation, 3.2 API client, 3.3 EAS builds, 3.4 auth, 3.5 profile and Settings, 3.6 People, 3.7 Create flow, 3.8 Feed, 3.9 Engagement and deep links, 3.10 Notifications, 3.11 Safety built (Review). 3.1–3.11 all checked on the reference Android (the 3.9–3.11 session passed 2026-10-14 on the new dev build, with two fixes: Follow back, comment input above the keyboard). 3.12 Quality built: the Update required screen (3.12.d), the accessibility pass (3.12.c), the EAS Update channel (3.12.e), the KPI events (3.12.b, off until a PostHog key is set) and the Maestro core-loop flow (3.12.a; it runs locally against the phone, CI wiring deferred to 5.1b). **Phase 3 is built end to end**; what remains for Done is the reviewed PR, green CI and the `preview` demo | [Phase 3 backlog](backlog/phase-3-mobile.md#status) |
-| 4 Admin portal | **In progress.** 4.1 app setup, 4.2 auth flow and 4.3 dashboard built (Review): Vite + React + TS, Tailwind + shadcn/ui, routing behind the session, the typed API client, sign-in with mandatory 2FA (QR enrollment, 6-digit code, idle and 12 h expiry), and the dashboard (attention tiles, twelve KPI tiles with trend lines, 7/30/90-day selector, daily-numbers table). Sign-in and the dashboard are checked against the running local API with `npm run portal:check` (19/19); not yet clicked through in a browser. Next: 4.4 Reports | [Phase 4 backlog](backlog/phase-4-admin.md#status) |
+| 1 Database design | Built and tested; **CI green on GitHub**; in **Review** — only the commit review is left | [Phase 1 backlog](backlog/phase-1-database-E0-E1.md#status) |
+| 2 Backend | Built and tested; **running on UAT since 2026-10-15**; exit gate met; **CI green on GitHub**; in **Review** — only the commit review is left | [Phase 2 backlog](backlog/phase-2-backend.md#status) |
+| 3 Mobile | **Built end to end and running against UAT.** Designs approved; 3.1–3.12 all built. 3.1–3.11 were checked on the reference Android on the dev build (2026-10-14). On 2026-10-16 the owner installed the **`preview` APK against the UAT API** and completed the core loop on their own Android — registration with an invite code, posting, likes and notifications — which is the `preview` demo Phase 3's exit asked for. Two faults came out of that session and were fixed and shipped over EAS Update: the keyboard covering form fields, and the near-invisible Profile tab. Mobile CI is green at `59e4527`. **What remains for Done is the reviewed PR.** Still open on the device: 3.12.a (Maestro has never been run, needs `adb`), 3.12.c (accessibility at maximum font with TalkBack), 3.12.d (the Update required screen), and 3.9.f (https share links, which waits for the domain) | [Phase 3 backlog](backlog/phase-3-mobile.md#status) |
+| 4 Admin portal | **Built, bar hosting.** 4.1–4.6 and 4.8 built: Vite + React + TS, Tailwind 4 + shadcn/ui, sign-in with mandatory 2FA, dashboard, reports queue and detail, users, invites, audit log, admins, and a Playwright run of the exit path. 4.7 (hosting) is **part done** — the portal is served on UAT with self-signed TLS; the IP allowlist and real certificates wait for Plan 5.0. Given a design pass on 2026-10-16: a grouped icon sidebar, a top bar with an account menu, one page-header shape, dark mode, and a recharts headline chart beside the twelve tiles. Sessions now idle out after 60 minutes, not 30. **Admin and Admin E2E are both green on GitHub** at `59e4527`, so the Playwright exit path runs in CI (4.8.j). **What remains for Done is the reviewed PR**, plus one session looking at the portal by hand (4.2.h, 4.3.f, 4.6.l) | [Phase 4 backlog](backlog/phase-4-admin.md#status) |
 | 5–6 Release, pilot | Not started | §4 Phases 5–6 |
 
 - **Database:** 11 migrations and 94 functions. The drift check passes, and the 123 procedure tests pass, including the authorization matrix and the SR-01/03/04 security checks. Every measured P95 is under 50 ms at 10k users / 1M posts (task 1.13).
-- **Backend:** 56 API paths, all in the OpenAPI spec. 47 unit and 77 e2e tests pass, including a spec-driven authorization sweep and the upload-security tests. Every endpoint has an e2e call. The API was reviewed against every App Flow screen ([07-api-review.md](07-api-review.md)).
-- **Mobile:** 163 jest tests pass (screens against a stubbed API, plus 3 optional live tests against the local API); typecheck, lint and Expo doctor clean. Mobile CI green on GitHub for 3.9 (`81bd310`) and 3.10 (`0a6aafd`). New native modules since the installed dev build: `expo-clipboard` (3.9) and `expo-notifications` (3.10), both loaded lazily so the installed build keeps working; the phone checks 3.9.e and 3.10.e need `npm run build:dev`.
-- **Open before Phases 1 and 2 are Done:**
-  - ✅ `main` pushed, CI green on GitHub (2026-10-12, `bb2002b`); review the commits;
-  - make the **Database**, **Backend** and **Mobile** checks required in `main`'s branch protection;
-  - create the GitHub board (the `gh` CLI is not installed yet; §9).
+- **Backend:** 56 API paths, all in the OpenAPI spec. 48 unit and 77 e2e tests pass, including a spec-driven authorization sweep and the upload-security tests. Every endpoint has an e2e call. The API was reviewed against every App Flow screen ([07-api-review.md](07-api-review.md)).
+- **Mobile:** 210 jest tests pass (screens against a stubbed API, plus optional live tests against the local API); typecheck, lint and `expo-doctor` (21/21) clean. Mobile CI green at `59e4527`. The `preview` APK built on 2026-10-15 ([build 91a5c533](https://expo.dev/accounts/bmachumu/projects/jamii-air/builds/91a5c533-5b0f-4f63-b7c3-a854cadffb0e)) points at the UAT API and is installed on the owner's Android. JavaScript-only fixes reach it over **EAS Update** without a rebuild, which is how the two faults found on 2026-10-16 shipped.
+- **Admin portal:** 101 unit tests and a 7-step Playwright run of the exit path, both green in CI. First load is 170 kB gzipped; the chart is a separate 109 kB chunk fetched only on the dashboard.
+- **Open before Phases 1–4 are Done:**
+  - ✅ `main` pushed and **all four workflows green on GitHub** (2026-10-16, `59e4527`): Database, Backend, Mobile, Admin, and the Admin E2E job that drives the portal in a real browser;
+  - **review the commits** — the one remaining gate for all four phases;
+  - make the **Database**, **Backend**, **Mobile** and **Admin** checks required in `main`'s branch protection;
+  - create the GitHub board (§9; the `gh` CLI is installed now).
 - **UAT is live (2026-10-15):** the API (`http://41.59.227.223:4011`), the admin portal (`https://41.59.227.223:4012`, self-signed TLS) and media (`http://41.59.227.223:4013`) run on the shared UAT host, so remote testers can use a `preview` APK. Deployed and verified end to end from outside; see [deploy/uat/README.md](../deploy/uat/README.md). **Still deferred:** Sentry and metrics (task 2.16), the portal IP allowlist (4.7) and real TLS, all of which need Plan 5.0.
-- **Repository:** [`baraka-machumu/jamii-air`](https://github.com/baraka-machumu/jamii-air) on GitHub. `backend/` holds the API, worker and database; `mobile/` holds the Expo app (tasks 3.1–3.10); `admin/` is a placeholder.
+- **Repository:** [`baraka-machumu/jamii-air`](https://github.com/baraka-machumu/jamii-air) on GitHub. `backend/` holds the API, worker and database; `mobile/` holds the Expo app; `admin/` holds the moderation portal; `deploy/uat/` holds the UAT stack and its runbook.
+
+### 1.1 Where the project stands (2026-10-16)
+
+The core loop works on a real phone against a real server: the owner installed the `preview` APK,
+registered with an invite code, posted, liked and received notifications. Everything through the
+admin portal is built, every check is green on GitHub, and all of it is deployed to UAT.
+
+**The next decision is not a task, it is a fork.** The pilot (Phase 6) needs ten real users, and
+they can either be invited onto **UAT now** or wait for **production** (Phase 5). The plan's layer
+order says production first; what the UAT deploy showed is that the pilot does not technically
+need it. What it does need is weighed below.
+
+| If the pilot runs on UAT | Cost |
+|---|---|
+| **Password reset does not work** | No transactional email provider, so reset codes land in Mailpit, which only the engineer can read over a tunnel. There is no admin-side reset either. **A tester who forgets their password is locked out for good.** This is the one hard blocker, and a free tier (Resend, Brevo) clears it well inside ten users. |
+| Plain HTTP for the API and media | Passwords and photos travel in the clear. Acceptable for a short shakedown among people who know; not acceptable for a pilot that is meant to produce evidence. |
+| No backups | Losing the host loses the pilot's evidence, which is the point of running it (BO-1). |
+| No crash reporting | A crash on someone's phone leaves no trace, so a bad build is only found by asking. |
+
+**Recommended order:** add a free-tier email provider, run a two-or-three person shakedown on UAT
+to find what only real use finds, then decide whether the pilot proper justifies Phase 5's costs
+(servers, domain, Apple Developer, Play Console). Nothing in that order wastes work: 5.0 is needed
+either way, and a shakedown de-risks it.
 
 ## 2. Agile delivery model
 
@@ -217,7 +242,7 @@ NestJS API and workers on top of the finished procedures. The API layer validate
 | 2.15 | ✅ Tests: API e2e for every endpoint (enforced: a route without an e2e call fails `openapi.e2e-spec`); upload security tests (oversized, wrong type, renamed non-image, another user's `mediaId`, expired intent, replayed idempotency key); **authorization sweep** — every endpoint × (owner, other user, blocked, suspended, user token on admin route, moderator on super-admin route) |
 | 2.16 | ✅ Dockerfile (multi-stage), `worker.ts`; ✅ CI (lint, typecheck, tests, build — `.github/workflows/backend.yml`); ✅ **UAT deploy done 2026-10-15** (ports 4011 API / 4012 portal / 4013 media on the shared host; image built locally and shipped because the host's `/` is 95% full, migrations over an SSH tunnel — [deploy/uat/README.md](../deploy/uat/README.md)); **still deferred:** Sentry (enabled once its DSN is set — optional until production) and per-route / per-procedure latency (`pg_stat_statements`, `track_functions`), queue metrics, alerts |
 
-**Status (2026-10-11): met locally** — 77 e2e (incl. the spec-driven authorization sweep and upload security), 123 procedure and 47 unit tests pass; the UAT part waits for the deferred deploy (local dev only until development is finished).
+**Status: met.** 77 e2e (incl. the spec-driven authorization sweep and upload security), 123 procedure and 48 unit tests pass (2026-10-11, locally); **"runs on UAT" met 2026-10-15**.
 
 **Exit:** the full API runs on UAT and is documented in OpenAPI; all e2e, security and authorization tests pass; a test script uploads a phone photo and gets WebP variants in MinIO with **no GPS metadata**, and the original is not reachable via the nginx media cache; user tokens are rejected on admin routes.
 
@@ -344,12 +369,13 @@ If priorities change, these stories are dropped first, in this order: 1) Caption
 
 1. ✅ Phase 0 complete: BRS signed off, documents approved, decisions D-7…D-12 recorded, repo on GitHub.
 2. ✅ **Phase 1 · Database** built and tested locally (tasks 1.1–1.14).
-3. ✅ **Phase 2 · Backend** built and tested locally (tasks 2.1–2.16; UAT deploy deferred).
-4. **Close Phases 1 and 2** (Review → Done):
-   - ✅ push `main` and check CI on GitHub: Backend, Database and Mobile green at `bb2002b` (2026-10-12);
-   - review the Phase 1 and 2 commits, then make the three checks required in `main`'s branch protection;
-   - create the board: `winget install GitHub.cli`, `gh auth login`, `gh auth refresh -s project`, then `node docs/backlog/create-github-issues.mjs <backlog file>`. Until then the backlog files are the tracker.
-   - rebuild the Docker image and check the API and worker containers start after the `.env` loading fix (`c0d837c`, found while building 3.4).
+3. ✅ **Phase 2 · Backend** built and tested (tasks 2.1–2.16); **deployed to UAT 2026-10-15**.
+4. **Close Phases 1–4** (Review → Done):
+   - ✅ `main` pushed; **all four workflows green at `59e4527` (2026-10-16)** — Database, Backend, Mobile, Admin, plus the Admin E2E job that drives the portal in a real browser;
+   - **review the commits** — the one gate left for all four phases;
+   - make the four checks required in `main`'s branch protection;
+   - create the board: `gh auth refresh -s project`, then `node docs/backlog/create-github-issues.mjs <backlog file>`. Until then the backlog files are the tracker. (`gh` is installed now.)
+   - ✅ the image is rebuilt and run on every UAT deploy, so the `.env` loading fix (`c0d837c`) is confirmed in containers.
 5. ✅ **Phase 3 started:** designs approved ([design canvas](https://claude.ai/artifact/U9EUjyBSEbuL8as26BwFtw)); 3.1 foundation built.
 6. ✅ 3.2 typed API client built.
 7. ✅ 3.3 EAS builds: profiles, project linked, FCM credentials; the Android dev build runs on the reference device against the local API over plain HTTP (purely development, no HTTPS for now).

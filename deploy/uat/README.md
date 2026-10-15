@@ -104,6 +104,29 @@ PUT the photo to the presigned URL → create post → worker published it (blur
 variants) → feed → share landing page. The `.webp` variant is readable without auth (200) and the
 original is **not** (403), which is the intended policy.
 
+## Redeploying (done twice, 2026-10-15 and 2026-10-16)
+
+Both halves were redeployed on 2026-10-16: the portal for its design pass, and the API because the
+60-minute admin idle timeout is enforced server-side — shipping only the portal would have had it
+warn at 55 minutes while the server still cut the session at 30.
+
+Two things the second run showed, worth keeping:
+
+- **Remove the superseded image.** `docker load` moves the `jamii-air-api:uat` tag and leaves the
+  old image untagged, ~580 MB a time, on a root filesystem with about 3 GB free. The deploy now
+  captures the old id first and removes it after the containers are up. That is our own image, not
+  another project's, so it is inside what the owner asked for.
+- **Clear stale portal assets.** Vite's filenames are content-hashed, so an upload adds files
+  rather than replacing them. Delete the hashes `index.html` no longer references.
+
+After a redeploy, check the running API rather than the repository:
+
+```bash
+curl -s http://41.59.227.223:4011/api/v1/openapi.json | grep -o "extends the [0-9]*-minute idle timeout"
+```
+
+It answers from the image that is actually running, so it catches a build that did not ship.
+
 ## Still open
 
 - **No IP allowlist** on the portal or `/api/v1/admin/*` (spec'd in task 4.7); it waits for the
@@ -112,7 +135,11 @@ original is **not** (403), which is the intended policy.
   `preview` APK (`usesCleartextTraffic` is on for every non-production variant) but replace both
   with real certificates once the domain exists (Plan 5.0).
 - **No real email provider**: Mailpit catches password-reset mail. Read codes at `127.0.0.1:8026`
-  through a tunnel. Testers cannot reset their own passwords.
+  through a tunnel. **Testers cannot reset their own passwords, and no admin can reset one for
+  them** — the admin API has suspend, reinstate and revoke-sessions, not a password reset. Anyone
+  who forgets a password is locked out permanently. This is the one thing that has to change
+  before real testers are invited; a free tier (Resend, Brevo) covers a ten-user pilot many times
+  over.
 - **Share links** are `http://41.59.227.223:4011/p/…`, so Android App Links cannot verify
   (that needs the https domain, task 3.9.f). `jamiiair://` deep links still work.
 - **No backups** of `/home/jamii-air/data` (Plan 5.2) and no Sentry/PostHog (Plan 5.0).

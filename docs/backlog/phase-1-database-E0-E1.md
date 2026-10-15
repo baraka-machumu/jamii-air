@@ -6,7 +6,7 @@ Format: user story, BRS link, plan task, acceptance criteria (Given / When / The
 
 ## Status
 
-Board columns as in Plan §2.3. **Review** = built, all acceptance criteria verified locally (and by `npm run test:db`), committed; not yet Done. Done also needs a reviewed PR and green CI, and the database CI arrives with E0-07.
+Board columns as in Plan §2.3. **Review** = built, all acceptance criteria verified locally (and by `npm run test:db`), committed; not yet Done. Done also needs a reviewed PR and green CI — **the Database workflow is green at `59e4527` (2026-10-16)**, so the reviewed PR is the only gate left.
 
 The GitHub board does not exist yet, so this table is the tracker until the issues are created.
 

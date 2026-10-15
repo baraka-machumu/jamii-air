@@ -6,32 +6,33 @@ Tracker for the mobile layer of the [Implementation Plan](../06-implementation-p
 
 Board columns as in Plan §2.3. **Review** = built, every check green locally, committed to `main`; not yet Done (that needs a reviewed PR, green CI on GitHub, and the demo on the reference Android with an EAS `preview` build).
 
-**3.1–3.11 are all checked on the reference Android** with the dev build (3.9.e, 3.10.e and 3.11.e passed 2026-10-14). CI on GitHub: **Mobile**, **Backend** and **Database** are green for 3.1–3.8 (`e2837bb`, 2026-10-13); **Mobile** is also green for 3.9 (`81bd310`) and 3.10 (`0a6aafd`) (Backend and Database unchanged since). 3.11 and the two phone fixes are committed but **not yet pushed**, so their CI has not run — push `main` to start it. What remains for Done on 3.1–3.11 is the reviewed PR, that green CI, and the demo on an EAS `preview` build.
+**The core loop is confirmed on a real phone against UAT (2026-10-16).** The owner installed the
+`preview` APK ([build 91a5c533](https://expo.dev/accounts/bmachumu/projects/jamii-air/builds/91a5c533-5b0f-4f63-b7c3-a854cadffb0e),
+built 2026-10-15, pointing at `http://41.59.227.223:4011`) and completed registration with an invite
+code, posting, likes and notifications. **That is the `preview` demo Phase 3's exit asks for**, and
+it is the first time the app has run against a server that is not the engineer's laptop.
 
-**Phone session done (2026-10-14).** On the dev build `ea7ea3a0` ([install link](https://expo.dev/accounts/bmachumu/projects/jamii-air/builds/ea7ea3a0-42b6-43aa-9050-5611f5541708)) with `scripts\dev-phone.bat`: 3.9.e, 3.10.e and 3.11.e all passed with a second account. Two fixes came out of it, Follow back and the comment input under the keyboard (see Decisions); both JavaScript only, so no rebuild was needed. The only device check still open in 3.1–3.11 is **3.9.f** (https share links), which waits for the domain in Plan 5.0.
+**3.1–3.11 were checked earlier on the reference Android** with the dev build (3.9.e, 3.10.e and
+3.11.e passed 2026-10-14, on `ea7ea3a0`, with a second account; two fixes came out of it — Follow
+back and the comment input under the keyboard).
 
-**Nothing left to build in Phase 3.** The **new dev build is done**: `8eae3ca2` ([install link](https://expo.dev/accounts/bmachumu/projects/jamii-air/builds/8eae3ca2-3c49-4459-95a9-15f2a2c31083)), built 2026-10-15 from `6864cbb`, the first build with `expo-updates` in the native layer. What is left is one phone session on it: a smoke test of the new native layer (sign in, feed, like, comment, camera and library, Copy link, one backgrounded push), the Update required screen against the API started with `MIN_APP_VERSION=9.9.9` (3.12.d), the accessibility pass on the real OS at maximum font and display size plus a TalkBack pass (3.12.c), and the first `npm run e2e` run (3.12.a). **3.12.a needs `adb`**, so it needs USB or wireless debugging; `adb` is not on the PATH on this laptop (it is at `%LOCALAPPDATA%\Android\Sdk\platform-tools`). The fixes from the 2026-10-14 session need no re-check: a dev build serves JS from Metro, so they were already running when they passed. Then Phase 3 wants its reviewed PR, green CI and the `preview` demo for **Done**, and Phase 4 (admin portal) can start.
+**CI is green on GitHub** for all four workflows at `59e4527` (2026-10-16). **What remains for Phase 3
+to be Done is the reviewed PR.**
 
-**First fixes from UAT (2026-10-15).** With the app on the UAT API, two faults showed up that local
-testing had not:
+**Still open on the device**, none of it blocking the above:
 
-- **The keyboard covered the lower half of every form.** `KeyboardAvoidingView` was given
-  `behavior={undefined}` on Android, where it does nothing under edge-to-edge, so a form kept the
-  full window height and its `ScrollView` never gained room for the keyboard — on Sign up the
-  Password field (the fourth) could not be reached at all. Every affected container now shrinks by
-  the reported keyboard height, the same fix as the comment input in 3.9. It was not only Sign up:
-  `FormScreen` (Sign up, Log in, Forgot password, Change password, Delete account), the Create-flow
-  caption screen, Edit profile, onboarding and the bottom sheet (so the **report details field**)
-  each had their own copy.
-- **The Profile tab was all but invisible.** It is the only tab drawn as a ring rather than a
-  stroked icon, and it opted out of the colour system: unfocused, the ring was `transparent`,
-  leaving a `surface` disc on `bg` — about 1.1:1 in both themes, below the 3:1 WCAG asks of a
-  control. It now takes the same `color` as the other four tabs.
+| Check | Why it is still open |
+|---|---|
+| 3.12.a Maestro core loop | Written but **never run**; needs `adb`, which is not on this laptop's PATH (it is at `%LOCALAPPDATA%\Android\Sdk\platform-tools`). CI wiring is deferred to Plan 5.1b |
+| 3.12.c Accessibility on the real OS | Maximum font and display size, plus a TalkBack pass |
+| 3.12.d Update required screen | Point the app at an API started with `MIN_APP_VERSION=9.9.9` and confirm the blocking screen |
+| 3.9.f https share links | Waits for the domain (Plan 5.0) |
+| iOS | Nothing done; waits for the Apple account (Plan 5.0) |
 
-Both are JavaScript only, so they went to the installed `preview` APK over **EAS Update**
-(`c87145ce`, runtime 1.0.0) with no rebuild — the first time 3.12.e earned its keep. 210 jest tests
-pass (+4); each new test was confirmed to fail with its fix reverted. **Still wants a look on the
-phone:** both are layout and contrast, which tests can only approximate.
+**First faults found from real use (2026-10-16).** Running against UAT turned up two things local
+testing had not, both fixed and shipped to the installed APK over **EAS Update** with no rebuild
+(`c87145ce`): the keyboard covering the lower half of every form, and the Profile tab being all but
+invisible. Details in the Decisions table below.
 
 The GitHub board does not exist yet, so this table is the tracker (the `gh` CLI is available: `gh run list` shows CI).
 

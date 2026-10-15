@@ -4,7 +4,7 @@ Tracker for the backend layer of the [Implementation Plan](../06-implementation-
 
 ## Status
 
-Board columns as in Plan §2.3. **Review** = built, every check green locally, committed to `main`; not yet Done. Done also needs a reviewed PR and a green CI run on GitHub, and the commits are not pushed yet.
+Board columns as in Plan §2.3. **Review** = built, every check green locally, committed to `main`; not yet Done. Done also needs a reviewed PR and a green CI run on GitHub — **CI is green at `59e4527` (2026-10-16), so the reviewed PR is the only gate left.**
 
 The GitHub board does not exist yet, so this table is the tracker (the `gh` CLI is available: `gh run list` shows CI).
 
@@ -39,8 +39,8 @@ Also green: lint, type-check, build, `npm run db:drift-check` (94 functions) and
 
 ## Open before the phase is Done
 
-1. ✅ Pushed 2026-10-12; CI green on GitHub at `bb2002b` (Backend, Database, Mobile). Still to do: review the Phase 1 and 2 commits.
-2. In `main`'s branch protection, make the **Database**, **Backend** and **Mobile** checks required.
+1. ✅ Pushed; **all four workflows green at `59e4527` (2026-10-16)** — Backend, Database, Mobile, Admin, plus the Admin E2E job. Still to do: review the Phase 1 and 2 commits.
+2. In `main`'s branch protection, make the **Database**, **Backend**, **Mobile** and **Admin** checks required.
 3. Create the board and issues (install the `gh` CLI, see Plan §9).
 4. Rebuild the image (`docker compose --profile app up -d --build`) and check the API and worker containers still start after the `.env` loading fix (`c0d837c`); not yet run.
 5. ✅ UAT deploy done 2026-10-15. Still open from 2.16: Sentry, latency metrics and alerts (need the accounts in Plan 5.0).

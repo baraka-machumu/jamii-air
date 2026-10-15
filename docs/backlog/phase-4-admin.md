@@ -58,6 +58,18 @@ include was collecting the Playwright spec, which would have hidden a real failu
 **The Playwright exit path was re-run after the redesign: 6/6 pass** against the real API in
 Chromium, and the dashboard and reports screens were captured in both themes and looked at.
 
+**CI is green on GitHub (2026-10-16, `59e4527`).** Both Admin jobs pass: the 101 unit tests, and
+the **Admin E2E** job, which brings up the stack, migrates, seeds and drives the portal through the
+whole exit path in a real Chromium — so 4.8 is now proven in CI, not only on the engineer's laptop.
+
+One fix was needed to get there. The logout test drove the new account menu with `userEvent.click`,
+which sends the full pointerdown/up/click sequence; Radix opens the menu on pointerdown, and in
+jsdom the trailing events reach its dismiss layer as an outside click, so the menu opened and shut
+inside the one call. It passed locally and failed in CI, where the race tips the other way. The
+test now opens the menu with the pointerdown Radix listens for and reads the item in the same tick.
+Because that is a narrower test, **the Playwright run was extended to sign out through the account
+menu in a real browser** (7 steps now, not 6) — the menu itself was never broken.
+
 **Checked against the running API** (2026-10-15):
 
 - `npm run portal:check` in `backend/` drives sign-in, 2FA enrollment with a real code,
@@ -84,7 +96,7 @@ its checks are green, move the task to **Review** in the Status table above.
 | 4.1.c | 4.1 App setup | Routing with the session guard, sidebar frame and top bar | ✅ |
 | 4.1.d | 4.1 App setup | Typed API client from the OpenAPI spec, errors, shared refresh on a 401 | ✅ |
 | 4.1.e | 4.1 App setup | Unit and route tests (Vitest + Testing Library) | ✅ |
-| 4.1.f | 4.1 App setup | Reviewed PR, green CI on GitHub → Done | ☐ |
+| 4.1.f | 4.1 App setup | Reviewed PR, green CI on GitHub → Done | ☐ (CI ✅ at `59e4527`; the reviewed PR is what is left, and it is the last gate for the whole phase) |
 | 4.2.a | 4.2 Auth flow | Login: email + password, one message for either being wrong | ✅ |
 | 4.2.b | 4.2 Auth flow | 2FA code step, digits only, a wrong code cleared for the next try | ✅ |
 | 4.2.c | 4.2 Auth flow | First sign-in: QR code drawn in the browser + manual key → enroll | ✅ |
@@ -142,7 +154,7 @@ its checks are green, move the task to **Review** in the Status table above.
 | 4.8.g | 4.8 E2E | Create an invite code, and revoke it | ✅ |
 | 4.8.h | 4.8 E2E | Every action in the audit log, with its note, and the filter narrowing it | ✅ |
 | 4.8.i | 4.8 E2E | Passing locally against the running stack (2026-10-15, 6/6) | ✅ |
-| 4.8.j | 4.8 E2E | Green in CI on GitHub | ☐ |
+| 4.8.j | 4.8 E2E | Green in CI on GitHub | ✅ (2026-10-16, `59e4527`: the Admin E2E job drives the portal in a real Chromium against a real API) |
 
 ## Decisions taken during Phase 4
 

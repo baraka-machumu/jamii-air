@@ -62,7 +62,8 @@
     "build:dev": "npx eas-cli@latest build --platform android --profile development",
     "build:preview": "npx eas-cli@latest build --platform android --profile preview",
     "update:preview": "npx eas-cli@latest update --channel preview",
-    "update:production": "npx eas-cli@latest update --channel production"
+    "update:production": "npx eas-cli@latest update --channel production",
+    "e2e": "maestro test maestro/flows"
   },
   "private": true
 }

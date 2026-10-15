@@ -1,0 +1,3 @@
+# Maestro workspace (Plan task 3.12.a). Run everything with `npm run e2e` from mobile/.
+flows:
+  - flows/*.yaml

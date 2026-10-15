@@ -1,0 +1,105 @@
+# The core loop end to end on a real phone (Plan task 3.12.a): sign up, onboarding, the feed, a
+# like, a comment, then log out and back in (App Flow §3, §4.1-4.2, §4.5, §5, §7.1-7.2).
+#
+# One flow, not several: each step needs the account the step before it made, and Maestro's
+# `output` does not cross flow files.
+#
+# It needs the local stack running (scripts\dev-phone.bat: API, worker, Postgres, Redis, MinIO) and
+# an account on it that has at least one published post, for this new account to follow and see.
+# Sharing a photo is deliberately not here: the Create flow opens the system photo picker (task
+# 3.7), which is another app's UI, and it is covered by the device check 3.7.h instead.
+#
+# Registration is limited to 5 per hour per address, so this flow cannot run more than 5 times in
+# an hour without clearing the `rl:*` keys in Redis.
+appId: tz.jamiiair.app
+name: Core loop
+---
+- launchApp:
+    clearState: true
+
+# A fresh username each run: registration refuses a duplicate.
+- evalScript: ${output.user = 'e2e' + Date.now().toString().slice(-8)}
+
+# --- Sign up (App Flow §4.1) ---
+- assertVisible: "Your people, on air."
+- tapOn: "Create account"
+- assertVisible: "Jamii Air is for adults 18 and over."
+
+- tapOn: "Email"
+- inputText: ${output.user}@example.test
+- tapOn: "Username"
+- inputText: ${output.user}
+- tapOn: "Password"
+- inputText: "mango-chai-2026"
+
+# Date of birth opens Android's date dialog, which opens on today; the field refuses anyone under
+# 18, so the year has to move back. This is the only step that drives another app's UI, and the
+# dialog differs between Android versions - adjust here if it fails on a new phone.
+- tapOn: "Date of birth"
+- tapOn:
+    text: "2000"
+    optional: true
+- tapOn:
+    text: "OK"
+    optional: true
+
+- tapOn: "I accept the Terms of Service and Privacy Policy"
+- tapOn:
+    text: "Create account"
+    index: 1
+
+# --- Onboarding (App Flow §4.2): photo, Find people, notifications ---
+- assertVisible: "Add a profile photo"
+- tapOn: "Skip"
+
+- assertVisible: "Find people"
+# Follow the first account offered, so the feed below has something in it.
+- tapOn:
+    text: "Follow"
+    index: 0
+- tapOn: "Continue"
+
+- assertVisible: "Turn on notifications"
+# Not now: the OS permission prompt is not part of this flow (device check 3.10.e covers it).
+- tapOn: "Not now"
+
+# --- The feed (App Flow §5) ---
+- assertVisible:
+    id: "tab-index"
+# An empty feed means the account that was followed has no posts: that is the stack's data, not a
+# bug in the app, and this says which it is rather than failing on a missing Like button below.
+- assertNotVisible: "Your feed is empty"
+
+# --- Like and comment (App Flow §7.1-7.2) ---
+- tapOn: "Like"
+- assertVisible: "Unlike"
+
+- tapOn:
+    text: "View all .* comments|View 1 comment"
+- assertVisible: "Comments"
+- tapOn: "Add a comment…"
+- inputText: "Habari kutoka E2E"
+- tapOn: "Post"
+- assertVisible: "Habari kutoka E2E"
+- back
+
+# --- Log out and back in (App Flow §4.5, §3) ---
+- tapOn:
+    id: "tab-profile"
+- tapOn: "Settings"
+- scrollUntilVisible:
+    element: "Log out"
+- tapOn: "Log out"
+- tapOn: "Log out"
+
+- assertVisible: "Your people, on air."
+- tapOn: "Log in"
+- tapOn: "Username or email"
+- inputText: ${output.user}
+- tapOn: "Password"
+- inputText: "mango-chai-2026"
+- tapOn:
+    text: "Log in"
+    index: 1
+- assertVisible:
+    id: "tab-index"

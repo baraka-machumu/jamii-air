@@ -2,15 +2,24 @@ import type { ReactNode } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { useTheme } from '@/theme/ThemeProvider';
 import { BackButton } from './BackButton';
+import { useAndroidKeyboardHeight } from './keyboard';
 import { Screen } from './Screen';
 import { Text } from './Text';
 
 /** A signed-out form screen: back button, title, scrolling fields that stay above the keyboard. */
 export function FormScreen({ title, subtitle, children }: { title: string; subtitle?: string; children: ReactNode }) {
   const { space } = useTheme();
+  // Android: `behavior` is undefined because KeyboardAvoidingView mis-measures under edge-to-edge
+  // (src/components/keyboard.ts), which left the form the full height of the window and the lower
+  // fields — Password, Date of birth, Create account — stranded behind the keyboard with no room
+  // to scroll to them. Shrinking the form by the reported keyboard height is what adjustResize
+  // used to do: the ScrollView's viewport now ends at the top of the keyboard, so every field can
+  // be reached. Same fix as the comment input (task 3.9).
+  const keyboard = useAndroidKeyboardHeight();
   return (
     <Screen edges={['top', 'bottom']}>
-      <KeyboardAvoidingView style={styles.fill} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <KeyboardAvoidingView testID="form-body" style={[styles.fill, { paddingBottom: keyboard }]}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <BackButton />
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: space.lg }}
           showsVerticalScrollIndicator={false}>

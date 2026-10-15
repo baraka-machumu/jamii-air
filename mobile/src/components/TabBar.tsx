@@ -40,7 +40,11 @@ export function TabBar({ state, navigation, insets, badge }: TabBarProps & { bad
           <Pressable key={route.key} onPress={onPress} accessibilityRole="tab" accessibilityLabel={label}
             accessibilityState={{ selected: focused }} style={styles.tab} testID={`tab-${route.name}`}>
             {tab.icon === 'avatar' ? (
-              <View style={[styles.avatar, { borderColor: focused ? colors.text : 'transparent' }]}>
+              // The ring carries this tab the way the stroke carries the other four, so it uses the
+              // same `color`. It used to be `transparent` when unfocused, which left only a
+              // `surface` disc on `bg` — about 1.1:1, invisible in both themes and short of the
+              // 3:1 WCAG asks of a control (3.12.c).
+              <View style={[styles.avatar, { borderColor: color }]}>
                 <View style={[styles.avatarInner, { backgroundColor: colors.surface }]} />
               </View>
             ) : (

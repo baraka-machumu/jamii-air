@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { create } from 'zustand';
 import { useTheme } from '@/theme/ThemeProvider';
 import { touchTarget } from '@/theme/tokens';
+import { useAndroidKeyboardHeight } from './keyboard';
 import { Text } from './Text';
 
 const useSheet = create<{ content: ReactNode }>(() => ({ content: null }));
@@ -25,9 +26,13 @@ export function SheetHost() {
   const content = useSheet((s) => s.content);
   const { colors, radius, space } = useTheme();
   const insets = useSafeAreaInsets();
+  // Shrink by the keyboard height on Android: KeyboardAvoidingView mis-measures under
+  // edge-to-edge, which left inputs stranded behind the keyboard (src/components/keyboard.ts).
+  const keyboard = useAndroidKeyboardHeight();
   return (
     <Modal visible={content !== null} transparent animationType="slide" onRequestClose={closeSheet} statusBarTranslucent>
-      <KeyboardAvoidingView style={styles.fill} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <KeyboardAvoidingView style={[styles.fill, { paddingBottom: keyboard }]}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <Pressable style={[styles.fill, styles.backdrop]} onPress={closeSheet} importantForAccessibility="no" />
         <View testID="sheet" style={[styles.sheet, {
           backgroundColor: colors.bg, borderTopLeftRadius: radius.md, borderTopRightRadius: radius.md,

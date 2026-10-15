@@ -5,6 +5,7 @@
 //   - a screen whose whole body is a spinner says that it is loading
 // Design Brief §8 (touch targets, labels) and Guidelines §25.
 import { render, screen, waitFor } from '@testing-library/react-native';
+import { StyleSheet } from 'react-native';
 import { renderRouter } from 'expo-router/testing-library';
 import type { ReactTestInstance } from 'react-test-renderer';
 import { tokenStore } from '@/auth/tokenStore';
@@ -16,7 +17,7 @@ import { useSession } from '@/stores/session';
 import { useSettings } from '@/stores/settings';
 import { emptyPage, json, me, stubApi } from '@/test/api';
 import { routes } from '@/test/routes';
-import { maxFontScale } from '@/theme/tokens';
+import { maxFontScale, palettes } from '@/theme/tokens';
 
 jest.mock('@expo-google-fonts/nunito', () => ({ useFonts: () => [true], Nunito_800ExtraBold: 1 }));
 jest.mock('@/auth/tokenStore', () => jest.requireActual('@/test/memoryTokenStore'));
@@ -114,5 +115,37 @@ describe('waiting is announced', () => {
     render(<Spinner />);
     expect(screen.getByLabelText('Loading')).toBeTruthy();
     expect(screen.getByRole('progressbar')).toBeTruthy();
+  });
+});
+
+describe('every tab stays visible against the background', () => {
+  // The Profile tab is a ring, not a stroked icon, and it used to be `transparent` when unfocused:
+  // only a `surface` disc on `bg`, which is about 1.1:1 in both themes and vanishes on a phone.
+  // It now takes the same colour as the other four, which is what WCAG's 3:1 for controls needs.
+  const signIn = async () => {
+    await tokenStore.set('refresh-0-xxxxxxxxxxxxxxxx');
+    useSession.setState({ status: 'signedIn', accessToken: 'access-0', user: { id: 'u1', username: 'amina' }, onboarding: false });
+  };
+  const ringColor = () => {
+    const ring = screen.getByTestId('tab-profile')
+      .findAll((n) => StyleSheet.flatten(n.props.style ?? {}).borderWidth === 2)[0]!;
+    return StyleSheet.flatten(ring.props.style).borderColor as string;
+  };
+
+  it('gives the unfocused Profile ring the muted colour, never transparent', async () => {
+    await signIn();
+    renderRouter(routes, { initialUrl: '/' });
+    await waitFor(() => expect(screen.getByText(/Caption 1/)).toBeTruthy());
+
+    expect(ringColor()).not.toBe('transparent');
+    expect(ringColor()).toBe(palettes.light.textMuted);
+  });
+
+  it('darkens the ring to the text colour when Profile is the open tab', async () => {
+    await signIn();
+    renderRouter(routes, { initialUrl: '/profile' });
+    await waitFor(() => expect(screen.getByTestId('tab-profile')).toBeTruthy());
+
+    expect(ringColor()).toBe(palettes.light.text);
   });
 });

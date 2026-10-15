@@ -11,6 +11,7 @@ import { usernameError } from '@/auth/validation';
 import { Avatar } from '@/components/Avatar';
 import { Button } from '@/components/Button';
 import { FormMessage } from '@/components/FormScreen';
+import { useAndroidKeyboardHeight } from '@/components/keyboard';
 import { Header } from '@/components/Header';
 import { Screen } from '@/components/Screen';
 import { Spinner } from '@/components/Spinner';
@@ -32,6 +33,9 @@ function EditForm({ me }: { me: Me }) {
   const router = useRouter();
   const navigation = useNavigation();
   const { colors, space } = useTheme();
+  // Shrink by the keyboard height on Android: KeyboardAvoidingView mis-measures under
+  // edge-to-edge, which left inputs stranded behind the keyboard (src/components/keyboard.ts).
+  const keyboard = useAndroidKeyboardHeight();
   const updateMe = useUpdateMe();
   const avatar = useAvatar();
   const [form, setForm] = useState<ProfileForm>(() => profileFormOf(me));
@@ -78,7 +82,8 @@ function EditForm({ me }: { me: Me }) {
         <Button kind="tertiary" label={t('common.save')} onPress={save} loading={busy}
           disabled={!!usernameInvalid} style={styles.save} />
       } />
-      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <KeyboardAvoidingView style={[styles.flex, { paddingBottom: keyboard }]}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: space.md, paddingBottom: space.lg }}>
           <Pressable onPress={() => avatar.choose(!!photo)} disabled={avatar.busy} accessibilityRole="button"
             accessibilityLabel={t('media.changePhoto')} style={styles.photo}>

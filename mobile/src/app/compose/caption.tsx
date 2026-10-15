@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { Button } from '@/components/Button';
 import { Header } from '@/components/Header';
+import { useAndroidKeyboardHeight } from '@/components/keyboard';
 import { Screen } from '@/components/Screen';
 import { TextField } from '@/components/TextField';
 import { runPosting } from '@/posting/run';
@@ -18,6 +19,9 @@ export default function Caption() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { space, colors } = useTheme();
+  // Shrink by the keyboard height on Android: KeyboardAvoidingView mis-measures under
+  // edge-to-edge, which left inputs stranded behind the keyboard (src/components/keyboard.ts).
+  const keyboard = useAndroidKeyboardHeight();
   const draft = usePosting((s) => s.draft);
   const update = usePosting((s) => s.update);
 
@@ -34,7 +38,8 @@ export default function Caption() {
   return (
     <Screen edges={['top', 'bottom']}>
       <Header title={t('create.captionTitle')} />
-      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <KeyboardAvoidingView style={[styles.flex, { paddingBottom: keyboard }]}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: space.md, paddingBottom: space.lg }}>
           <View style={styles.row}>
             <Image source={{ uri: image.uri }} style={[styles.thumb, { aspectRatio: image.width / image.height, backgroundColor: colors.surface }]}

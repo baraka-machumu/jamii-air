@@ -1,7 +1,7 @@
 // The auth screens (App Flow §4) against a stubbed API: what the user sees for each answer.
 import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
 import { renderRouter } from 'expo-router/testing-library';
-import { Alert } from 'react-native';
+import { Alert, Keyboard, Platform, StyleSheet } from 'react-native';
 import { tokenStore } from '@/auth/tokenStore';
 import { useSession } from '@/stores/session';
 import { useSettings } from '@/stores/settings';
@@ -81,6 +81,51 @@ describe('Log in (§4.3)', () => {
     act(() => buttons.find((b) => b.text === 'Cancel deletion')!.onPress!());
     expect(await screen.findByTestId('tab-index')).toBeTruthy();
     expect(bodies[1]).toMatchObject({ cancelDeletion: true });
+  });
+});
+
+describe('the keyboard does not cover the fields (§4.1)', () => {
+  // Password is the fourth field on Sign up, so it sits under the keyboard unless the form gives
+  // way. KeyboardAvoidingView cannot do that on Android under edge-to-edge, so FormScreen shrinks
+  // by the height the keyboard reports (src/components/keyboard.ts).
+  type Listener = (e: { endCoordinates: { height: number } }) => void;
+  const os = Platform.OS;
+  // KeyboardAvoidingView subscribes to the same events, so every listener is kept and fired.
+  let listeners: Record<string, Listener[]>;
+  const emit = (event: string, height: number) =>
+    act(() => { for (const l of listeners[event] ?? []) l({ endCoordinates: { height } }); });
+
+  beforeEach(() => {
+    listeners = {};
+    jest.spyOn(Keyboard, 'addListener').mockImplementation(((event: string, listener: Listener) => {
+      (listeners[event] ??= []).push(listener);
+      return { remove: jest.fn() };
+    }) as never);
+  });
+  afterEach(() => { Platform.OS = os; jest.restoreAllMocks(); });
+
+  const paddingBottom = () => StyleSheet.flatten(screen.getByTestId('form-body').props.style).paddingBottom;
+
+  it('shrinks the form by the keyboard height on Android, and restores it after', async () => {
+    Platform.OS = 'android';
+    renderRouter(routes, { initialUrl: '/signup' });
+    await screen.findByLabelText('Password');
+    expect(paddingBottom()).toBe(0);
+
+    emit('keyboardDidShow', 320);
+    expect(paddingBottom()).toBe(320);
+
+    emit('keyboardDidHide', 0);
+    expect(paddingBottom()).toBe(0);
+  });
+
+  it('leaves it to KeyboardAvoidingView on iOS', async () => {
+    Platform.OS = 'ios';
+    renderRouter(routes, { initialUrl: '/signup' });
+    await screen.findByLabelText('Password');
+
+    emit('keyboardDidShow', 320);
+    expect(paddingBottom()).toBe(0);
   });
 });
 

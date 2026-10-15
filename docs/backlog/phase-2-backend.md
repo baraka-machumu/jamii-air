@@ -6,7 +6,7 @@ Tracker for the backend layer of the [Implementation Plan](../06-implementation-
 
 Board columns as in Plan §2.3. **Review** = built, every check green locally, committed to `main`; not yet Done. Done also needs a reviewed PR and a green CI run on GitHub, and the commits are not pushed yet.
 
-The GitHub board does not exist yet (the `gh` CLI is not installed), so this table is the tracker.
+The GitHub board does not exist yet, so this table is the tracker (the `gh` CLI is available: `gh run list` shows CI).
 
 **Phase gate:** met locally on 2026-10-11, apart from "runs on UAT" (deploy deferred: local dev only until development is finished). Plan §4 Phase 2 has the exit status.
 

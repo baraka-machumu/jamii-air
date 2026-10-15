@@ -1,0 +1,53 @@
+# Admin portal checks (Plan task 4.1): type-check, lint, unit tests, production build.
+# Playwright E2E (4.8) and the nginx deploy (4.7) come later.
+name: Admin
+
+on:
+  pull_request:
+    paths:
+      - admin/**
+      - .github/workflows/admin.yml
+  push:
+    branches: [main]
+    paths:
+      - admin/**
+      - .github/workflows/admin.yml
+
+concurrency:
+  group: admin-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  admin:
+    name: Admin
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: admin
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: admin/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Type-check
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Tests
+        run: npm test
+
+      - name: Build
+        run: npm run build

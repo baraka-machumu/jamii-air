@@ -12,7 +12,7 @@ Board columns as in Plan §2.3. **Review** = built, every check green locally, c
 
 **Nothing left to build in Phase 3.** Next is one phone session on a **new dev build** (`npm run build:dev`, needed because 3.12.e added `expo-updates`): install Maestro, run `npm run e2e` for the first time (3.12.a), and check the Update required screen against the API started with `MIN_APP_VERSION=9.9.9` (3.12.d). Then Phase 3 wants its reviewed PR, green CI and the `preview` demo for **Done**, and Phase 4 (admin portal) can start.
 
-The GitHub board does not exist yet (the `gh` CLI is not installed), so this table is the tracker.
+The GitHub board does not exist yet, so this table is the tracker (the `gh` CLI is available: `gh run list` shows CI).
 
 | Task | Column | Commit | Notes |
 |---|---|---|---|

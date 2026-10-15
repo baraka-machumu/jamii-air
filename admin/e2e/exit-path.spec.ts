@@ -169,4 +169,16 @@ test.describe.serial('the portal does the job Phase 4 exists for', () => {
     await expect(log.getByText('Hid a post').first()).toBeVisible();
     await expect(log.getByText('Suspended the account')).toHaveCount(0);
   });
+
+  // Last, because it ends the session this file shares. Log out lives behind the account menu,
+  // and a real browser is the only place that menu can be driven honestly: in jsdom the portal
+  // and the dismiss layer do not behave as they do here, so the unit test opens it with a
+  // pointerdown instead (src/App.test.tsx).
+  test('the admin can sign out from the account menu', async () => {
+    await page.getByRole('button', { name: 'Account: E2E Admin' }).click();
+    await page.getByRole('menuitem', { name: 'Log out' }).click();
+
+    await expect(page.getByRole('heading', { name: 'Jamii Air Admin' })).toBeVisible();
+    await expect(page.getByLabel('Email')).toBeVisible();
+  });
 });

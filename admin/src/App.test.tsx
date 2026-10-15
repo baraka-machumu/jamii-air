@@ -1,6 +1,5 @@
 // Task 4.1: the frame and the guards. The screens themselves arrive with tasks 4.2-4.6.
-import { screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { fireEvent, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { App } from './App';
 import { useSession } from '@/stores/session';
@@ -73,12 +72,17 @@ describe('once signed in', () => {
     expect(screen.getByRole('heading', { name: 'Page not found' })).toBeInTheDocument();
   });
 
-  it('logs out to Login', async () => {
+  it('logs out to Login', () => {
     useSession.getState().signIn('token', admin);
     renderAt(<App />, '/');
-    // Log out lives in the account menu now, so it has to be opened first.
-    await userEvent.click(screen.getByRole('button', { name: 'Account: Moda' }));
-    await userEvent.click(await screen.findByRole('menuitem', { name: 'Log out' }));
+    // Log out lives in the account menu now, so it has to be opened first. The menu is opened
+    // with a pointerdown, which is the event Radix's trigger listens for, and read in the same
+    // tick: `userEvent.click` sends the whole pointerdown/up/click sequence, and in jsdom the
+    // trailing events reach Radix's dismiss layer as an outside click, so the menu opens and
+    // shuts again within the one call. A real browser does not do this - the same menu is driven
+    // by a real click in the Playwright run (e2e/exit-path.spec.ts).
+    fireEvent.pointerDown(screen.getByRole('button', { name: 'Account: Moda' }), { button: 0, pointerType: 'mouse' });
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Log out' }));
     expect(useSession.getState().status).toBe('signedOut');
     expect(screen.getByRole('heading', { name: 'Jamii Air Admin' })).toBeInTheDocument();
   });

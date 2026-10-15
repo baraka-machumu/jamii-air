@@ -3,6 +3,7 @@ import { QueryClient } from '@tanstack/react-query';
 import { uploadImage } from '@/media/upload';
 import { useSession } from '@/stores/session';
 import { json, type StubRequest, stubApi } from '@/test/api';
+import { usePublished } from './published';
 import { retryPosting, runPosting } from './run';
 import { usePosting } from './store';
 
@@ -43,6 +44,9 @@ describe('runPosting (App Flow §6.1)', () => {
     expect(creates()[0]!.headers['idempotency-key']).toBe(key);
     expect(polls).toBe(2);
     expect(usePosting.getState().draft).toBeNull();
+    // Posting finishes in the background, so Home is told which post went up and sends the feed
+    // back to the top - otherwise the new photo sits off-screen above wherever you were reading.
+    expect(usePublished.getState().postId).toBe('post-1');
   });
 
   it('keeps the upload when creating fails, and Retry creates with the same key', async () => {

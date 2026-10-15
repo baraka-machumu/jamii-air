@@ -9,6 +9,7 @@ import { ApiError } from '@/api/errors';
 import { meKey } from '@/api/me';
 import { peopleKey } from '@/api/people';
 import { uploadImage } from '@/media/upload';
+import { usePublished } from './published';
 import { newDraftKey, usePosting } from './store';
 
 export type PostOutcome = 'PUBLISHED' | 'FAILED' | 'PENDING';
@@ -40,6 +41,7 @@ export function runPosting(queryClient: QueryClient, delays = POLL_DELAYS_MS): P
 async function run(queryClient: QueryClient, delays: number[]): Promise<void> {
   const { update, setProgress, discard } = usePosting.getState();
   const draft = () => usePosting.getState().draft;
+  const announce = (postId: string) => usePublished.getState().announce(postId);
   const refresh = () => {
     void queryClient.invalidateQueries({ queryKey: meKey });
     void queryClient.invalidateQueries({ queryKey: peopleKey });
@@ -67,7 +69,7 @@ async function run(queryClient: QueryClient, delays: number[]): Promise<void> {
       }));
       update({ postId: post.id });
       track('post_created');
-      if (post.status === 'PUBLISHED') { discard(); refresh(); return; }
+      if (post.status === 'PUBLISHED') { discard(); refresh(); announce(post.id); return; }
     }
 
     update({ phase: 'processing', failure: undefined });
@@ -79,9 +81,12 @@ async function run(queryClient: QueryClient, delays: number[]): Promise<void> {
       return;
     }
     // PUBLISHED, or still processing after the last try: the post exists and shows up in the
-    // feed and grid by itself (the grid marks it "Processing…").
+    // feed and grid by itself (the grid marks it "Processing…"). Tell Home as well, so the feed
+    // goes to the top and the photo just shared is the one on screen.
+    const published = draft()?.postId;
     discard();
     refresh();
+    if (published) announce(published);
   } catch (error) {
     const code = error instanceof ApiError ? error.code : 'UNKNOWN';
     const changes: Parameters<typeof update>[0] = { phase: 'failed', failure: code };

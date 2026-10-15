@@ -132,7 +132,7 @@ Settings → **Log out** → confirm → `DELETE /me/devices/:installationId` (b
 | Load | `GET /feed?limit=20` → render with FlashList. Image space reserved from `width/height` (no layout shift); blurhash placeholder until image loads. |
 | Scroll | When 5 items from the end → `GET /feed?cursor=…`. Footer skeleton while loading. `nextCursor = null` → "You're all caught up ✓" footer. |
 | Refresh | Pull-to-refresh → refetch first page; new posts appear on top. |
-| Own new post | While the user's new post is `PROCESSING`, a local card with the preview and "Posting…" sits at the top; it's replaced by the server version when published. |
+| Own new post | While the user's new post is `PROCESSING`, a local card with the preview and "Posting…" sits at the top; it's replaced by the server version when published. **When it publishes the feed returns to the top**, because posting finishes in the background and the new photo would otherwise be off-screen above wherever the user had scrolled to. *(Added 2026-10-16 after the first real use.)* |
 
 **Post card contents:** avatar + username (→ profile) · ⋯ menu · photo · ❤️ like, 💬 comment, ↗ share · like count · caption (2 lines, "more" expands) · "View all N comments" (→ comments) · relative time.
 
@@ -186,7 +186,7 @@ Tap ❤️ or double-tap photo → heart animation + count +1 immediately → `P
 ### 7.2 Comments (BR-FD-04, 05)
 
 **Entry:** 💬 icon, "View all comments", notification.
-- Comments screen: post caption pinned at top; list oldest → newest, paginated (`GET /posts/:id/comments`), loads more on scroll up/down as designed; input bar fixed above keyboard.
+- Comments screen: post caption pinned at top; list **newest first**, paginated (`GET /posts/:id/comments`, which pages newest-first anyway), older ones load on scrolling down; input bar fixed above the keyboard. Sending scrolls back to the top, so the comment just written is the one on screen rather than the end of a long thread. *(Changed 2026-10-16 after the first real use: it ran oldest → newest in a chat-style inverted list, and a new comment landed out of sight.)*
 - **Send:** comment appears immediately in a "sending" style → `POST /posts/:id/comments` → confirmed. Failure → red "Not sent · Tap to retry".
 - **Delete:** long-press own comment (or any comment on own post) → *Delete* → confirm → `DELETE /comments/:id` → removed.
 - **Report:** long-press others' comment → *Report*.

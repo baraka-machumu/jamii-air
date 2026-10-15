@@ -1,7 +1,7 @@
 // Comments (App Flow §7.2; BR-FD-04, 05). The post's caption is pinned at the top; the list runs
-// oldest → newest with the newest at the bottom (an inverted list: the API's newest-first pages
-// fit it as they come, and older pages load on scrolling up). The input bar stays above the
-// keyboard (on Android by the reported keyboard height: src/components/keyboard.ts). Send: the
+// **newest first**, so a comment you have just written is the one you see, at the top, instead of
+// landing out of sight at the end of a long thread. Older pages load on scrolling down, which is
+// how the API pages anyway. The input bar stays above the keyboard (on Android by the reported keyboard height: src/components/keyboard.ts). Send: the
 // comment shows at once as "Sending…", then is confirmed; a failure turns it into "Not sent · Tap
 // to retry" (same Idempotency-Key, so a retry never posts twice). Long-press a comment → a sheet:
 // Report (someone else's comment, §10.2) and Delete → confirm (yours, or any on your post). Max
@@ -9,7 +9,7 @@
 // input.
 import { useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams } from 'expo-router';
-import { memo, useState } from 'react';
+import { memo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Alert, FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import {
@@ -49,6 +49,7 @@ export default function Comments() {
   const [draft, setDraft] = useState('');
   const [pending, setPending] = useState<Pending[]>([]);
   const [closed, setClosed] = useState(false);
+  const listRef = useRef<FlatList<Row>>(null);
   const keyboard = useAndroidKeyboardHeight();
 
   const gone = (error: unknown) => error instanceof ApiError && error.status === 404;
@@ -77,6 +78,8 @@ export default function Comments() {
     if (!body) return;
     setDraft('');
     void send({ key: newCommentKey(), body, state: 'sending', createdAt: new Date().toISOString() });
+    // The new row goes in at the top; if the thread was scrolled down, go and look at it.
+    listRef.current?.scrollToOffset({ offset: 0, animated: true });
   };
 
   const remove = (comment: Comment) => {
@@ -99,7 +102,7 @@ export default function Comments() {
     showActions(actions, { cancel: t('common.cancel') });
   };
 
-  // Inverted list: index 0 sits at the bottom. Newest first: unsent ones (latest typed first), then the server's.
+  // Newest first, top to bottom: unsent ones (latest typed first), then the server's pages.
   const rows: Row[] = [
     ...[...pending].reverse().map((p): Row => ({ kind: 'pending', pending: p })),
     ...(comments.data?.pages.flatMap((page) => page.items) ?? []).map((c): Row => ({ kind: 'comment', comment: c })),
@@ -127,7 +130,8 @@ export default function Comments() {
   } else {
     list = (
       <FlatList
-        inverted
+        testID="comments"
+        ref={listRef}
         data={rows}
         keyExtractor={(row) => (row.kind === 'comment' ? row.comment.id : row.pending.key)}
         renderItem={({ item }) => (item.kind === 'comment'

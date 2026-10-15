@@ -2,7 +2,8 @@
 // FlashList; each photo's space is reserved from its size (no jumps), blurhash until it loads.
 // More loads near the end; pull to refresh; tapping Home again scrolls to the top. States: 3
 // skeleton cards, empty (Find people / Share your first photo), error (Try again), and on a failed
-// refresh the cached feed stays with a "Couldn't refresh" toast. Your post being shared sits on top.
+// refresh the cached feed stays with a "Couldn't refresh" toast. Your post being shared sits on top,
+// and when it goes up the feed returns to the top so the new photo is the one you are looking at.
 import { FlashList, type FlashListRef } from '@shopify/flash-list';
 import { useRouter, useScrollToTop } from 'expo-router';
 import { useCallback, useEffect, useRef } from 'react';
@@ -17,6 +18,7 @@ import { PostingCard } from '@/components/PostingCard';
 import { Screen } from '@/components/Screen';
 import { Text } from '@/components/Text';
 import { showToast } from '@/components/Toast';
+import { usePublished } from '@/posting/published';
 import { useTheme } from '@/theme/ThemeProvider';
 
 export default function HomeTab() {
@@ -29,6 +31,15 @@ export default function HomeTab() {
 
   const posts = feed.data?.pages.flatMap((page) => page.items) ?? [];
   const open = useCallback((post: Post) => router.push({ pathname: '/p/[id]', params: { id: post.id } }), [router]);
+
+  // A post finishes in the background, so by then the feed is wherever it was left and the new
+  // photo is off-screen above. Go back to the top once, then forget it happened.
+  const published = usePublished((s) => s.postId);
+  useEffect(() => {
+    if (!published) return;
+    list.current?.scrollToOffset({ offset: 0, animated: true });
+    usePublished.getState().clear();
+  }, [published]);
 
   // A failed refresh keeps what is on screen and says so.
   const refreshFailed = feed.isRefetchError && posts.length > 0;

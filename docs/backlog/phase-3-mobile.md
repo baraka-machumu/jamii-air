@@ -29,6 +29,21 @@ to be Done is the reviewed PR.**
 | 3.9.f https share links | Waits for the domain (Plan 5.0) |
 | iOS | Nothing done; waits for the Apple account (Plan 5.0) |
 
+**Changes asked for after using the app (2026-10-16).** Two things only real use surfaces, both
+JavaScript-only and shipped over EAS Update:
+
+- **Comments now run newest first.** They were an inverted, chat-style list running oldest →
+  newest, so a comment you had just written went to the bottom of the thread, out of sight.
+  Sending also scrolls back to the top. App Flow §7.2 updated to match.
+- **The feed returns to the top when a post publishes.** Posting runs in the background, so by the
+  time it finished the feed was wherever it had been left and the new photo was off-screen above
+  it — which looked like nothing had happened. The posting job now announces the published id and
+  Home scrolls up once (`src/posting/published.ts`). App Flow §5 updated.
+
+Both are covered by tests that were checked to fail without the fix. The comments one needs two
+assertions: `inverted` flips a list visually, not in the tree, so the rendered order alone cannot
+see it.
+
 **First faults found from real use (2026-10-16).** Running against UAT turned up two things local
 testing had not, both fixed and shipped to the installed APK over **EAS Update** with no rebuild
 (`c87145ce`): the keyboard covering the lower half of every form, and the Profile tab being all but

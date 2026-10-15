@@ -166,6 +166,26 @@ describe('Comments (§7.2)', () => {
     expect(screen.getAllByText(/Caption 1/).length).toBeGreaterThan(0);
   });
 
+  it('lists the newest first, and puts a comment you send at the top', async () => {
+    await openComments();
+    // The stub answers with c2 then c1 (newest first), and that is the order on screen: a thread
+    // is read from its newest end, not scrolled to the bottom of.
+    const text = (node: { children?: unknown[] }): string =>
+      (node.children ?? []).map((c) => (typeof c === 'string' ? c : text(c as { children?: unknown[] }))).join('');
+    const order = () => screen.getAllByText(/Comment \d|Nice photo/).map((node) => text(node as never));
+    expect(order()).toEqual([expect.stringContaining('Comment 2'), expect.stringContaining('Comment 1')]);
+    // The rows above are in tree order, which `inverted` does not change - it flips the list
+    // visually (scaleY), so the prop is the only way a test can see which end is the top. Both
+    // assertions are needed: this one catches the flip, the one above catches a reversed `rows`.
+    expect(screen.getByTestId('comments').props.inverted).toBeFalsy();
+
+    fireEvent.changeText(screen.getByLabelText('Add a comment…'), 'Nice photo');
+    fireEvent.press(screen.getByRole('button', { name: 'Post' }));
+
+    // Yours is above both, where you can see it, rather than at the end of the thread.
+    expect(order()[0]).toEqual(expect.stringContaining('Nice photo'));
+  });
+
   it('opens from "View all N comments" too', async () => {
     renderRouter(routes, { initialUrl: '/' });
     await screen.findByText(/Caption 1/);

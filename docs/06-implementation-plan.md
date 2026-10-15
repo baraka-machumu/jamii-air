@@ -252,7 +252,7 @@ The moderation web app in `admin/`, against the finished admin API.
 | 4.2 | ✅ Auth flow: login, 2FA setup, 2FA code, session expiry |
 | 4.3 | ✅ Dashboard (KPI cards from `daily_metrics`, open reports, suspended users, invites remaining) |
 | 4.4 | ✅ Reports queue & detail; post view; hide / restore content (a comment is moderated from the report that names it: the admin API has no endpoint to fetch one on its own) |
-| 4.5 | Users list & detail; suspend / reinstate |
+| 4.5 | ✅ Users list & detail; suspend / reinstate; revoke all sessions |
 | 4.6 | Invite codes; Audit log; Admins management (super-admin only) |
 | 4.7 | Hosting: build in CI, serve the static files from nginx on our servers; **IP allowlist** for the portal and `/api/v1/admin/*` |
 | 4.8 | Playwright E2E in CI |

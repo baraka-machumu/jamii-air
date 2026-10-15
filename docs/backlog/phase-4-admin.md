@@ -18,12 +18,12 @@ Done also needs a reviewed PR, a green CI run on GitHub and the portal demonstra
 | 4.2 Auth flow | E1 | Review | see git log | Login (one page, three steps: email + password → the 6-digit code, or on a first sign-in the QR code and manual key to set up the authenticator), the session restored from the refresh cookie on every page load, idle expiry (30 min, warning with **Stay signed in** at 25) and the 12 h absolute limit, log out. 19 new tests (35 pass) |
 | 4.3 Dashboard | E7 | Review | see git log | “Needs attention” first (open reports with the oldest age, suspended users, invites remaining, each linking to the screen that acts on it), then the twelve pilot KPIs as stat tiles with trend lines, a 7 / 30 / 90-day selector above everything, and a **Show daily numbers** table so no value is hover-only. 18 new tests (53 pass) |
 | 4.4 Reports queue and detail | E6 | Review | see git log | Queue (default Open, oldest first; status / type filters on the server, reason in the portal; `j`/`k` move focus through the rows and Enter opens one), report detail (content preview blurred until clicked, the reporter's own words, other reports on the same target, the account's moderation history), hide / restore a post or comment, suspend / reinstate the account, resolve / dismiss — each with a reason note, and hiding or suspending closes the report in the same call. Opening a report marks it `REVIEWING`; a `409` names the admin who got there first. Post view at `/posts/:id` with hide / restore. 18 new tests (71 pass) |
-| 4.5 Users list and detail | E6 | Backlog | | Search and status filter, user detail (status, counts, posts incl. hidden, reports against them, sessions), suspend / reinstate, revoke sessions (App Flow §15.5) |
+| 4.5 Users list and detail | E6 | Review | see git log | Search (debounced 300 ms) over username, display name and email, status filter, open-reports column; account detail (email, joined, language, invite code, last active, counts, active sessions, bio; recent posts as a grid with hidden and failed ones badged; reports against them linking back to the report; moderation history), suspend / reinstate and revoke all sessions, each with a reason note. The date of birth is never shown — only "confirmed 18+ at sign-up". 12 new tests (83 pass) |
 | 4.6 Invites, audit log, admins | E6 | Backlog | | Invite codes (create, copy, revoke, used-by), audit log, admins management for super-admins incl. reset 2FA (App Flow §15.6–15.8) |
 | 4.7 Hosting | E0 | Backlog | | Build in CI, static files from nginx, IP allowlist for the portal and `/api/v1/admin/*`. **Waits for the servers and domain (Plan 5.0)** |
 | 4.8 Playwright E2E | E8 | Backlog | | The exit path in CI: resolve a report, hide a post, suspend and reinstate a user, create an invite code |
 
-**Next to build:** 4.5 Users list and detail.
+**Next to build:** 4.6 Invites, audit log and admins.
 
 **Checked against the running API** (2026-10-15): `npm run portal:check` in `backend/` drives
 sign-in, 2FA enrollment with a real code, `GET /admin/dashboard`, the page-load refresh and sign-out
@@ -70,11 +70,24 @@ its checks are green, move the task to **Review** in the Status table above.
 | 4.4.j | 4.4 Reports | Post view (`/posts/:id`): photo, caption, counts, its reports and history, hide / restore | ✅ |
 | 4.4.k | 4.4 Reports | Unit and route tests | ✅ |
 | 4.4.l | 4.4 Reports | Worked through in a browser against the local API (with 4.2.h) | ☐ |
+| 4.5.a | 4.5 Users | List: debounced search, status filter, paging, open-reports column | ✅ |
+| 4.5.b | 4.5 Users | Account detail: status, joined, counts, language, invite code, active sessions | ✅ |
+| 4.5.c | 4.5 Users | Confirmed 18+ shown without the date of birth | ✅ |
+| 4.5.d | 4.5 Users | Recent posts grid, with hidden and failed posts badged rather than left out | ✅ |
+| 4.5.e | 4.5 Users | Reports against them, linking back to each report | ✅ |
+| 4.5.f | 4.5 Users | Moderation history | ✅ |
+| 4.5.g | 4.5 Users | Suspend / reinstate with a reason note | ✅ |
+| 4.5.h | 4.5 Users | Revoke all sessions with a reason note | ✅ |
+| 4.5.i | 4.5 Users | Unit and route tests | ✅ |
+| 4.5.j | 4.5 Users | Looked at in a browser against the local API (with 4.2.h) | ☐ |
 
 ## Decisions taken during Phase 4
 
 | Topic | Decision | Why |
 |---|---|---|
+| The date of birth never reaches the portal (4.5) | The account page says "Confirmed 18+ at sign-up" and the API sends no birth date | App Flow §15.5 asks for exactly that. The 18+ rule is enforced by a CHECK constraint at registration (Plan 1.4), so the date adds nothing a moderator can act on and is the most sensitive field on the account |
+| Hidden and failed posts are badged, not filtered (4.5) | The recent-posts grid shows every post with a badge on anything not `PUBLISHED` | A grid that quietly left them out would hide exactly what a moderator opened the account to check, and a hidden post is the evidence that someone already acted |
+| Search is debounced, not cancelled (4.5) | 300 ms after the typing stops, and no `signal` is handed to the API client | The client wraps every request in its own abort controller for the 20 s timeout, which replaces a caller's signal — passing TanStack Query's in would read as cancellation that never happens. Each query string is its own cache key, so a slow page cannot overwrite a newer one either way (found by the 4.5 tests, where the handed-in signal made every search fail) |
 | Reason filter is applied in the portal (4.4) | `GET /admin/reports` filters by status and type only, so the reason filter narrows the pages already loaded, and the screen says which count it searched | Adding a server filter is a backend change in a phase whose premise is that the admin API is finished (2.12). The pilot's queue is tens of rows, and the note keeps the filter honest rather than looking like a full search |
 | `j` / `k` move focus, not a selection (4.4) | The shortcuts call `.focus()` on each row's own link instead of tracking a selected index | Enter, the focus ring and the screen-reader announcement then come from the browser, and a row stays reachable by Tab for an admin who does not know the shortcuts. A custom selection would have had to re-implement all four |
 | Opening a report marks it `REVIEWING`, quietly (4.4) | The `PATCH` fires once per report on arrival and invalidates only that report, not the queue | App Flow §15.4 step 2 asks for it so two moderators can see that someone is already on a report. Invalidating the queue would reorder the list under the moderator who just left it |

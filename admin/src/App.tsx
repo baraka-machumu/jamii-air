@@ -10,6 +10,8 @@ import Login from '@/routes/Login';
 import Post from '@/routes/Post';
 import Report from '@/routes/Report';
 import Reports from '@/routes/Reports';
+import User from '@/routes/User';
+import Users from '@/routes/Users';
 import { Placeholder } from '@/routes/placeholder';
 import { useSession } from '@/stores/session';
 
@@ -43,8 +45,8 @@ export function App() {
         <Route path="reports" element={<Reports />} />
         <Route path="reports/:id" element={<Report />} />
         <Route path="posts/:id" element={<Post />} />
-        <Route path="users" element={<Placeholder title="Users" task="4.5" />} />
-        <Route path="users/:id" element={<Placeholder title="User" task="4.5" />} />
+        <Route path="users" element={<Users />} />
+        <Route path="users/:id" element={<User />} />
         <Route path="invites" element={<Placeholder title="Invite codes" task="4.6" />} />
         <Route path="audit-log" element={<Placeholder title="Audit log" task="4.6" />} />
         <Route path="admins" element={<Placeholder title="Admins" task="4.6" />} />

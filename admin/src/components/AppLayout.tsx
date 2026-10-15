@@ -3,6 +3,7 @@
 // moderator - the API refuses them anyway, and a dead link is worse than no link.
 import { Link, NavLink, Outlet, useLocation } from 'react-router';
 import { SessionExpiryWarning } from '@/components/SessionExpiryWarning';
+import { ToastHost } from '@/components/Toast';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { logout } from '@/auth/session';
@@ -66,6 +67,9 @@ export function AppLayout() {
         <main className="mx-auto w-full max-w-[1440px] flex-1 p-6">
           <Outlet />
         </main>
+        {/* One host for the whole portal: a mutation inside a dialog confirms through it without
+            the screen that opened the dialog knowing about it. */}
+        <ToastHost />
       </div>
     </div>
   );

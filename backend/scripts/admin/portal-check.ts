@@ -3,7 +3,8 @@
 // load uses, and sign out (Plan 4.2, 4.3). It proves the portal's assumptions against the server
 // rather than against a stub, and needs no browser or authenticator app.
 //
-//   npm run portal:check            # API on localhost:3000
+//   npm run portal:check                  # API on localhost:3000
+//   npm run portal:check -- --prepare     # only create the admin, for signing in by hand
 //   PORTAL_CHECK_API=http://... npm run portal:check
 //
 // It writes one clearly-named SUPER_ADMIN (portal-check@jamiiair.test), replacing it each run so
@@ -30,6 +31,18 @@ const { rows } = await client.query<{ id: string }>(
   [EMAIL, 'Portal Check', hash],
 );
 console.log(`admin ready: ${EMAIL} (${rows[0]!.id})`);
+
+// --prepare: leave the admin un-enrolled and stop, so the browser gets the QR code at its first
+// sign-in (Plan 4.2.h / 4.3.f, looking at the portal by hand).
+if (process.argv.includes('--prepare')) {
+  console.log('');
+  console.log('Sign in to the portal with:');
+  console.log(`  email:    ${EMAIL}`);
+  console.log(`  password: ${PASSWORD}`);
+  console.log('The first sign-in shows the QR code to scan with an authenticator app.');
+  await client.end();
+  process.exit(0);
+}
 
 const results: [string, boolean, string][] = [];
 const check = (name: string, ok: boolean, detail = '') => {

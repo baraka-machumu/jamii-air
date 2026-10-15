@@ -17,13 +17,13 @@ Done also needs a reviewed PR, a green CI run on GitHub and the portal demonstra
 | 4.1 App setup | E0 | Review | see git log | Vite + React 19 + TS, Tailwind 4 + shadcn/ui with the Jamii tokens, react-router with the session guard, sidebar frame, typed API client from the OpenAPI spec (`npm run api:sync`), Vitest. 16 tests, `Admin` CI workflow (type-check, lint, tests, build) |
 | 4.2 Auth flow | E1 | Review | see git log | Login (one page, three steps: email + password → the 6-digit code, or on a first sign-in the QR code and manual key to set up the authenticator), the session restored from the refresh cookie on every page load, idle expiry (30 min, warning with **Stay signed in** at 25) and the 12 h absolute limit, log out. 19 new tests (35 pass) |
 | 4.3 Dashboard | E7 | Review | see git log | “Needs attention” first (open reports with the oldest age, suspended users, invites remaining, each linking to the screen that acts on it), then the twelve pilot KPIs as stat tiles with trend lines, a 7 / 30 / 90-day selector above everything, and a **Show daily numbers** table so no value is hover-only. 18 new tests (53 pass) |
-| 4.4 Reports queue and detail | E6 | Backlog | | Queue (default Open, oldest first; status / type / reason filters, `j`/`k`/`Enter` keyboard), detail with content preview and blur-until-click, hide / restore, dismiss, resolve, moderation history (App Flow §15.4) |
+| 4.4 Reports queue and detail | E6 | Review | see git log | Queue (default Open, oldest first; status / type filters on the server, reason in the portal; `j`/`k` move focus through the rows and Enter opens one), report detail (content preview blurred until clicked, the reporter's own words, other reports on the same target, the account's moderation history), hide / restore a post or comment, suspend / reinstate the account, resolve / dismiss — each with a reason note, and hiding or suspending closes the report in the same call. Opening a report marks it `REVIEWING`; a `409` names the admin who got there first. Post view at `/posts/:id` with hide / restore. 18 new tests (71 pass) |
 | 4.5 Users list and detail | E6 | Backlog | | Search and status filter, user detail (status, counts, posts incl. hidden, reports against them, sessions), suspend / reinstate, revoke sessions (App Flow §15.5) |
 | 4.6 Invites, audit log, admins | E6 | Backlog | | Invite codes (create, copy, revoke, used-by), audit log, admins management for super-admins incl. reset 2FA (App Flow §15.6–15.8) |
 | 4.7 Hosting | E0 | Backlog | | Build in CI, static files from nginx, IP allowlist for the portal and `/api/v1/admin/*`. **Waits for the servers and domain (Plan 5.0)** |
 | 4.8 Playwright E2E | E8 | Backlog | | The exit path in CI: resolve a report, hide a post, suspend and reinstate a user, create an invite code |
 
-**Next to build:** 4.4 Reports queue and detail — the screen the portal exists for.
+**Next to build:** 4.5 Users list and detail.
 
 **Checked against the running API** (2026-10-15): `npm run portal:check` in `backend/` drives
 sign-in, 2FA enrollment with a real code, `GET /admin/dashboard`, the page-load refresh and sign-out
@@ -58,11 +58,32 @@ its checks are green, move the task to **Review** in the Status table above.
 | 4.3.d | 4.3 Dashboard | 7 / 30 / 90-day selector, one control scoping every tile | ✅ |
 | 4.3.e | 4.3 Dashboard | **Show daily numbers** table, so no value is reachable only by hovering | ✅ |
 | 4.3.f | 4.3 Dashboard | Looked at in a browser against the local API (with 4.2.h) | ☐ |
+| 4.4.a | 4.4 Reports | Queue: default Open and oldest first, status / type / reason filters, paging | ✅ |
+| 4.4.b | 4.4 Reports | `j` / `k` move through the queue and Enter opens a report | ✅ |
+| 4.4.c | 4.4 Reports | Report detail: reported content, reporter and their words, other reports on the target, the account's moderation history | ✅ |
+| 4.4.d | 4.4 Reports | Reported media blurred until clicked | ✅ |
+| 4.4.e | 4.4 Reports | Opening a report marks it `REVIEWING` | ✅ |
+| 4.4.f | 4.4 Reports | Hide / restore a post or comment, with a reason note | ✅ |
+| 4.4.g | 4.4 Reports | Suspend / reinstate the reported account from the report, with a reason note | ✅ |
+| 4.4.h | 4.4 Reports | Resolve / dismiss; hiding or suspending can close the report in the same call | ✅ |
+| 4.4.i | 4.4 Reports | `409` says who handled it first and shows what they decided | ✅ |
+| 4.4.j | 4.4 Reports | Post view (`/posts/:id`): photo, caption, counts, its reports and history, hide / restore | ✅ |
+| 4.4.k | 4.4 Reports | Unit and route tests | ✅ |
+| 4.4.l | 4.4 Reports | Worked through in a browser against the local API (with 4.2.h) | ☐ |
 
 ## Decisions taken during Phase 4
 
 | Topic | Decision | Why |
 |---|---|---|
+| Reason filter is applied in the portal (4.4) | `GET /admin/reports` filters by status and type only, so the reason filter narrows the pages already loaded, and the screen says which count it searched | Adding a server filter is a backend change in a phase whose premise is that the admin API is finished (2.12). The pilot's queue is tens of rows, and the note keeps the filter honest rather than looking like a full search |
+| `j` / `k` move focus, not a selection (4.4) | The shortcuts call `.focus()` on each row's own link instead of tracking a selected index | Enter, the focus ring and the screen-reader announcement then come from the browser, and a row stays reachable by Tab for an admin who does not know the shortcuts. A custom selection would have had to re-implement all four |
+| Opening a report marks it `REVIEWING`, quietly (4.4) | The `PATCH` fires once per report on arrival and invalidates only that report, not the queue | App Flow §15.4 step 2 asks for it so two moderators can see that someone is already on a report. Invalidating the queue would reorder the list under the moderator who just left it |
+| Reported media is blurred until clicked (4.4) | The image loads but stays blurred behind a "Click to show" button that names the reason | Nudity and violence are two of the seven reasons the app offers, and a queue is a stream of other people's worst content. Loading it anyway means a click does not then wait for a download |
+| Hiding or suspending offers to close the report (4.4) | The moderation endpoints take the `reportId`, so the dialog has a "Resolve the report as well" box, ticked by default for hide and suspend and absent for restore and reinstate | App Flow §15.4 step 3a asks for exactly this. Restoring content is not an answer to the report that asked for it to go, so it does not offer to close it |
+| A `409` is answered with a refetch, not with the error (4.4) | `REPORT_ALREADY_HANDLED` carries no admin name, so the portal refetches the report and names `resolvedByName` in the banner | App Flow §15.9 asks for "already handled by {admin}". The name only exists on the report, and the refetch also replaces the stale decision buttons with what the other admin actually decided |
+| One modal, hand-written (4.4) | `src/components/Modal.tsx` is a plain `role="dialog" aria-modal` with Escape, the first field focused and focus returned to the opener, rather than shadcn's Radix dialog | The portal needs one overlay. Radix would add two dependencies for it, and what matters for a keyboard moderator is the four behaviours above |
+| Every moderation action goes through one dialog (4.4) | `NoteDialog` takes a title, what will happen, a confirm label and the action; Confirm stays disabled until a note is typed | The server requires the note (`fn__require_note`) and the audit log is only as useful as the notes in it. A disabled button with the reason beside it beats a round trip that comes back `NOTE_REQUIRED` |
+| A moderation action invalidates the whole `['admin']` namespace (4.4) | Rather than listing the queries it touches | One suspension changes the user's status, the report queue, the dashboard's attention tiles, the account's post grid and the audit log at once. An enumerated list silently rots as screens are added |
 | Dashboard layout (4.3) | “Needs attention” (open reports with the oldest age, suspended users, invites remaining) comes before the KPI tiles, and each of those tiles is followed by a link to the screen that acts on it | App Flow §15.3 lists the KPIs first, but a moderator opens the portal to clear a queue, not to read retention. The numbers that imply work come first |
 | Trend lines are sparklines, not charts (4.3) | Each KPI is a stat tile with a 36px single-series line, no axes, no grid and no per-point labels; the tile's value is the latest point | The job is “a current value, with its direction”, which is a stat tile's job. Twelve axis-bearing charts would be a wall of chrome for numbers that are read in one glance |
 | Status is never colour alone (4.3) | Changes read as text (“+14”, “no change”) and attention tiles carry a sentence, not a coloured arrow or pill. The sparkline is a recessive grey line with the read point in the brand accent | The palette validator settles it: as a categorical set, Jamii terracotta `#c2410c`, danger `#b91c1c` and warning `#b45309` are ΔE 6.1 apart for normal vision — below the 15 floor, so they cannot carry meaning side by side. Contrast against white passes, so they stay fine as single accents. “More posts” is also good while “more open reports” is not, so direction alone would not say which |

@@ -58,7 +58,12 @@ include was collecting the Playwright spec, which would have hidden a real failu
 **The Playwright exit path was re-run after the redesign: 6/6 pass** against the real API in
 Chromium, and the dashboard and reports screens were captured in both themes and looked at.
 
-**CI is green on GitHub (2026-10-16, `59e4527`).** Both Admin jobs pass: the 101 unit tests, and
+**✅ Phase 4 is Done (2026-10-16), bar 4.7 hosting.** CI green on GitHub, and the commits reviewed
+by the owner — as commits on `main` rather than through a pull request, since a single-engineer
+repo never branched. The three by-hand checks (4.2.h, 4.3.f, 4.6.l) are still worth doing but are
+not part of the phase gate.
+
+**CI is green on GitHub (2026-10-16).** Both Admin jobs pass: the 101 unit tests, and
 the **Admin E2E** job, which brings up the stack, migrates, seeds and drives the portal through the
 whole exit path in a real Chromium — so 4.8 is now proven in CI, not only on the engineer's laptop.
 

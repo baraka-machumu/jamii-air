@@ -33,7 +33,7 @@ Nothing here costs money or waits for anyone else.
 
 | # | Item | Why it matters | State |
 |---|---|---|---|
-| A1 | **Review the Phase 1–4 commits** | The single remaining gate for all four phases to leave Review → Done. CI is green; the demo happened. This is the only thing left. | ☐ |
+| A1 | **Review the Phase 1–4 commits** | ✅ **Done 2026-10-16.** All four phases are now Done. Reviewed as commits on `main` rather than through a pull request — the repo never branched — so the Definition of Done was met in substance, not in form. | ✅ |
 | A2 | **Transactional email provider** — Resend | **Part done 2026-10-16.** The account exists, the API sends through it (SMTP credentials, not a vendor SDK) and a real password reset was delivered end to end on UAT. **It still does not help testers:** the only sender available without a verified domain is `onboarding@resend.dev`, which Resend delivers **only to the address the account was opened with**. So reset works for the owner and for nobody else. The remaining step is not code — verify a domain at resend.com/domains, then set `MAIL_FROM` to it. | ◐ 🔒 D2 |
 | A3 | Make **Database, Backend, Mobile, Admin** checks required in `main`'s branch protection | Green CI that cannot block a merge is decoration. GitHub settings, two minutes. | ☐ |
 | A4 | Create the GitHub board and issues | `gh auth refresh -s project`, then `node docs/backlog/create-github-issues.mjs <file>`. Until then the backlog files are the tracker. `gh` is installed. | ☐ |

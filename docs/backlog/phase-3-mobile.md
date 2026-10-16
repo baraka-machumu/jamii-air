@@ -16,8 +16,10 @@ it is the first time the app has run against a server that is not the engineer's
 3.11.e passed 2026-10-14, on `ea7ea3a0`, with a second account; two fixes came out of it — Follow
 back and the comment input under the keyboard).
 
-**CI is green on GitHub** for all four workflows at `59e4527` (2026-10-16). **What remains for Phase 3
-to be Done is the reviewed PR.**
+**CI is green on GitHub** for all four workflows (2026-10-16), and the commits were reviewed the
+same day.
+
+**✅ Phase 3 is Done (2026-10-16).** Built, every check green on GitHub, and the commits reviewed by the owner. Reviewed **as commits on `main`, not through a pull request** — a single-engineer repo never branched — so the Definition of Done's "reviewed PR" was met in substance rather than in form.
 
 **Still open on the device**, none of it blocking the above:
 

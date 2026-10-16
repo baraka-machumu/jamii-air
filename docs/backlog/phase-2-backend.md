@@ -4,7 +4,9 @@ Tracker for the backend layer of the [Implementation Plan](../06-implementation-
 
 ## Status
 
-Board columns as in Plan §2.3. **Review** = built, every check green locally, committed to `main`; not yet Done. Done also needs a reviewed PR and a green CI run on GitHub — **CI is green at `59e4527` (2026-10-16), so the reviewed PR is the only gate left.**
+Board columns as in Plan §2.3. **Review** = built, every check green locally, committed to `main`; not yet Done. Done also needed a reviewed PR and a green CI run on GitHub; both happened on 2026-10-16.
+
+**✅ Phase 2 is Done (2026-10-16).** Built, every check green on GitHub, and the commits reviewed by the owner. Reviewed **as commits on `main`, not through a pull request** — a single-engineer repo never branched — so the Definition of Done's "reviewed PR" was met in substance rather than in form.
 
 The GitHub board does not exist yet, so this table is the tracker (the `gh` CLI is available: `gh run list` shows CI).
 

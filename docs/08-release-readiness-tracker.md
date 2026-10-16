@@ -34,7 +34,7 @@ Nothing here costs money or waits for anyone else.
 | # | Item | Why it matters | State |
 |---|---|---|---|
 | A1 | **Review the Phase 1–4 commits** | The single remaining gate for all four phases to leave Review → Done. CI is green; the demo happened. This is the only thing left. | ☐ |
-| A2 | **Transactional email provider** (free tier: Resend, Brevo) | **The one hard blocker for real testers.** Without it password-reset codes go to Mailpit, which only you can read over a tunnel, and no admin can reset a password either — the admin API has suspend, reinstate and revoke-sessions, nothing else. A tester who forgets their password is locked out for good. Needs a little wiring once the key exists. | ☐ |
+| A2 | **Transactional email provider** — Resend | **Part done 2026-10-16.** The account exists, the API sends through it (SMTP credentials, not a vendor SDK) and a real password reset was delivered end to end on UAT. **It still does not help testers:** the only sender available without a verified domain is `onboarding@resend.dev`, which Resend delivers **only to the address the account was opened with**. So reset works for the owner and for nobody else. The remaining step is not code — verify a domain at resend.com/domains, then set `MAIL_FROM` to it. | ◐ 🔒 D2 |
 | A3 | Make **Database, Backend, Mobile, Admin** checks required in `main`'s branch protection | Green CI that cannot block a merge is decoration. GitHub settings, two minutes. | ☐ |
 | A4 | Create the GitHub board and issues | `gh auth refresh -s project`, then `node docs/backlog/create-github-issues.mjs <file>`. Until then the backlog files are the tracker. `gh` is installed. | ☐ |
 | A5 | **Sentry** account (free: 5k errors/month) | Crash reporting for API, worker, app and portal. The DSN is free; the SDK is **not wired yet in any of the four**, so this one does need development after the account exists. Set a spend cap at signup. | ☐ |
@@ -78,7 +78,7 @@ Everything here was deferred by decision D-12 and is now the gate for most of Ph
 | # | Item | Blocks | State |
 |---|---|---|---|
 | D1 | **Production servers** — Tanzanian data centre; Linux, Docker + Compose, firewall, SSH keys, static IPs, separate disks for PostgreSQL, MinIO and backups | 5.1, 5.2, 5.3 | ☐ |
-| D2 | **Domain + DNS**, including the `admin.` sub-domain | Real TLS, the portal IP allowlist, https share links (3.9.f), App Links verification | ☐ |
+| D2 | **Domain + DNS**, including the `admin.` sub-domain | Real TLS, the portal IP allowlist, https share links (3.9.f), App Links verification, **and the Resend sender that lets testers reset their passwords (A2)** | ☐ |
 | D3 | **Apple Developer** account, plus an iPhone as second reference device | All of iOS: 5.1a, APNs, TestFlight | ☐ |
 | D4 | **Google Play Console** account | Play internal testing, store listing | ☐ |
 | D5 | Office **IP addresses** for the admin allowlist | 4.7 proper, 5.1 | ☐ |
@@ -109,7 +109,7 @@ Not tasks — things that are true today and should be said out loud before anyo
 |---|---|
 | API and media on **plain HTTP** | Passwords and photos travel in the clear. Fine among people who know; not fine for a pilot meant to produce evidence. |
 | Portal on **self-signed TLS**, no IP allowlist | A certificate warning every session, and the portal is reachable from any IP, behind 2FA only. |
-| **No password reset** | See A2. The sharpest edge for real users. |
+| **Password reset reaches the owner only** | See A2: it works, but `onboarding@resend.dev` delivers only to the Resend account's own address until a domain is verified. Still the sharpest edge for real users. |
 | **No crash reporting** | A crash on someone's phone leaves no trace; a bad build is found by asking. |
 | **No backups** | Losing the host loses the pilot's evidence, which is the point of running it (BO-1). |
 | Share links are `http://41.59.227.223:4011/p/…` | Android App Links cannot verify, so https links do not open the app. `jamiiair://` still works. |

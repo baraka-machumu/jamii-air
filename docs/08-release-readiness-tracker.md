@@ -1,0 +1,129 @@
+# Jamii Air — Release Readiness Tracker
+
+| | |
+|---|---|
+| **Document** | 08 — Release Readiness Tracker |
+| **Purpose** | Everything standing between the built product and a release that is **not writing code** |
+| **Opened** | 2026-10-16 |
+| **Owner** | Baraka (engineer + acting product owner) |
+| **Related** | [06 Implementation Plan](06-implementation-plan.md) §4 Phase 5–6, the four [backlog trackers](backlog/), [deploy/uat/README.md](../deploy/uat/README.md) |
+
+---
+
+## Why this document exists
+
+The code is effectively finished: Phases 1–4 are built, every check is green on GitHub, and the
+whole stack runs on UAT with the core loop confirmed on a real phone. What is left is almost
+entirely **not development** — accounts to open, money to spend, things to look at by hand,
+decisions to make, and bookkeeping to close.
+
+Those items were scattered across the plan, four backlog files and a runbook, which is fine while
+building and useless when planning a release. They are gathered here, with what each one blocks.
+
+**How to use it:** work top-down. The groups are ordered by what unblocks the most for the least,
+not by phase number. Tick items here *and* in their home document, so neither goes stale.
+
+**Legend:** ☐ not started · ◐ part done · ✅ done · 🔒 blocked by another row
+
+---
+
+## A. Free, now, and blocking the most
+
+Nothing here costs money or waits for anyone else.
+
+| # | Item | Why it matters | State |
+|---|---|---|---|
+| A1 | **Review the Phase 1–4 commits** | The single remaining gate for all four phases to leave Review → Done. CI is green; the demo happened. This is the only thing left. | ☐ |
+| A2 | **Transactional email provider** (free tier: Resend, Brevo) | **The one hard blocker for real testers.** Without it password-reset codes go to Mailpit, which only you can read over a tunnel, and no admin can reset a password either — the admin API has suspend, reinstate and revoke-sessions, nothing else. A tester who forgets their password is locked out for good. Needs a little wiring once the key exists. | ☐ |
+| A3 | Make **Database, Backend, Mobile, Admin** checks required in `main`'s branch protection | Green CI that cannot block a merge is decoration. GitHub settings, two minutes. | ☐ |
+| A4 | Create the GitHub board and issues | `gh auth refresh -s project`, then `node docs/backlog/create-github-issues.mjs <file>`. Until then the backlog files are the tracker. `gh` is installed. | ☐ |
+| A5 | **Sentry** account (free: 5k errors/month) | Crash reporting for API, worker, app and portal. The DSN is free; the SDK is **not wired yet in any of the four**, so this one does need development after the account exists. Set a spend cap at signup. | ☐ |
+| A6 | **PostHog** account (free: 1M events/month) | All ten TRD PA-01 events are already wired and dormant; they switch on when `EXPO_PUBLIC_POSTHOG_KEY` is set. **Choose the EU region at signup**, or the host has to be set too. Set a billing limit. | ☐ |
+
+---
+
+## B. Look at it by hand
+
+Automation has gone as far as it can. These need a person, a real device and real credentials.
+
+| # | Item | Where | State |
+|---|---|---|---|
+| B1 | Scan the portal's QR with a real authenticator app | 4.2.h | ☐ |
+| B2 | Look at the dashboard against real data — tiles, chart, daily numbers | 4.3.f | ☐ |
+| B3 | Look at the Admins page (the end-to-end run never visits it) | 4.6.l | ☐ |
+| B4 | Look at the redesigned portal generally (nobody has seen it but the engineer, in two screenshots) | 4.7 | ☐ |
+| B5 | **Update required** screen: point the app at an API started with `MIN_APP_VERSION=9.9.9` | 3.12.d | ☐ |
+| B6 | Accessibility on the real OS: maximum font and display size, plus a TalkBack pass | 3.12.c | ☐ |
+| B7 | **Run the Maestro core loop once** — it has never been run. Needs `adb` on PATH (`%LOCALAPPDATA%\Android\Sdk\platform-tools`) | 3.12.a | ☐ |
+
+B1–B4 are one browser session. B5–B7 are one phone session.
+
+---
+
+## C. Decisions only the owner can make
+
+| # | Decision | What hangs on it | State |
+|---|---|---|---|
+| C1 | **Pilot on UAT, or wait for production?** | Everything in D and E. The pilot does not technically need production — see Plan §1.1 for the costs of each path. Recommended: fix A2, run a 2–3 person shakedown on UAT, then decide. | ☐ |
+| C2 | Pay for **Apple Developer** (annual) and **Google Play Console** (one-off) now, or after the shakedown? | D3, D4, all of iOS, and store distribution | ☐ |
+| C3 | How the Maestro loop runs in CI: GitHub Actions emulator, or Maestro Cloud (paid) | 5.1b | ☐ |
+| C4 | Whether UAT data is worth backing up before the pilot | E6 | ☐ |
+
+---
+
+## D. Costs money (Plan 5.0)
+
+Everything here was deferred by decision D-12 and is now the gate for most of Phase 5.
+
+| # | Item | Blocks | State |
+|---|---|---|---|
+| D1 | **Production servers** — Tanzanian data centre; Linux, Docker + Compose, firewall, SSH keys, static IPs, separate disks for PostgreSQL, MinIO and backups | 5.1, 5.2, 5.3 | ☐ |
+| D2 | **Domain + DNS**, including the `admin.` sub-domain | Real TLS, the portal IP allowlist, https share links (3.9.f), App Links verification | ☐ |
+| D3 | **Apple Developer** account, plus an iPhone as second reference device | All of iOS: 5.1a, APNs, TestFlight | ☐ |
+| D4 | **Google Play Console** account | Play internal testing, store listing | ☐ |
+| D5 | Office **IP addresses** for the admin allowlist | 4.7 proper, 5.1 | ☐ |
+
+---
+
+## E. Operations and hardening
+
+| # | Item | Where | State |
+|---|---|---|---|
+| E1 | Production deploy: API, worker, PG 18, Redis, MinIO, nginx with TLS + media cache, portal behind the allowlist; secrets, firewall, disk and container-health alerts | 5.1 | 🔒 D1, D2 |
+| E2 | Backups: pgBackRest (daily + WAL for PITR), off-server copy, MinIO mirror, **restore drill** with runbook | 5.2 | 🔒 D1 |
+| E3 | k6 load test at 10× pilot (10k-DAU model); fix what it finds | 5.3 | 🔒 D1 |
+| E4 | Security review: OWASP API Top 10, `SECURITY DEFINER` sweep, dependency audit, log redaction check | 5.4 | ☐ (can start now) |
+| E5 | Cross-check PostHog's numbers against `daily_metrics` | 5.5 | 🔒 A6 |
+| E6 | **No backups of UAT data** (`/home/jamii-air/data`) | deploy README | ☐ |
+| E7 | Watch `/` on the shared UAT host — 94% full, four other projects on it; if it fills they go down with us | [deploy README](../deploy/uat/README.md) | ☐ ongoing |
+| E8 | Swahili copy review | 5.6 | ☐ (can start now) |
+| E9 | Store assets, **18+ age rating**, privacy labels / Data Safety, TestFlight and Play internal testing | 5.7 | 🔒 D3, D4 |
+
+---
+
+## F. Known gaps being lived with on UAT
+
+Not tasks — things that are true today and should be said out loud before anyone else uses it.
+
+| Gap | Consequence |
+|---|---|
+| API and media on **plain HTTP** | Passwords and photos travel in the clear. Fine among people who know; not fine for a pilot meant to produce evidence. |
+| Portal on **self-signed TLS**, no IP allowlist | A certificate warning every session, and the portal is reachable from any IP, behind 2FA only. |
+| **No password reset** | See A2. The sharpest edge for real users. |
+| **No crash reporting** | A crash on someone's phone leaves no trace; a bad build is found by asking. |
+| **No backups** | Losing the host loses the pilot's evidence, which is the point of running it (BO-1). |
+| Share links are `http://41.59.227.223:4011/p/…` | Android App Links cannot verify, so https links do not open the app. `jamiiair://` still works. |
+| iOS entirely unbuilt | Android-only pilot until D3. |
+
+---
+
+## Suggested order
+
+1. **A1, A3, A4** — close the bookkeeping; Phases 1–4 become Done. Free, an hour.
+2. **A2** — email. The one thing between the working APK and other people's hands.
+3. **B1–B4** in one browser session, **B5–B7** in one phone session.
+4. **C1** — decide where the pilot runs, now that you have seen the portal and the app.
+5. If UAT: invite 2–3 people, watch, fix. If production: **D1–D5**, then **E1–E3**.
+6. **E4, E8** can be done at any point and do not wait for money.
+
+Nothing in 1–4 costs anything, and none of it is wasted whichever way C1 goes.

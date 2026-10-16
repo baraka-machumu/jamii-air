@@ -82,6 +82,9 @@ need it. What it does need is weighed below.
 | No backups | Losing the host loses the pilot's evidence, which is the point of running it (BO-1). |
 | No crash reporting | A crash on someone's phone leaves no trace, so a bad build is only found by asking. |
 
+Every non-code item below — accounts, costs, the checks that need a person, the decisions — is
+tracked in one place: **[08 Release Readiness Tracker](08-release-readiness-tracker.md)**.
+
 **Recommended order:** add a free-tier email provider, run a two-or-three person shakedown on UAT
 to find what only real use finds, then decide whether the pilot proper justifies Phase 5's costs
 (servers, domain, Apple Developer, Play Console). Nothing in that order wastes work: 5.0 is needed

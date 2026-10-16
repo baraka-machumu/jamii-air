@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Project** | Jamii Air — photo & short-video social platform |
-| **Phase** | Phase 0 complete. Phases 1 · Database and 2 · Backend built and tested locally, in review (2026-10-11). Phase 3 · Mobile in progress: tasks 3.1–3.8 built and checked on the reference Android (2026-10-13); 3.9 engagement and 3.10 notifications built (2026-10-13), 3.11 safety built (2026-10-14), phone checks pending; next 3.12. Status: [Plan §1](06-implementation-plan.md#1-summary) |
+| **Phase** | Phases 0–4 built. The stack runs on UAT and the core loop is confirmed on a real phone (2026-10-16); all four CI workflows green. Phases 1–4 wait only on a commit review to be Done. What is left is mostly not development — see the [Release Readiness Tracker](08-release-readiness-tracker.md). Status: [Plan §1](06-implementation-plan.md#1-summary) |
 | **Doc version** | 1.7 — 2026-10-14 (TRD 1.7 and Design Brief 1.3: mobile stack and motion as built; Plan 1.18: status after 3.11; Phase 3 decisions in the [Phase 3 backlog](backlog/phase-3-mobile.md#decisions-taken-during-phase-3)) |
 | **Prepared by** | Senior Software Engineer |
 | **Source guidelines** | `instagram_mvp_technical_specification_10_users.pdf` (the "Spec"), `application-consideration.txt` (the "Guidelines") |
@@ -23,6 +23,7 @@ Read in this order. Every later document builds on the decisions in the earlier 
 | 05 | [Backend Schema Document](05-backend-schema-document.md) | What is stored, where, and which stored procedures operate on it? | Backend engineering |
 | 06 | [Implementation Plan](06-implementation-plan.md) | In what order do we build it, and how do we know each step is done? | Whole team |
 | 07 | [API Review](07-api-review.md) | Does every screen have the endpoints it needs? (Plan task 2.14 record) | Engineering |
+| 08 | [Release Readiness Tracker](08-release-readiness-tracker.md) | What is left that is **not** writing code: accounts, costs, manual checks, decisions, ops | Owner |
 
 ## 2. Release numbering
 

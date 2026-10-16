@@ -6,6 +6,12 @@ export interface Mail {
   to: string;
   subject: string;
   text: string;
+  /**
+   * A stable label for the logs. The subject cannot be used: a reset email puts the code in it
+   * ("Your Jamii Air code: 123456"), so logging the subject writes a live credential to the log
+   * and undoes SR-05, which hashes the code precisely so it cannot be read back.
+   */
+  kind: 'password-reset';
 }
 
 /**
@@ -32,8 +38,9 @@ export class MailService {
   }
 
   async send(mail: Mail): Promise<void> {
-    await this.transport.sendMail({ from: this.config.smtp.from, ...mail });
-    // Never the address or the body: a reset code in a log is a reset code that leaked (SR-05).
-    this.logger.log({ subject: mail.subject }, 'mail sent');
+    const { kind, ...message } = mail;
+    await this.transport.sendMail({ from: this.config.smtp.from, ...message });
+    // The label only. Not the address, not the body, and not the subject - see Mail.kind.
+    this.logger.log({ kind }, 'mail sent');
   }
 }

@@ -100,7 +100,7 @@ export class AuthService {
       dto.email.trim(), this.codeHash(dto.email, code), new Date(Date.now() + RESET_CODE_TTL_MS));
     if (!target) return;
     try {
-      await this.mail.send({ to: target.email, ...resetCodeMail(target.locale, code, RESET_CODE_TTL_MS / 60_000) });
+      await this.mail.send({ to: target.email, kind: 'password-reset', ...resetCodeMail(target.locale, code, RESET_CODE_TTL_MS / 60_000) });
     } catch (error) {
       this.logger.error({ err: error, userId: target.userId }, 'password reset mail failed');
     }

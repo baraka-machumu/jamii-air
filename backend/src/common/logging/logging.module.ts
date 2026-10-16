@@ -23,6 +23,8 @@ export const REDACT_PATHS = [
   '*.dateOfBirth',
   '*.totp',
   '*.code',
+  // A reset email carries its code in the subject, so a subject is a credential here.
+  '*.subject',
 ];
 
 export function requestIdOf(req: IncomingMessage, res: ServerResponse): string {

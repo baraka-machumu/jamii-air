@@ -25,6 +25,32 @@ function problems(env: NodeJS.ProcessEnv): string[] {
 }
 
 describe('loadConfig', () => {
+  describe('email', () => {
+    it('needs no credentials for Mailpit, which is what local development runs on', () => {
+      const config = loadConfig({ ...valid });
+      expect(config.smtp).toMatchObject({ host: 'localhost', port: 1025, user: null, password: null, secure: false });
+    });
+
+    it('carries a provider user and password through, and keeps 587 on STARTTLS', () => {
+      const config = loadConfig({
+        ...valid, SMTP_HOST: 'smtp.resend.com', SMTP_PORT: '587', SMTP_USER: 'resend', SMTP_PASSWORD: 're_key',
+      });
+      expect(config.smtp).toMatchObject({ host: 'smtp.resend.com', port: 587, user: 'resend', password: 're_key', secure: false });
+    });
+
+    it('turns on implicit TLS for 465 without being told', () => {
+      expect(loadConfig({ ...valid, SMTP_PORT: '465', SMTP_USER: 'u', SMTP_PASSWORD: 'p' }).smtp.secure).toBe(true);
+    });
+
+    it('refuses half a credential, which a provider would only report as a rejected message', () => {
+      expect(problems({ ...valid, SMTP_USER: 'resend' }))
+        .toContain('SMTP_USER and SMTP_PASSWORD must be set together, or neither');
+      expect(problems({ ...valid, SMTP_PASSWORD: 're_key' }))
+        .toContain('SMTP_USER and SMTP_PASSWORD must be set together, or neither');
+    });
+  });
+
+
   it('loads a valid environment with defaults', () => {
     const config = loadConfig(valid);
     expect(config).toMatchObject({ nodeEnv: 'development', port: 3000, logLevel: 'debug', requireInvite: true });

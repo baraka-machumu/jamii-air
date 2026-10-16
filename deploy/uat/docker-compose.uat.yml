@@ -37,8 +37,13 @@ x-app-env: &app-env
   S3_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:?}
   PUBLIC_WEB_URL: ${PUBLIC_WEB_URL:?}
   ANDROID_PACKAGE: ${ANDROID_PACKAGE:-}
-  SMTP_HOST: mailpit
-  SMTP_PORT: 1025
+  # Mailpit unless a real provider is configured in .env (Resend, since 2026-10-16). Mailpit is
+  # still running, so clearing SMTP_USER/SMTP_PASSWORD falls straight back to catching mail.
+  SMTP_HOST: ${SMTP_HOST:-mailpit}
+  SMTP_PORT: ${SMTP_PORT:-1025}
+  SMTP_USER: ${SMTP_USER:-}
+  SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+  SMTP_SECURE: ${SMTP_SECURE:-false}
   MAIL_FROM: ${MAIL_FROM:-Jamii Air (UAT) <no-reply@jamii-air.uat>}
   MIN_APP_VERSION: ${MIN_APP_VERSION:-}
   EXPO_ACCESS_TOKEN: ${EXPO_ACCESS_TOKEN:-}

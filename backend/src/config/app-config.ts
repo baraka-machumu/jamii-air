@@ -25,7 +25,12 @@ export class AppConfig {
   readonly jwtAccessSecret: string;
   /** HMAC key for password-reset codes (stored as HMAC, never plaintext: SR-05). */
   readonly authCodeSecret: string;
-  readonly smtp: { host: string; port: number; from: string };
+  /**
+   * Transactional email. Local development points at Mailpit, which wants no credentials; a real
+   * provider (Resend, Plan 5.0) is the same SMTP path with a user and password, so there is one
+   * code path rather than a provider SDK.
+   */
+  readonly smtp: { host: string; port: number; from: string; user: string | null; password: string | null; secure: boolean };
   /** Public base for media variant URLs (API-10): the nginx media cache, or MinIO locally. No trailing slash. */
   readonly mediaBaseUrl: string;
   /** BullMQ queues, rate-limit counters (TRD §12 Redis). */
@@ -139,12 +144,20 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
   const authCodeSecret = env.AUTH_CODE_SECRET ?? '';
   if (authCodeSecret.length < 32) problems.push('AUTH_CODE_SECRET must be at least 32 characters');
 
+  const smtpPort = Number(env.SMTP_PORT ?? 1025);
   const smtp = {
     host: env.SMTP_HOST ?? 'localhost',
-    port: Number(env.SMTP_PORT ?? 1025),
+    port: smtpPort,
     from: env.MAIL_FROM ?? 'Jamii Air <no-reply@jamii-air.local>',
+    user: env.SMTP_USER || null,
+    password: env.SMTP_PASSWORD || null,
+    // 465 is implicit TLS; 587 and 2525 start plain and upgrade with STARTTLS, which nodemailer
+    // does on its own. Mailpit on 1025 is neither, and wants no credentials.
+    secure: parseBoolean(env.SMTP_SECURE ?? String(smtpPort === 465)) ?? false,
   };
   if (!Number.isInteger(smtp.port) || smtp.port < 1 || smtp.port > 65535) problems.push('SMTP_PORT must be an integer 1–65535');
+  // Half a credential is a misconfiguration that only shows up as a provider rejecting mail.
+  if ((smtp.user === null) !== (smtp.password === null)) problems.push('SMTP_USER and SMTP_PASSWORD must be set together, or neither');
 
   const mediaBaseUrl = (env.MEDIA_BASE_URL ?? `http://localhost:${env.MINIO_API_PORT ?? 9000}/${env.S3_BUCKET ?? 'jamii-air-media-local'}`)
     .replace(/\/+$/, '');

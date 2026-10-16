@@ -9,8 +9,12 @@ export interface Mail {
 }
 
 /**
- * Transactional email over SMTP (local: Mailpit, UI on MAILPIT_UI_PORT; production provider: Plan
- * task 5.0). Sent after the database work has committed (SP-09).
+ * Transactional email over SMTP. One path for both environments: Mailpit locally (no credentials,
+ * UI on MAILPIT_UI_PORT) and a real provider elsewhere (Resend on UAT, Plan 5.0) with a user and
+ * password. A provider SDK would buy nothing here - the messages are plain text and the only
+ * thing that changes is the host.
+ *
+ * Sent after the database work has committed (SP-09).
  */
 @Injectable()
 export class MailService {
@@ -18,11 +22,18 @@ export class MailService {
   private readonly transport: Transporter;
 
   constructor(private readonly config: AppConfig) {
-    this.transport = nodemailer.createTransport({ host: config.smtp.host, port: config.smtp.port, secure: false });
+    const { host, port, secure, user, password } = config.smtp;
+    this.transport = nodemailer.createTransport({
+      host,
+      port,
+      secure,
+      ...(user && password ? { auth: { user, pass: password } } : {}),
+    });
   }
 
   async send(mail: Mail): Promise<void> {
     await this.transport.sendMail({ from: this.config.smtp.from, ...mail });
+    // Never the address or the body: a reset code in a log is a reset code that leaked (SR-05).
     this.logger.log({ subject: mail.subject }, 'mail sent');
   }
 }

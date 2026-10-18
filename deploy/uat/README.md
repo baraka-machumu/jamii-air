@@ -54,6 +54,8 @@ with PuTTY (no `sshpass` on Windows).
 ```bash
 # 1. Build both artefacts locally (never on the host — see Disk)
 cd backend && npm run db:generate && docker build -t jamii-air-api:uat . && cd ..
+# Since the R1 scope change the image installs ffmpeg for video (+~80 MB). Same image, same
+# steps: build here, never on the host.
 cd admin   && npm run build && cd ..
 
 # 2. Ship the API image (~870 MB, ~170 MB gzipped)

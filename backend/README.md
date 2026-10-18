@@ -78,7 +78,8 @@ Two cases need a hand-written migration:
 - `src/common/pagination/`: opaque keyset cursors (`nextCursor`) and `limit` clamping.
 - Routes live under `/api/v1`. Health checks are at `/api/v1/health/live` and `/api/v1/health/ready`. OpenAPI is at `/api/v1/docs` and `/api/v1/openapi.json` everywhere except production.
 - `src/modules/`: one module per area. `auth`, `users`, `media`, `posts` (posts and feed), `engagement` (likes and comments), `notifications`, `safety` (blocks, reports, account deletion), `links` (share-link landing pages and app-link files, served outside `/api/v1`) and `admin` (the portal API under `/api/v1/admin`, with its own sign-in and guards; TRD §8).
-- `src/workers/`: the worker process (`src/worker.ts`). It runs media processing, push notifications (Expo Push) and the maintenance schedule (10 BullMQ job schedulers in East Africa Time, Schema §7.7).
+- `src/workers/`: the worker process (`src/worker.ts`). It runs media processing, push notifications (Expo Push) and the maintenance schedule (10 BullMQ job schedulers in East Africa Time, Schema §7.7). Images go through sharp; **video goes through `ffmpeg` / `ffprobe`** (TRD §9.1), which the Docker image installs. To process video on the host, install ffmpeg and put it on `PATH`, or set `FFMPEG_PATH` / `FFPROBE_PATH`. Without it, photo posts work and a video post ends `FAILED`.
+- **Running the e2e suite:** stop any `node dist/worker.js` you have running against the local Redis first. It consumes the jobs the suite enqueues (including push jobs, whose real Expo call drops the test devices), and `notifications.e2e-spec.ts` then fails.
 
 ### Configuration
 

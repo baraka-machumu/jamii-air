@@ -38,6 +38,8 @@ Nothing here costs money or waits for anyone else.
 | A3 | Make **Database, Backend, Mobile, Admin** checks required in `main`'s branch protection | Green CI that cannot block a merge is decoration. GitHub settings, two minutes. | ☐ |
 | A4 | Create the GitHub board and issues | `gh auth refresh -s project`, then `node docs/backlog/create-github-issues.mjs <file>`. Until then the backlog files are the tracker. `gh` is installed. | ☐ |
 | A5 | **Sentry** account (free: 5k errors/month) | Crash reporting for API, worker, app and portal. The DSN is free; the SDK is **not wired yet in any of the four**, so this one does need development after the account exists. Set a spend cap at signup. | ☐ |
+| A7 | **New `preview` build** for the R1 scope change | `expo-video` (video playback) is a native module, so the installed APK cannot get video, carousels, replies or hashtags over EAS Update. `npm run build:preview` in `mobile/`, free on the EAS free tier. Blocks B8. | ☐ |
+| A8 | **Redeploy UAT** with the new image and 7 migrations | The API/worker image now carries ffmpeg (~80 MB more). Build it locally and ship it as the runbook does — never `docker build` on the host, whose `/` is shared and nearly full; the deploy removes the superseded image, and other projects' images are not pruned. Run the migrations over the tunnel before the new API starts (the feed and comment procedures changed shape). Blocks B8. | ☐ |
 | A6 | **PostHog** account (free: 1M events/month) | All ten TRD PA-01 events are already wired and dormant; they switch on when `EXPO_PUBLIC_POSTHOG_KEY` is set. **Choose the EU region at signup**, or the host has to be set too. Set a billing limit. | ☐ |
 
 ---
@@ -54,9 +56,10 @@ Automation has gone as far as it can. These need a person, a real device and rea
 | B4 | Look at the redesigned portal generally (nobody has seen it but the engineer, in two screenshots) | 4.7 | ☐ |
 | B5 | **Update required** screen: point the app at an API started with `MIN_APP_VERSION=9.9.9` | 3.12.d | ☐ |
 | B6 | Accessibility on the real OS: maximum font and display size, plus a TalkBack pass | 3.12.c | ☐ |
+| B8 | **R1 scope change device checks** — carousels, video, replies, hashtags, a shared post on screen at once, the admin video player | [S.5.a–i](backlog/r1-scope-change.md#device-checks-s5) | 🔒 A7 A8 |
 | B7 | **Run the Maestro core loop once** — it has never been run. Needs `adb` on PATH (`%LOCALAPPDATA%\Android\Sdk\platform-tools`) | 3.12.a | ☐ |
 
-B1–B4 are one browser session. B5–B7 are one phone session.
+B1–B4 are one browser session. B5–B8 are one phone session (B8 adds S.5.i in the browser).
 
 ---
 
@@ -114,6 +117,8 @@ Not tasks — things that are true today and should be said out loud before anyo
 | **No backups** | Losing the host loses the pilot's evidence, which is the point of running it (BO-1). |
 | Share links are `http://41.59.227.223:4011/p/…` | Android App Links cannot verify, so https links do not open the app. `jamiiair://` still works. |
 | iOS entirely unbuilt | Android-only pilot until D3. |
+| **Video on a shared host** | Each video is a CPU-bound transcode on the same host as four other projects, and roughly 8–15 MB stored against ~200 KB for a photo. Fine for ten pilot users; to be re-measured before R1.1 (BRS §6.1). |
+| **Local e2e and a running dev worker** | A `node dist/worker.js` left running against the local Redis consumes the e2e suite's jobs, so `notifications.e2e` fails locally. Stop it before `npm run test:e2e`; CI is unaffected. |
 
 ---
 
@@ -121,6 +126,7 @@ Not tasks — things that are true today and should be said out loud before anyo
 
 1. **A1, A3, A4** — close the bookkeeping; Phases 1–4 become Done. Free, an hour.
 2. **A2** — email. The one thing between the working APK and other people's hands.
+2a. **A7, A8** — the new build and the UAT redeploy for the R1 scope change, then **B8**. Free.
 3. **B1–B4** in one browser session, **B5–B7** in one phone session.
 4. **C1** — decide where the pilot runs, now that you have seen the portal and the app.
 5. If UAT: invite 2–3 people, watch, fix. If production: **D1–D5**, then **E1–E3**.

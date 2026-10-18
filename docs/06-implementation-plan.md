@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Document** | 06 — Implementation Plan |
-| **Version** | 1.18 (Phase 3: 3.1–3.8 built and checked on the reference Android; 3.9 engagement, 3.10 notifications and 3.11 safety built) |
+| **Version** | 1.19 (R1 scope change 2026-10-16: video posts, carousels, replies, hashtags and the shared-post defect, built through every layer — §4 "R1 scope change") · 1.18 (Phase 3: 3.1–3.8 built and checked on the reference Android; 3.9 engagement, 3.10 notifications and 3.11 safety built) |
 | **Status** | **Approved** — 2026-10-11 |
 | **Date** | 2026-10-10 |
 | **Team** | 1 engineer building with Claude Code; Product (stakeholder) as product owner |
@@ -50,6 +50,7 @@ Visual design (Design Brief, doc 04) is produced by the engineer with Claude Cod
 | 2 Backend | ✅ **Done** (2026-10-16): built and tested, running on UAT since 2026-10-15, exit gate met, CI green, commits reviewed | [Phase 2 backlog](backlog/phase-2-backend.md#status) |
 | 3 Mobile | ✅ **Done.** Built end to end and running against UAT. Designs approved; 3.1–3.12 all built. 3.1–3.11 were checked on the reference Android on the dev build (2026-10-14). On 2026-10-16 the owner installed the **`preview` APK against the UAT API** and completed the core loop on their own Android — registration with an invite code, posting, likes and notifications — which is the `preview` demo Phase 3's exit asked for. Two faults came out of that session and were fixed and shipped over EAS Update: the keyboard covering form fields, and the near-invisible Profile tab. Mobile CI is green. **✅ Done (2026-10-16)**: the commits are reviewed. Still open on the device, none of it part of the phase gate: 3.12.a (Maestro has never been run, needs `adb`), 3.12.c (accessibility at maximum font with TalkBack), 3.12.d (the Update required screen), and 3.9.f (https share links, which waits for the domain) | [Phase 3 backlog](backlog/phase-3-mobile.md#status) |
 | 4 Admin portal | ✅ **Done, bar 4.7 hosting.** 4.1–4.6 and 4.8 built: Vite + React + TS, Tailwind 4 + shadcn/ui, sign-in with mandatory 2FA, dashboard, reports queue and detail, users, invites, audit log, admins, and a Playwright run of the exit path. 4.7 (hosting) is **part done** — the portal is served on UAT with self-signed TLS; the IP allowlist and real certificates wait for Plan 5.0. Given a design pass on 2026-10-16: a grouped icon sidebar, a top bar with an account menu, one page-header shape, dark mode, and a recharts headline chart beside the twelve tiles. Sessions now idle out after 60 minutes, not 30. **Admin and Admin E2E are both green on GitHub**, so the Playwright exit path runs in CI (4.8.j). **✅ Done (2026-10-16)** bar 4.7 hosting: the commits are reviewed. Still worth doing: one session looking at the portal by hand (4.2.h, 4.3.f, 4.6.l) | [Phase 4 backlog](backlog/phase-4-admin.md#status) |
+| **R1 scope change** | **Review** (2026-10-18): video posts, multi-photo carousels, comment replies and hashtags moved into R1 by the owner on 2026-10-16 (BRS §6.1), plus the fix for a shared post not appearing. Built through every layer and committed; every suite green locally. **Open:** a new `preview` build (expo-video is native), the UAT deploy with the ffmpeg image, and the device checks S.5 | [R1 scope change backlog](backlog/r1-scope-change.md#status) |
 | 5–6 Release, pilot | Not started | §4 Phases 5–6 |
 
 - **Database:** 11 migrations and 94 functions. The drift check passes, and the 123 procedure tests pass, including the authorization matrix and the SR-01/03/04 security checks. Every measured P95 is under 50 ms at 10k users / 1M posts (task 1.13).
@@ -67,6 +68,17 @@ Visual design (Design Brief, doc 04) is produced by the engineer with Claude Cod
   - create the GitHub board (§9; the `gh` CLI is installed now).
 - **UAT is live (2026-10-15):** the API (`http://41.59.227.223:4011`), the admin portal (`https://41.59.227.223:4012`, self-signed TLS) and media (`http://41.59.227.223:4013`) run on the shared UAT host, so remote testers can use a `preview` APK. Deployed and verified end to end from outside; see [deploy/uat/README.md](../deploy/uat/README.md). **Still deferred:** Sentry and metrics (task 2.16), the portal IP allowlist (4.7) and real TLS, all of which need Plan 5.0.
 - **Repository:** [`baraka-machumu/jamii-air`](https://github.com/baraka-machumu/jamii-air) on GitHub. `backend/` holds the API, worker and database; `mobile/` holds the Expo app; `admin/` holds the moderation portal; `deploy/uat/` holds the UAT stack and its runbook.
+
+### 1.0 Scope change (2026-10-16 → built 2026-10-18)
+
+After the core loop was shown on a real phone, the owner moved **video posts** (from R2),
+**multi-photo carousels** (from R1.1), **replies to comments** and **hashtags** (from R3) into
+Release 1, and raised one defect: a post did not show up properly once shared. BRS §6.1 records
+what moved and what it costs. It is built as one increment across all layers (§4 "R1 scope
+change"), tracked in [backlog/r1-scope-change.md](backlog/r1-scope-change.md).
+
+This lands **before** the pilot decision below and does not change it — but it adds two steps in
+front of any pilot: a new `preview` build, and a UAT deploy of the image that now carries ffmpeg.
 
 ### 1.1 Where the project stands (2026-10-16)
 
@@ -291,6 +303,24 @@ The moderation web app in `admin/`, against the finished admin API.
 
 **Exit:** from the portal, an admin (with 2FA) resolves a report, hides a post, suspends and reinstates a user, and creates an invite code; each action appears in the audit log; Playwright E2E green.
 
+### R1 scope change — video, carousels, replies, hashtags (added 2026-10-16)
+
+An increment on top of Phases 1–4, built in the same layer order. One epic per feature (S1 video,
+S2 carousel, S3 replies, S4 hashtags) and S5 for the defect. Tracker:
+[`docs/backlog/r1-scope-change.md`](backlog/r1-scope-change.md).
+
+| # | Task |
+|---|---|
+| S.0 | ✅ Docs: BRS §6.1 and the new requirements, TRD §5.1 / §9.1 / FD-05…07, App Flow §5–§7.5, Schema §18 |
+| S.1 | ✅ Database: 7 migrations, 3 new and 12 changed procedures, 22 procedure tests (145 pass) |
+| S.2 | ✅ Backend: carousel and video in `POST /posts`, `GET /tags/:tag/posts`, `GET /comments/:id/replies`, per-kind upload limits, the ffmpeg video worker, REPLY pushes, admin video detail |
+| S.3 | ✅ Mobile: carousels, video pick/record and tap-to-play, replies, tappable hashtags and the tag screen, a shared post on screen at once (229 tests pass) |
+| S.4 | ✅ Admin portal: numbered carousel photos, a player for a reported video behind *Click to show* |
+| S.5 | Device checks on a **new `preview` build** (expo-video is a native module) — list in the tracker |
+| S.6 | UAT deploy: build the image locally (now with ffmpeg, ~80 MB more) and ship it per the runbook — the host's `/` is shared and nearly full — run the 7 migrations over the tunnel, then S.5 against UAT |
+
+**Exit:** S.5 ticked on the reference Android against UAT; CI green on GitHub; the commits reviewed.
+
 ### Phase 5 — Release readiness
 
 | # | Task |
@@ -338,14 +368,18 @@ The pilot is the only stage paced by real users rather than by build speed: it r
 | Users can delete content and initiate account deletion | 1, 2, 3 | API tests |
 | Database restoration tested | 5 | Restore drill record |
 | Errors and failed jobs are observable | 2, 5 | Sentry + queue dashboard |
+| A post of up to 10 photos, or one video ≤ 60 s, publishes and plays (BR-CT-07…10) | S | Procedure + e2e tests, device check S.5.a–d |
+| Replies one level deep, counted and notified (BR-FD-08/09) | S | Procedure tests (counter drift 0), device check S.5.e–f |
+| A hashtag opens its posts, within the feed's visibility rules (BR-FD-10/11) | S | Procedure + e2e tests, device check S.5.g |
+| A shared post is on screen at once (BR-FD-12) | S | Procedure test, mobile test that fails without the fix, device check S.5.b |
 
 ## 6. Post-MVP roadmap (directional)
 
 | Release | Key work | Entry criteria |
 |---|---|---|
-| **R1.1 — Public launch** | Open sign-up + email verification; carousel (≤ 10 photos); illegal-content hash matching; PgBouncer; public store release; low-data mode | Pilot go decision |
-| **R2 — Reels** | Video upload (resumable multipart); transcoding worker (FFmpeg → HLS 360p/720p + poster, or a managed video service — decide on cost); Reels tab with vertical pager and preloading; view counts; data-saver; video moderation in the admin portal; new procedures such as `fn_get_reels_feed` | R1.1 stable; video storage/CDN cost model approved |
-| R3 — Discovery | Explore page, hashtags & mentions, better search. **AI/ML features will be designed in a separate document before R3.** | ≥ 1,000 DAU |
+| **R1.1 — Public launch** | Open sign-up + email verification; illegal-content hash matching (**now video too**); PgBouncer; public store release; low-data mode; re-check video storage cost against NFR-07 | Pilot go decision |
+| **R2 — Reels** | *Video upload, one 720p rendition and video moderation are R1 since 2026-10-16.* What is left: resumable multipart upload; an HLS ladder (360p/720p); Reels tab with vertical pager and preloading; view counts; data-saver; `fn_get_reels_feed` | R1.1 stable; video storage/CDN cost model approved |
+| R3 — Discovery | Explore page, @mentions, trending hashtags, better search. *Plain hashtags are R1 since 2026-10-16.* **AI/ML features will be designed in a separate document before R3.** | ≥ 1,000 DAU |
 | R4 — Scale & engage | Stories, DMs, multiple API instances, read replica | Measured triggers (TRD §17) |
 
 Each release follows the same model: layer order docs → database → backend → mobile → admin portal, built in agile increments by epic.
@@ -368,7 +402,7 @@ Each release follows the same model: layer order docs → database → backend �
 
 ## 8. Scope-cut order (bottom of the backlog)
 
-If priorities change, these stories are dropped first, in this order: 1) Caption edit (C) · 2) followers/following lists (S) · 3) password reset (S — admins trigger resets manually) · 4) admin "Admins" management page (super-admin manages admins via a seed/SQL script during the pilot) · 5) dashboard trend charts (keep KPI numbers) · 6) dark mode.
+If priorities change, these stories are dropped first, in this order: 0) from the R1 scope change, if the pilot must start sooner: video (S1) first — it is the only part with a running cost and a new build — then hashtags (S4), replies (S3), carousels (S2); the defect fix (S5) is never cut · 1) Caption edit (C) · 2) followers/following lists (S) · 3) password reset (S — admins trigger resets manually) · 4) admin "Admins" management page (super-admin manages admins via a seed/SQL script during the pilot) · 5) dashboard trend charts (keep KPI numbers) · 6) dark mode.
 
 **Never cut:** 18+ enforcement, auth security, stored-procedure authorization tests, EXIF stripping, block/report, admin portal core (login + 2FA, reports, hide, suspend, audit log), account deletion, backups + restore test.
 
@@ -395,3 +429,4 @@ If priorities change, these stories are dropped first, in this order: 1) Caption
 14. ✅ 3.10 Notifications built: Activity tab (New / Earlier, Follow back, marks read after 1 s), unread badge, onboarding step 3 and a Settings row to turn pushes on, pushes in every app state (foreground toast, tap opens the post or profile), log-out removes this phone's push token. Phone checks 3.9.e and 3.10.e go together on one new dev build. Tracker: [`docs/backlog/phase-3-mobile.md`](backlog/phase-3-mobile.md).
 15. ✅ 3.11 Safety built: the ⋯ menus became a bottom sheet (Report, Copy link, Unfollow, Block); block / unblock from posts, profiles and Settings → Blocked accounts; the Report sheet for posts, comments and accounts, then the offer to block; Delete account (password, 30-day grace, Welcome says when); a suspension noticed mid-session signs out and Welcome explains. Checked against the local API; the phone check 3.11.e joins 3.9.e and 3.10.e (no new native module). **Next:** 3.12 (Quality).
 
+16. ✅ **R1 scope change built (2026-10-18):** video posts, carousels, replies, hashtags, and the fix for a shared post not appearing — every layer, every suite green locally ([tracker](backlog/r1-scope-change.md)). **Next:** push and let CI run; a new `preview` build (`npm run build:preview`, expo-video is native); rebuild and redeploy the UAT image with ffmpeg and run the 7 migrations; then the device checks S.5.

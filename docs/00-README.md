@@ -3,8 +3,8 @@
 | | |
 |---|---|
 | **Project** | Jamii Air — photo & short-video social platform |
-| **Phase** | **Phases 0–4 Done** (2026-10-16): built, CI green on GitHub, commits reviewed. The stack runs on UAT and the core loop is confirmed on a real phone. Phase 5 (release readiness) and Phase 6 (pilot) are next, and most of what is left is not development — see the [Release Readiness Tracker](08-release-readiness-tracker.md). Status: [Plan §1](06-implementation-plan.md#1-summary) |
-| **Doc version** | 1.7 — 2026-10-14 (TRD 1.7 and Design Brief 1.3: mobile stack and motion as built; Plan 1.18: status after 3.11; Phase 3 decisions in the [Phase 3 backlog](backlog/phase-3-mobile.md#decisions-taken-during-phase-3)) |
+| **Phase** | **Phases 0–4 Done** (2026-10-16): built, CI green on GitHub, commits reviewed. The stack runs on UAT and the core loop is confirmed on a real phone. On 2026-10-16 the owner widened R1 (video, carousels, replies, hashtags); that increment is built and in Review ([tracker](backlog/r1-scope-change.md)). Phase 5 (release readiness) and Phase 6 (pilot) are next, and most of what is left is not development — see the [Release Readiness Tracker](08-release-readiness-tracker.md). Status: [Plan §1](06-implementation-plan.md#1-summary) |
+| **Doc version** | 1.8 — 2026-10-18 (R1 scope change, BRS §6.1: video posts, carousels, replies, hashtags; BRS 1.2, TRD 1.8, App Flow 1.3, Schema 1.4, Plan 1.19; tracker [backlog/r1-scope-change.md](backlog/r1-scope-change.md)) · 1.7 — 2026-10-14 (TRD 1.7 and Design Brief 1.3: mobile stack and motion as built; Plan 1.18: status after 3.11; Phase 3 decisions in the [Phase 3 backlog](backlog/phase-3-mobile.md#decisions-taken-during-phase-3)) |
 | **Prepared by** | Senior Software Engineer |
 | **Source guidelines** | `instagram_mvp_technical_specification_10_users.pdf` (the "Spec"), `application-consideration.txt` (the "Guidelines") |
 

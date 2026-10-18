@@ -82,7 +82,7 @@ features into R1 rather than waiting for R1.1 or R2:
 
 | Moved into R1 | Was | Requirements | Why it is affordable now |
 |---|---|---|---|
-| Video posts | R2 | BR-CT-07, BR-CT-08 | One 720p MP4 rendition plus a poster frame, capped at 60 s. No adaptive ladder, no Reels tab: the existing media pipeline, worker and post model take it as another media kind (TRD §9.3). |
+| Video posts | R2 | BR-CT-07, BR-CT-08 | One 720p MP4 rendition plus a poster frame, capped at 60 s. No adaptive ladder, no Reels tab: the existing media pipeline, worker and post model take it as another media kind (TRD §9.1). |
 | Multi-photo carousel | R1.1 | BR-CT-09 | `post_media` already carries an ordered position and the publish rule already waits for every item (Schema §4.3); only the one-photo guard and the mobile UI had to change. |
 | Replies to comments | out of scope | BR-FD-08, BR-FD-09 | **One** level only — a reply cannot be replied to — so the comment table takes a self-reference and no recursive query is needed. |
 | Hashtags | R3 | BR-FD-10, BR-FD-11 | Tags are parsed from the caption and stored; a tag opens a chronological list of posts. No trending, no ranking, no @mentions — those stay in R3. |

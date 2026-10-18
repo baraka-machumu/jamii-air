@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Document** | 03 — App Flow |
-| **Version** | 1.2 (Phase 2 API review: change password, removed-post badge, admin onboarding by temporary password) |
+| **Version** | 1.3 (R1 scope change 2026-10-16, BRS §6.1: carousels and video in §5–§6, replies §7.2, hashtags §7.5, a post on screen the moment it is shared §5) · 1.2 (Phase 2 API review: change password, removed-post badge, admin onboarding by temporary password) |
 | **Status** | **Approved** — 2026-10-11 |
 | **Date** | 2026-10-09 |
 | **Scope** | Release 1 mobile app (Android & iOS) and admin portal (web, §15). R2 Reels flow sketched in §14. |
@@ -69,7 +69,11 @@ flowchart TB
     PD --> CM
     PD --> RPT[Report sheet]
     UP --> RPT
-    T3 --> PICK[Pick / capture photo] --> PREV[Crop & preview] --> CAP[Caption & share] --> T1
+    T1 --> TAG[Hashtag #tag]
+    CM --> TAG
+    TAG --> PD
+    T3 --> PICK[Pick photos / take photo] --> PREV[Crop & preview] --> CAP[Caption & share] --> T1
+    T3 --> VID[Pick / record video] --> CAP
 ```
 
 **Bottom tabs (R1):** Home · Search · Create · Activity · Profile.
@@ -132,9 +136,19 @@ Settings → **Log out** → confirm → `DELETE /me/devices/:installationId` (b
 | Load | `GET /feed?limit=20` → render with FlashList. Image space reserved from `width/height` (no layout shift); blurhash placeholder until image loads. |
 | Scroll | When 5 items from the end → `GET /feed?cursor=…`. Footer skeleton while loading. `nextCursor = null` → "You're all caught up ✓" footer. |
 | Refresh | Pull-to-refresh → refetch first page; new posts appear on top. |
-| Own new post | While the user's new post is `PROCESSING`, a local card with the preview and "Posting…" sits at the top; it's replaced by the server version when published. **When it publishes the feed returns to the top**, because posting finishes in the background and the new photo would otherwise be off-screen above wherever the user had scrolled to. *(Added 2026-10-16 after the first real use.)* |
+| Own new post | While the files upload, a local card with the preview and "Posting… N%" sits at the top. **As soon as `POST /posts` returns**, the feed is refetched and the post itself is in it, still `PROCESSING`, holding its place with "Processing…" (the feed returns the viewer's own processing posts, BR-FD-12); it fills in when published, and the feed returns to the top so it is what the user is looking at. *(Changed 2026-10-16: before, the feed only returned PUBLISHED posts, so a refresh after sharing showed exactly what was already there and the post appeared only on some later refresh — for a video, for as long as transcoding took.)* |
 
-**Post card contents:** avatar + username (→ profile) · ⋯ menu · photo · ❤️ like, 💬 comment, ↗ share · like count · caption (2 lines, "more" expands) · "View all N comments" (→ comments) · relative time.
+**Post card contents:** avatar + username (→ profile) · ⋯ menu · media · ❤️ like, 💬 comment, ↗ share · like count · caption (2 lines, "more" expands; **#tags tappable**, §7.5) · "View all N comments" (→ comments) · relative time.
+
+**Media** (BR-CT-07/09):
+
+| Post | Shown as |
+|---|---|
+| One photo | Full-bleed, aspect reserved (4:5…1.91:1); double-tap likes. |
+| 2–10 photos | Horizontal pager, one photo per page, all pages the height of the first; "2/5" counter top-right and dots below. Double-tap is off (a swipe must stay a swipe): like with ❤️. |
+| Video | Poster, ▶ button and length ("0:42"). **No autoplay** — it would spend a prepaid bundle on posts nobody chose to watch. Tap → plays muted, looped, fitted (a 9:16 clip is letterboxed, not cropped); 🔇/🔊 control to unmute. |
+
+Profile and hashtag grids badge a video tile with ▶ and a carousel tile with a stack icon, and announce them as such to a screen reader.
 
 **⋯ menu:** own post → *Delete*, *Copy link*. Others' post → *Report*, *Copy link*, *Unfollow*, *Block*.
 
@@ -148,14 +162,23 @@ Settings → **Log out** → confirm → `DELETE /me/devices/:installationId` (b
 | Error (with cache) | Keep cached content; toast "Couldn't refresh". |
 | Offline | Offline banner; cached pages shown; pagination paused. |
 
-## 6. Create post (BR-CT-01 – 03, 06)
+## 6. Create post (BR-CT-01 – 03, 06 – 10)
+
+The Create tab offers **Choose from library** (up to 10 photos, in the order picked, BR-CT-09), **Take a photo**, **Choose a video** and **Record a video** (BR-CT-07). A post is photos *or* one video, never both (BR-CT-10).
+
+- **Crop (photos):** one shape applies to the whole carousel, so its pages line up. Each photo keeps its own drag position; a strip under the frame switches photos ("Photo 2 of 3") and ✕ removes one (removing the last one leaves the flow). Changing the shape recentres every photo.
+- **Video:** no crop step — it goes straight to the caption, whose preview shows the first frame and the length. Too long (> 60 s) or too large (> 150 MB) is refused **before** anything is uploaded, with the reason.
+- **Caption:** a carousel shows its photos in order as a strip.
 
 ```mermaid
 flowchart LR
     A[Create tab] --> B{Permission<br/>granted?}
     B -- no --> B2[Explain + open settings]
-    B -- yes --> C[Gallery grid / Camera]
-    C --> D[Crop: 1:1 or 4:5 or original]
+    B -- yes --> C{Photos or video?}
+    C -- "photos: library ≤ 10, or camera" --> D[Crop: one shape for all<br/>1:1 · 4:5 · original<br/>strip to switch / remove]
+    C -- "video: library or record ≤ 60 s" --> V{≤ 60 s and ≤ 150 MB?}
+    V -- no --> V2[Explain, nothing uploaded]
+    V -- yes --> E
     D --> E[Caption screen]
     E --> F[Tap Share]
     F --> G[Navigate to Home<br/>'Posting…' card with progress]
@@ -170,12 +193,13 @@ flowchart LR
 2. `POST /media/uploads { kind: IMAGE, mimeType, byteSize, purpose }` → `{ mediaId, uploadUrl, headers }`.
 3. `PUT uploadUrl` with progress events. On network failure: automatic retry ×3 with backoff; then show **Retry**.
 4. If the upload intent has expired (> 15 min, e.g. app was backgrounded) → request a new intent transparently.
-5. Posts: `POST /posts { mediaIds:[mediaId], caption }` with an `Idempotency-Key` generated once per draft. Avatar: `PATCH /me { avatarMediaId }`.
-6. Server returns `PROCESSING`. Client polls `GET /posts/:id` at 2 s, 4 s, 8 s (max 5 tries) until `PUBLISHED` or `FAILED`. (Push is not used for this; polling is short and bounded.)
+5. Posts: one intent + PUT **per file**, in order, under one progress bar ("Posting… 45%" across all of them); a file already uploaded is not uploaded again on Retry. Then `POST /posts { mediaIds:[…], caption }` with an `Idempotency-Key` generated once per draft. Avatar: `PATCH /me { avatarMediaId }`.
+6. Server returns `PROCESSING`. The client **refreshes the feed at once** (the post appears with "Processing…", §5), then polls `GET /posts/:id` until `PUBLISHED` or `FAILED`: photos at 2, 4, 8, 8, 8, 8 s (~40 s); a video at 4 s → 30 s steps (~2.5 min), since it is a transcode. (Push is not used for this; polling is bounded.)
+7. A video skips step 1: it is uploaded as recorded (`kind: VIDEO`, `video/mp4` or `video/quicktime`) and the server re-encodes it (TRD §9.1).
 
 **Draft persistence:** the selected local file URI, crop and caption are saved locally until the post is published, so a crash or app kill doesn't lose the post. On next launch: "You have an unfinished post — Retry / Discard".
 
-**Validation messages:** file > 15 MB → "This photo is too large"; unsupported format → "This file type isn't supported"; server `MEDIA_INVALID` → "We couldn't process this photo. Try another one."
+**Validation messages:** file > 15 MB → "This photo is too large"; unsupported format → "This file type isn't supported"; server `MEDIA_INVALID` → "We couldn't process this photo. Try another one."; more than 10 photos picked → the first 10 are kept, with a note; video > 60 s → "Video too long"; video > 150 MB → "Video too large"; `MEDIA_KINDS_MIXED` → "A post can hold photos or one video, not both."
 
 ## 7. Post engagement
 
@@ -183,12 +207,13 @@ flowchart LR
 
 Tap ❤️ or double-tap photo → heart animation + count +1 immediately → `PUT /posts/:id/like`. Failure → revert + toast "Couldn't like post". Rapid toggling is debounced: only the final state is sent (300 ms). Only the affected card re-renders.
 
-### 7.2 Comments (BR-FD-04, 05)
+### 7.2 Comments and replies (BR-FD-04, 05, 08, 09)
 
 **Entry:** 💬 icon, "View all comments", notification.
 - Comments screen: post caption pinned at top; list **newest first**, paginated (`GET /posts/:id/comments`, which pages newest-first anyway), older ones load on scrolling down; input bar fixed above the keyboard. Sending scrolls back to the top, so the comment just written is the one on screen rather than the end of a long thread. *(Changed 2026-10-16 after the first real use: it ran oldest → newest in a chat-style inverted list, and a new comment landed out of sight.)*
 - **Send:** comment appears immediately in a "sending" style → `POST /posts/:id/comments` → confirmed. Failure → red "Not sent · Tap to retry".
-- **Delete:** long-press own comment (or any comment on own post) → *Delete* → confirm → `DELETE /comments/:id` → removed.
+- **Replies (BR-FD-08/09):** each comment has **Reply** beside its time. Replies sit indented under their comment, collapsed behind "View N replies"; opening loads the thread **oldest first** (`GET /comments/:id/replies`), "More replies" pages it, "Hide replies" closes it. **Reply** puts "Replying to <username> · Cancel" above the input and the placeholder becomes "Reply to <username>…"; sending posts with `parentId` and the reply joins the thread. Replies are one level deep: **Reply** on a reply answers the same parent comment. A reply notifies the author of the comment it answers, not the post's author.
+- **Delete:** long-press own comment (or any comment on own post) → *Delete* → confirm → `DELETE /comments/:id` → removed. A comment that has replies asks "Delete comment and its replies?" — the thread goes with it.
 - **Report:** long-press others' comment → *Report*.
 - Max 1,000 chars; counter shows from 900.
 - Blocked relationship → input hidden; message "You can't comment on this post".
@@ -200,6 +225,10 @@ Tap ↗ → OS share sheet with text "{username} on Jamii Air: {shareUrl}". Anal
 ### 7.4 Delete own post (BR-CT-04)
 
 ⋯ → *Delete* → confirm dialog "Delete this post? This can't be undone." → `DELETE /posts/:id` → removed from feed/profile caches → toast "Post deleted".
+
+### 7.5 Hashtags (BR-FD-10/11)
+
+A `#tag` in a caption or a comment is drawn in the primary colour and is tappable (the same rule the server stores by: `#` + 1–64 letters, digits or `_`, not straight after one of those — `C#` is not a tag). Tapping opens **`/t/<tag>`**: "#tag" header, "N posts", and a 3-column grid newest first (`GET /tags/:tag/posts`). Posts from people the user does not follow are included — a tag is how people are found — but nothing hidden, blocked either way, or by a suspended author. No posts → "Nothing here yet". Editing a tag out of a caption takes the post off that tag.
 
 ## 8. Search & profiles
 
@@ -226,7 +255,7 @@ Fields: photo (change/remove), display name (≤ 50), username (3–30, availabi
 ## 9. Activity / notifications (BR-NT-01 – 04)
 
 - Tab badge = unread count (`GET /notifications/unread-count` on app foreground, on push receipt, and after visiting Activity).
-- Activity list grouped **New** / **Earlier**: "amina liked your post" (+ thumb), "baraka commented: 'nice!'" (+ thumb), "neema started following you" (+ Follow back button).
+- Activity list grouped **New** / **Earlier**: "amina liked your post" (+ thumb), "baraka commented: 'nice!'" (+ thumb), "juma replied to your comment" (+ thumb), "neema started following you" (+ Follow back button).
 - Opening the tab marks visible items read (`POST /notifications/read { all: true }`) after 1 s.
 - Tap row → Post detail (like/comment) or Profile (follow). Target deleted/hidden → toast "This post is no longer available".
 
@@ -285,6 +314,8 @@ Pending deep link is stored during auth and resumed after login/onboarding.
 | Low storage / permission denied | Explain and link to settings; never crash. |
 
 ## 14. Release 2 preview — Reels flow (not in R1)
+
+*Since the 2026-10-16 scope change, recording or picking a video and posting it is R1 (§6). What remains here is the Reels **surface**.*
 
 - **Reels tab:** full-screen vertical pager; one video plays at a time, muted by default until the user taps sound; preloads next 2 videos at low rendition; pauses when off-screen or app backgrounded.
 - **Create Reel:** record (≤ 60 s) or pick video → trim → cover frame → caption → upload (same upload-intent flow with `kind: VIDEO`, resumable multipart) → "Processing…" while transcoding.

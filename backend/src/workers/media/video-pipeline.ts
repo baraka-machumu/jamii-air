@@ -1,4 +1,4 @@
-// Video processing for uploads (BR-CT-07/08, TRD §9.3). One upload becomes exactly three objects:
+// Video processing for uploads (BR-CT-07/08, TRD §9.1). One upload becomes exactly three objects:
 //   VIDEO_720  one H.264 / AAC MP4, long edge ≤ 1280 and short edge ≤ 720, ≤ 60 s, faststart
 //   POSTER     a WebP still from the first second: what the card shows before playback
 //   THUMB      a 320 × 320 WebP for the profile grid

@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Document** | 02 — Technical Requirements Document |
-| **Version** | 1.7 (Phase 3: mobile stack as built, §3: Expo Router, on-device storage, native photo upload, animations with React Native `Animated`, clipboard, push registration; Phase 2: admin sign-in §8.2 and API review endpoints, see [07](07-api-review.md)) |
+| **Version** | 1.8 (R1 scope change 2026-10-16, BRS §6.1: video posts §9.1, carousels, replies and hashtags in §5.1, MD-01 per kind, FD-05 now server-side) · 1.7 (Phase 3: mobile stack as built, §3: Expo Router, on-device storage, native photo upload, animations with React Native `Animated`, clipboard, push registration; Phase 2: admin sign-in §8.2 and API review endpoints, see [07](07-api-review.md)) |
 | **Status** | **Approved** — 2026-10-11 |
 | **Date** | 2026-10-10 |
 | **Scope** | Release 1 (MVP) in detail; R1.1–R4 as forward-compatibility requirements |
@@ -207,17 +207,19 @@ admin/src/
 | PUT / DELETE | `/users/:id/follow` | 🔒 | Follow / unfollow (idempotent) | `fn_follow_user` · `fn_unfollow_user` | 200 / day |
 | PUT / DELETE | `/users/:id/block` | 🔒 | Block / unblock | `fn_block_user` · `fn_unblock_user` | 50 / day |
 | GET | `/me/blocks` | 🔒 | Blocked users | `fn_get_blocked_users` | — |
-| POST | `/media/uploads` | 🔒 | Upload intent → `{ mediaId, uploadUrl, headers, expiresAt }` | `fn_create_upload_intent` | 30 / h |
+| POST | `/media/uploads` | 🔒 | Upload intent → `{ mediaId, uploadUrl, headers, expiresAt }`; `kind` IMAGE or VIDEO | `fn_create_upload_intent` | 150 / h (one per file: a 10-photo carousel is 10) |
 | GET | `/media/:id` | 🔒 | Asset status (owner) | Prisma read | — |
-| POST | `/posts` | 🔒 | Create post `{ mediaIds, caption }` | `fn_create_post` | 30 / h |
+| POST | `/posts` | 🔒 | Create post `{ mediaIds, caption }`: 1–10 photos in order, or one video, never mixed (BR-CT-09/10) | `fn_create_post` | 30 / h |
 | GET | `/posts/:id` | 🔒 | Post detail | `fn_get_post` | — |
 | PATCH | `/posts/:id` | 🔒 | Edit caption (C) | `fn_update_post_caption` | 30 / h |
 | DELETE | `/posts/:id` | 🔒 | Delete own post | `fn_delete_post` | 60 / h |
-| GET | `/feed` | 🔒 | Home feed | `fn_get_home_feed` | 120 / min |
+| GET | `/feed` | 🔒 | Home feed (includes your own PROCESSING posts, FD-05) | `fn_get_home_feed` | 120 / min |
+| GET | `/tags/:tag/posts` | 🔒 | One hashtag's posts as grid tiles, newest first, `{ tag, postCount, items, nextCursor }` (BR-FD-11) | `fn_get_hashtag_posts` | 120 / min |
 | PUT / DELETE | `/posts/:id/like` | 🔒 | Like / unlike | `fn_like_post` · `fn_unlike_post` | 600 / h |
-| GET | `/posts/:id/comments` | 🔒 | Comments | `fn_get_post_comments` | — |
-| POST | `/posts/:id/comments` | 🔒 | Add comment | `fn_add_comment` | 60 / h |
-| DELETE | `/comments/:id` | 🔒 | Delete (author or post owner) | `fn_delete_comment` | 60 / h |
+| GET | `/posts/:id/comments` | 🔒 | Top-level comments, each with `replyCount` | `fn_get_post_comments` | — |
+| POST | `/posts/:id/comments` | 🔒 | Add comment, or a reply with `parentId` (one level, BR-FD-08/09) | `fn_add_comment` | 60 / h |
+| GET | `/comments/:id/replies` | 🔒 | The thread under a comment, **oldest first**, paged forwards | `fn_get_comment_replies` | — |
+| DELETE | `/comments/:id` | 🔒 | Delete (author or post owner); a top-level comment takes its thread | `fn_delete_comment` | 60 / h |
 | GET | `/notifications` | 🔒 | Activity list | `fn_get_notifications` | — |
 | GET | `/notifications/unread-count` | 🔒 | Badge | `fn_get_unread_count` | 120 / min |
 | POST | `/notifications/read` | 🔒 | Mark read `{ ids?, all? }` | `fn_mark_notifications_read` | — |
@@ -357,7 +359,7 @@ Each module has a thin typed wrapper; services never write SQL strings inline.
 - CORS: only the admin origin (`ADMIN_ORIGIN`), `credentials: true`, only on `/api/v1/admin/*`; mobile routes do not enable CORS.
 - Separate guard `AdminJwtGuard` (`aud=admin`) with role metadata (`@AdminAuth('SUPER_ADMIN')`); user tokens are rejected on admin routes and vice versa. Every admin procedure re-checks role, status and lock (`fn__assert_admin`).
 
-## 9. Media pipeline (photos, R1)
+## 9. Media pipeline (photos and video, R1)
 
 ```mermaid
 sequenceDiagram
@@ -386,14 +388,29 @@ sequenceDiagram
 
 | ID | Requirement |
 |---|---|
-| MD-01 | Input: JPEG, PNG, HEIC/HEIF, WebP. Max 15 MB, max 8000×8000 px, min 320 px shortest side. |
+| MD-01 | Per kind. **Image:** JPEG, PNG, HEIC/HEIF, WebP; max 15 MB, max 8000×8000 px, min 320 px shortest side. **Video:** MP4 or QuickTime, max 150 MB, ≤ 60 s (a 61 s container is trimmed, longer is refused), purpose POST only. Enforced by CHECK constraints on `media_assets`; the API returns `UNSUPPORTED_MEDIA_TYPE` / `PAYLOAD_TOO_LARGE` for a mismatched pair. |
 | MD-02 | Presigned PUT signs `Content-Type` and `Content-Length`; API re-checks with `HEAD`. |
 | MD-03 | Worker validates the **decoded** format; failures call `fn_fail_media_processing` (asset + post FAILED). |
-| MD-04 | Variants (WebP q≈80, metadata stripped): `thumb` 320×320, `feed` ≤ 1080 wide (aspect clamped 4:5…1.91:1), `avatar_s` 150, `avatar_m` 320. |
+| MD-04 | Variants (WebP q≈80, metadata stripped): `thumb` 320×320, `feed` ≤ 1080 wide (aspect clamped 4:5…1.91:1), `avatar_s` 150, `avatar_m` 320. Video: `video_720` (MP4), `poster`, `thumb` — §9.1. |
 | MD-05 | `original` private; variants public via CDN, `Cache-Control: public, max-age=31536000, immutable`. |
-| MD-06 | Object keys generated server-side only: `users/{userId}/media/{mediaId}/original` and `…/{variant}.webp`. |
+| MD-06 | Object keys generated server-side only: `users/{userId}/media/{mediaId}/original` and `…/{variant}.webp` (a video's rendition is `…/video_720.mp4`). |
 | MD-07 | Unattached upload intents purged after 24 h (`fn_maint_cleanup_upload_intents`). |
-| MD-08 | **R2 (Reels) forward-compatibility:** media `kind`, `durationMs`, variant model and post `type` already exist; R2 adds enum values, a transcoding job and `fn_get_reels_feed`. No change to the upload contract. |
+| MD-08 | **Video moved into R1 (BRS §6.1).** The forward-compatible model was used as designed: `kind` VIDEO, `durationMs`, variants POSTER / VIDEO_720 and post `type` VIDEO were added without restructuring. What R2 still adds is the Reels surface: an HLS ladder, `fn_get_reels_feed`, view counts. |
+| MD-09 | **Carousels (BR-CT-09).** A post holds 1–10 photos at `post_media.position` 0–9, in the order sent. It publishes only when **every** item is READY (`fn_complete_media_processing` already waited for all of them), so a carousel never appears half-made. |
+
+### 9.1 Video (BR-CT-07/08)
+
+The phone uploads the recording **as it is** (no on-device re-encode: minutes of battery for a job the server does anyway), through the same upload intent and presigned PUT as a photo. The worker then:
+
+1. streams the original to a temporary directory — never into a Buffer, since it may be 150 MB — and removes the directory whatever happens;
+2. reads it with `ffprobe`: a file with no video track, no duration or over 61 s is `InvalidVideoError` → `fn_fail_media_processing`, no retry. A quarter-turn rotation (how phones store portrait) swaps width and height;
+3. transcodes with `ffmpeg` to **one** H.264 Main / AAC MP4: long edge ≤ 1280, short edge ≤ 720, never upscaled, even dimensions, `-t 60`, `-map_metadata -1` (no GPS or camera tags, BR-CT-06), `+faststart` so playback starts before the download ends, `yuv420p` for older Android decoders;
+4. takes the poster from the first frame of the **transcoded** file, so it matches what plays, and derives `thumb` (320×320) and the blurhash from it;
+5. calls `fn_complete_media_processing(…, p_duration_ms)`.
+
+`ffmpeg` and `ffprobe` are installed in the API/worker image (`apk add ffmpeg`, ~80 MB); `FFMPEG_PATH` / `FFPROBE_PATH` override the binaries. There is **no adaptive (HLS) ladder** in R1: one rendition costs a tenth of the CPU and a third of the objects, and the surface that would want it (Reels) is R2. A transcode times out after 10 minutes and is retried by BullMQ like any transient failure.
+
+**Playback (mobile).** A video post shows its poster with a play button and its length; it **does not autoplay**, because autoplay spends a prepaid bundle on posts nobody chose to watch (BRS §11). Tapped, it plays muted and looped with a mute control (`expo-video`, a native module: shipping it needs a new build, not an EAS Update).
 
 ## 10. Feed
 
@@ -403,7 +420,9 @@ sequenceDiagram
 | FD-02 | Order `created_at DESC, id DESC`; keyset cursor `(createdAt, id)`; page size 20. |
 | FD-03 | `fn_get_home_feed` returns feed rows **already joined** with author, media variants and `liked_by_me` — one round trip, no N+1. |
 | FD-04 | P95 < 50 ms at 10k users / 1M posts (verified on seeded data in Plan task 1.13). |
-| FD-05 | The author's own `PROCESSING` post is shown client-side at the top of the feed until published. |
+| FD-05 | The author's own `PROCESSING` posts are returned **by `fn_get_home_feed` itself** (others' never are; FAILED never are), and the app refreshes the feed as soon as `POST /posts` returns, so a post is on screen at once with a "Processing…" placeholder and fills in when published (BR-FD-12). This replaced a client-side-only plan that left the feed unchanged after sharing — for a video, for as long as transcoding took. |
+| FD-06 | **Hashtags (BR-FD-10/11).** Parsed from the caption in SQL (`fn__sync_post_hashtags`) on create and on every caption edit: `#` + 1–64 letters/digits/`_`, not preceded by one of those; stored lower-case without `#`; ≤ 30 per post. A tag's list (`fn_get_hashtag_posts`) is **not** limited to followed accounts — it is how people are found — but applies every other feed rule. The app finds the tags in the caption text with the same rule rather than receiving a second list. |
+| FD-07 | **Replies (BR-FD-08/09).** One level: a reply to a reply is re-pointed at its parent. `posts.comment_count` counts replies too, and a reply counts only while it **and** its parent are visible — the rule `fn_maint_reconcile_counters` recomputes. Deleting a top-level comment deletes its thread; hiding one (admin) removes the thread from the count and unhiding restores exactly the replies still visible in their own right. A reply notifies the parent comment's author (`REPLY`), not the post's author. |
 
 ## 11. Notifications, search & sharing
 

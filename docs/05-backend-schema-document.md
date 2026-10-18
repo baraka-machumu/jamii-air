@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Document** | 05 — Backend Schema |
-| **Version** | 1.3 (Phase 2 API review: `fn_change_password` and five changed procedures; see §17) |
+| **Version** | 1.4 (R1 scope change 2026-10-16: video, carousels, replies, hashtags, own processing posts in the feed; see §18) · 1.3 (Phase 2 API review: `fn_change_password` and five changed procedures; see §17) |
 | **Status** | **Approved** — 2026-10-11 |
 | **Date** | 2026-10-09 |
 | **Scope** | PostgreSQL schema (Prisma), stored procedures, grants, object storage layout, Redis, retention |
@@ -67,8 +67,9 @@ erDiagram
 | `device_push_tokens` | Expo push tokens per installation | notification procedures |
 | `follows` · `blocks` | Social graph | social procedures |
 | `media_assets` · `media_variants` | Uploads and sized derivatives | media procedures |
-| `posts` · `post_media` | Posts (photo; reel in R2) and their ordered media | post procedures |
-| `likes` · `comments` | Engagement | engagement procedures |
+| `posts` · `post_media` | Posts (1–10 photos, or one video; reel in R2) and their ordered media | post procedures |
+| `likes` · `comments` | Engagement; a comment with `parent_id` is a reply (one level) | engagement procedures |
+| `hashtags` · `post_hashtags` | Tags parsed from captions, and which posts carry them | `fn__sync_post_hashtags` (from `fn_create_post`, `fn_update_post_caption`) |
 | `notifications` | Activity feed | engagement/social procedures |
 | `reports` | User reports | `fn_submit_report`, admin procedures |
 | `moderation_actions` | Audit of content/user moderation | admin procedures |
@@ -100,13 +101,13 @@ datasource db {
 // ───────────── Enums ─────────────
 
 enum UserStatus           { ACTIVE SUSPENDED PENDING_DELETION                       @@map("user_status") }
-enum MediaKind            { IMAGE /* VIDEO in R2 */                                  @@map("media_kind") }
+enum MediaKind            { IMAGE VIDEO                                              @@map("media_kind") }
 enum MediaPurpose         { POST AVATAR                                              @@map("media_purpose") }
 enum MediaStatus          { PENDING_UPLOAD UPLOADED PROCESSING READY FAILED DELETED  @@map("media_status") }
-enum MediaVariantType     { THUMB FEED AVATAR_S AVATAR_M /* POSTER, HLS_* in R2 */  @@map("media_variant_type") }
-enum PostType             { PHOTO /* REEL in R2 */                                   @@map("post_type") }
+enum MediaVariantType     { THUMB FEED AVATAR_S AVATAR_M POSTER VIDEO_720 /* HLS_* in R2 */ @@map("media_variant_type") }
+enum PostType             { PHOTO VIDEO /* PHOTO = 1–10 photos; REEL in R2 */        @@map("post_type") }
 enum PostStatus           { PROCESSING PUBLISHED FAILED HIDDEN DELETED               @@map("post_status") }
-enum NotificationType     { FOLLOW LIKE COMMENT                                      @@map("notification_type") }
+enum NotificationType     { FOLLOW LIKE COMMENT REPLY                                @@map("notification_type") }
 enum ReportTargetType     { USER POST COMMENT                                        @@map("report_target_type") }
 enum ReportReason         { SPAM NUDITY HARASSMENT HATE VIOLENCE FALSE_INFORMATION OTHER @@map("report_reason") }
 enum ReportStatus         { OPEN REVIEWING RESOLVED DISMISSED                        @@map("report_status") }
@@ -278,7 +279,7 @@ model MediaAsset {
   byteSize      BigInt       @map("byte_size")
   width         Int?
   height        Int?
-  durationMs    Int?         @map("duration_ms")          // R2 video
+  durationMs    Int?         @map("duration_ms")          // video only, ≤ 65 000 (CHECK)
   blurhash      String?      @db.VarChar(64)
   failureReason String?      @map("failure_reason") @db.VarChar(255)
   processedAt   DateTime?    @map("processed_at") @db.Timestamptz
@@ -330,6 +331,7 @@ model Post {
 
   author        User           @relation(fields: [authorId], references: [id], onDelete: Cascade)
   media         PostMedia[]
+  hashtags      PostHashtag[]
   comments      Comment[]
   likes         Like[]
   notifications Notification[]
@@ -367,22 +369,49 @@ model Like {
 }
 
 model Comment {
-  id        String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
-  postId    String    @map("post_id") @db.Uuid
-  authorId  String    @map("author_id") @db.Uuid
-  body      String    @db.VarChar(1000)
-  hiddenAt  DateTime? @map("hidden_at") @db.Timestamptz
-  deletedAt DateTime? @map("deleted_at") @db.Timestamptz
-  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  id         String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  postId     String    @map("post_id") @db.Uuid
+  authorId   String    @map("author_id") @db.Uuid
+  parentId   String?   @map("parent_id") @db.Uuid     // a reply; always points at a top-level comment
+  body       String    @db.VarChar(1000)
+  replyCount Int       @default(0) @map("reply_count") // visible replies; 0 on a reply (CHECK)
+  hiddenAt   DateTime? @map("hidden_at") @db.Timestamptz
+  deletedAt  DateTime? @map("deleted_at") @db.Timestamptz
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz
 
   post          Post               @relation(fields: [postId], references: [id], onDelete: Cascade)
   author        User               @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  parent        Comment?           @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies       Comment[]          @relation("CommentReplies")
   notifications Notification[]
   reports       Report[]
   modActions    ModerationAction[]
 
   @@index([authorId])
+  @@index([parentId, createdAt(sort: Desc), id(sort: Desc)])   // a thread
   @@map("comments")
+}
+
+model Hashtag {                    // BR-FD-10: stored lower-case, without '#'; never deleted
+  id        String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  tag       String   @unique @db.Citext
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  posts PostHashtag[]
+
+  @@map("hashtags")
+}
+
+model PostHashtag {                // rewritten from the caption on create and every edit
+  postId    String @map("post_id") @db.Uuid
+  hashtagId String @map("hashtag_id") @db.Uuid
+
+  post    Post    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  hashtag Hashtag @relation(fields: [hashtagId], references: [id], onDelete: Cascade)
+
+  @@id([postId, hashtagId])
+  @@index([hashtagId, postId(sort: Desc)])                     // a tag's posts; uuidv7 ids sort by time
+  @@map("post_hashtags")
 }
 
 model Notification {
@@ -570,13 +599,27 @@ ALTER TABLE users ADD CONSTRAINT users_counts_nonneg
 ALTER TABLE follows ADD CONSTRAINT follows_no_self CHECK (follower_id <> following_id);
 ALTER TABLE blocks  ADD CONSTRAINT blocks_no_self  CHECK (blocker_id  <> blocked_id);
 ALTER TABLE posts   ADD CONSTRAINT posts_counts_nonneg CHECK (like_count >= 0 AND comment_count >= 0);
-ALTER TABLE post_media ADD CONSTRAINT post_media_position CHECK (position BETWEEN 0 AND 9);
+ALTER TABLE post_media ADD CONSTRAINT post_media_position CHECK (position BETWEEN 0 AND 9);  -- 10-photo carousel
+-- MD-01 per kind (migration r1_video_replies_hashtags); kind::text, see §18.
+ALTER TABLE media_assets ADD CONSTRAINT media_assets_mime CHECK (CASE kind::text
+  WHEN 'IMAGE' THEN mime_type IN ('image/jpeg','image/png','image/heic','image/heif','image/webp')
+  WHEN 'VIDEO' THEN mime_type IN ('video/mp4','video/quicktime') ELSE false END);
+ALTER TABLE media_assets ADD CONSTRAINT media_assets_byte_size CHECK (
+  byte_size BETWEEN 1 AND CASE kind::text WHEN 'VIDEO' THEN 157286400 ELSE 15728640 END);
+ALTER TABLE media_assets ADD CONSTRAINT media_assets_duration CHECK (
+  duration_ms IS NULL OR (kind::text = 'VIDEO' AND duration_ms BETWEEN 1 AND 65000));
+ALTER TABLE media_assets ADD CONSTRAINT media_assets_video_is_post CHECK (kind::text <> 'VIDEO' OR purpose::text = 'POST');
+-- Replies are one level deep (BR-FD-09).
+ALTER TABLE comments ADD CONSTRAINT comments_replies_are_flat CHECK (parent_id IS NULL OR reply_count = 0);
+ALTER TABLE comments ADD CONSTRAINT comments_parent_not_self  CHECK (parent_id IS DISTINCT FROM id);
+ALTER TABLE hashtags ADD CONSTRAINT hashtags_tag_format CHECK (tag ~ '^[[:alnum:]_]{1,64}$');
 ALTER TABLE invite_codes ADD CONSTRAINT invite_uses CHECK (use_count >= 0 AND use_count <= max_uses);
 ALTER TABLE notifications ADD CONSTRAINT notifications_no_self CHECK (recipient_id <> actor_id);
 ALTER TABLE notifications ADD CONSTRAINT notifications_target CHECK (
   (type = 'FOLLOW'  AND post_id IS NULL) OR
   (type = 'LIKE'    AND post_id IS NOT NULL) OR
-  (type = 'COMMENT' AND post_id IS NOT NULL AND comment_id IS NOT NULL));
+  (type = 'COMMENT' AND post_id IS NOT NULL AND comment_id IS NOT NULL) OR
+  (type = 'REPLY'   AND post_id IS NOT NULL AND comment_id IS NOT NULL));  -- comment_id = the reply
 ALTER TABLE reports ADD CONSTRAINT reports_target CHECK (
   (target_type = 'USER'    AND target_post_id IS NULL AND target_comment_id IS NULL) OR
   (target_type = 'POST'    AND target_comment_id IS NULL) OR
@@ -660,6 +703,7 @@ Full rules are in [TRD §6](02-technical-requirements-document.md). In short:
 | `fn__is_blocked_either_way(a, b) → boolean` | Block check in both directions. |
 | `fn__assert_admin(admin_id, roles admin_role[])` | Admin exists, ACTIVE, has one of the roles; else `JA403 ADMIN_FORBIDDEN`. |
 | `fn__cursor(time, id, limit) → (cursor_time, cursor_id, page_limit)` | Applies the sentinel for a missing cursor; clamps the page size to 1–50 (default 20) and adds 1. |
+| `fn__sync_post_hashtags(post_id, caption)` | Rewrites a post's `post_hashtags` from its caption (BR-FD-10): lower-cased, ≤ 30, tag rows created on demand. |
 | `fn__resolve_profile(viewer, username) → (target_id, blocked_by_me)` | Profile lookup for reads: `JA404` if unknown, not ACTIVE, or the target blocked the viewer. |
 | `fn__assert_post_visible(viewer, post_id) → author_id` | PUBLISHED, author ACTIVE, no block either way; else `JA404 POST_NOT_FOUND`. |
 | `fn__queue_media_deletion(media_ids)` | Media → DELETED and their object prefixes into `pending_object_deletions`. |
@@ -699,23 +743,25 @@ Full rules are in [TRD §6](02-technical-requirements-document.md). In short:
 | Function | R/W | Returns |
 |---|---|---|
 | `fn_create_upload_intent(viewer, kind, purpose, mime_type, byte_size)` | W | `media_id, original_key` (key built in SQL: `users/{viewer}/media/{id}/original`) |
-| `fn_create_post(viewer, media_ids uuid[], caption, idempotency_key, request_hash)` | W | post row + `media_to_process uuid[]`, `replayed boolean` |
-| `fn_complete_media_processing(media_id, width, height, blurhash, variants jsonb)` | W | `post_id, post_published boolean, author_id` |
+| `fn_create_post(viewer, media_ids uuid[], caption, idempotency_key, request_hash)` | W | post row incl. `type` + `media_to_process uuid[]`, `replayed boolean`. 1–10 photos or one video (`MEDIA_KINDS_MIXED`); syncs hashtags |
+| `fn_complete_media_processing(media_id, width, height, blurhash, variants jsonb, duration_ms = NULL)` | W | `post_id, post_published boolean, author_id`; publishes when **every** item is READY |
 | `fn_fail_media_processing(media_id, reason)` | W | `post_id, author_id` |
 | `fn_get_post(viewer, post_id)` | R | feed-item shape |
-| `fn_update_post_caption(viewer, post_id, caption)` | W | post row |
+| `fn_update_post_caption(viewer, post_id, caption)` | W | post row; re-syncs hashtags |
 | `fn_delete_post(viewer, post_id)` | W | `deleted` — queues object deletion rows |
-| `fn_get_home_feed(viewer, cursor)` | R | feed items (§8.1) |
-| `fn_get_profile_posts(viewer, username, cursor)` | R | id, status, thumb key, created_at (own grid: also PROCESSING, FAILED, HIDDEN) |
+| `fn_get_home_feed(viewer, cursor)` | R | feed items incl. `type`, `status` (§8.1); also the viewer's **own PROCESSING** posts (BR-FD-12) |
+| `fn_get_profile_posts(viewer, username, cursor)` | R | id, status, type, thumb key, media_count, created_at (own grid: also PROCESSING, FAILED, HIDDEN) |
+| `fn_get_hashtag_posts(viewer, tag, cursor)` | R | grid tiles for one tag + `tag`, `post_count`; not limited to follows; `TAG_INVALID` |
 
 ### 7.5 Engagement & notifications
 
 | Function | R/W | Returns |
 |---|---|---|
 | `fn_like_post(viewer, post_id)` · `fn_unlike_post(…)` | W | `liked, like_count, notification_id` |
-| `fn_add_comment(viewer, post_id, body, idempotency_key, request_hash)` | W | comment row + `notification_id`, `replayed` |
-| `fn_delete_comment(viewer, comment_id)` | W | `deleted` (author or post owner) |
-| `fn_get_post_comments(viewer, post_id, cursor)` | R | comment rows with author |
+| `fn_add_comment(viewer, post_id, body, parent_id, idempotency_key, request_hash)` | W | comment row + `parent_id`, `parent_reply_count`, `notification_id` (COMMENT or REPLY), `replayed`. A reply to a reply is re-pointed at its parent |
+| `fn_delete_comment(viewer, comment_id)` | W | `deleted`, `comment_count`, `parent_reply_count`; a top-level comment takes its thread |
+| `fn_get_post_comments(viewer, post_id, cursor)` | R | **top-level** comment rows with author and `reply_count` |
+| `fn_get_comment_replies(viewer, comment_id, cursor)` | R | a thread, **oldest first**, keyset on the uuidv7 id alone (the API cursor is ms, `created_at` is µs) |
 | `fn_get_notifications(viewer, cursor)` | R | rows with actor + post thumb |
 | `fn_get_unread_count(viewer)` | R | `count` (capped at 100) |
 | `fn_mark_notifications_read(viewer, ids uuid[], mark_all boolean)` | W | `updated` |
@@ -754,7 +800,7 @@ Full rules are in [TRD §6](02-technical-requirements-document.md). In short:
 | `fn_maint_purge_deleted_accounts(batch)` | daily 03:30 | users PENDING_DELETION > 30 days: fix counters, queue prefix deletion, delete |
 | `fn_maint_purge_expired_tokens(batch)` | daily | refresh/admin sessions/reset codes past retention |
 | `fn_maint_purge_idempotency_keys(batch)` · `fn_maint_purge_old_notifications(batch)` | hourly / daily | retention |
-| `fn_maint_reconcile_counters(since)` | daily 02:00 | recompute counters for recently changed rows; returns drift count (metric) |
+| `fn_maint_reconcile_counters(since)` | daily 02:00 | recompute counters for recently changed rows — incl. `comments.reply_count`, and `comment_count` counting a reply only while it and its parent are visible; returns drift count (metric) |
 | `fn_maint_compute_daily_metrics(day)` | daily 00:30 | upsert KPIs into `daily_metrics` |
 
 ## 8. Reference implementations
@@ -987,6 +1033,7 @@ GRANT SELECT (id, username, email, display_name, bio, avatar_media_id, status, l
               post_count, follower_count, following_count, created_at) ON users TO jamii_app;
 GRANT SELECT (id, owner_id, kind, purpose, status, width, height, blurhash, failure_reason, created_at)
   ON media_assets TO jamii_app;
+GRANT SELECT (duration_ms) ON media_assets TO jamii_app;   -- migration r1_media_duration_grant
 
 DO $$ DECLARE f record; BEGIN
   FOR f IN SELECT p.oid::regprocedure AS sig
@@ -1010,7 +1057,9 @@ users/{userId}/media/{mediaId}/thumb.webp        ← CDN, immutable
 users/{userId}/media/{mediaId}/feed.webp         ← CDN, immutable
 users/{userId}/media/{mediaId}/avatar_s.webp
 users/{userId}/media/{mediaId}/avatar_m.webp
-# R2 (Reels): poster.webp, hls/{rendition}/…
+users/{userId}/media/{mediaId}/video_720.mp4     ← video (BR-CT-08): the one rendition played
+users/{userId}/media/{mediaId}/poster.webp       ← video: the still before playback (thumb.webp too)
+# R2 (Reels): hls/{rendition}/…
 ```
 
 Keys are built only inside `fn_create_upload_intent` and the worker; deletions flow through `pending_object_deletions`.
@@ -1072,9 +1121,11 @@ Prisma prefixes migration folders with timestamps; names below are descriptive. 
 
 | Future feature | Already supported | Change later |
 |---|---|---|
-| Carousel (R1.1) | `post_media.position` 0–9, `media` array | Remove "1 media" check in `fn_create_post` |
-| **Reels (R2)** | `media_assets.kind`, `duration_ms`, variant model, `posts.type` | Add `VIDEO`, `REEL`, `POSTER`, `HLS_*` enum values; transcoding job; `view_count`; `fn_get_reels_feed` |
-| Hashtags / mentions (R3) | Raw caption stored | New tables + procedures; MENTION notification |
+| ~~Carousel (R1.1)~~ | **Done in R1** (§18): 1–10 photos | — |
+| ~~Video upload~~ | **Done in R1** (§18): `VIDEO`, `POSTER`, `VIDEO_720` | — |
+| **Reels surface (R2)** | Video posts, `duration_ms`, variant model, `posts.type` | `REEL` type, `HLS_*` variants, `view_count`, `fn_get_reels_feed` |
+| ~~Hashtags (R3)~~ | **Done in R1** (§18): `hashtags`, `post_hashtags` | Trending / ranking stays R3 |
+| @mentions (R3) | Raw caption stored; the hashtag parser is the model | New table + MENTION notification |
 | AI/ML (future, separate doc) | Interaction tables with timestamps | Defined in its own design document |
 | Private accounts / DMs (R4) | — | New tables and modules |
 
@@ -1124,3 +1175,21 @@ The Plan 2.14 review of the API against every App Flow screen ([07-api-review.md
 | `fn_admin_list_audit` | New trailing parameters `p_target_id`, `p_from`, `p_to` (defaults `NULL`, so existing calls still work). A target matches any id an entry touches; a user's entries include actions on their content. | Audit log filters (App Flow §15.7). |
 
 The four admin procedures change their result columns or parameters, so the migration drops them before re-creating them (`CREATE OR REPLACE` cannot change a signature).
+
+## 18. Changes in version 1.4 (R1 scope change of 2026-10-16, BRS §6.1)
+
+Six migrations; the procedure tests are in `test/db/r1-scope.db-spec.ts` (22 tests).
+
+| Migration | What it does |
+|---|---|
+| `r1_scope_enums` | `media_kind` VIDEO, `media_variant_type` POSTER and VIDEO_720, `post_type` VIDEO, `notification_type` REPLY. **On its own on purpose:** Postgres will not use a value added by `ALTER TYPE … ADD VALUE` in the transaction that added it, and the next migration's CHECKs do. |
+| `r1_video_replies_hashtags` | `comments.parent_id` / `reply_count`; `hashtags`, `post_hashtags`. CHECKs: per-kind MIME and size (`media_assets_mime`, `media_assets_byte_size`), `media_assets_duration` (video only, ≤ 65 s), `media_assets_video_is_post`, `comments_replies_are_flat`, `comments_parent_not_self`, `comments_reply_count_nonneg`, `hashtags_tag_format`. Partial indexes for a visible thread and visible top-level comments. CHECKs compare `kind::text` so the planner never resolves the new enum label. |
+| `r1_scope_procedures` | The procedures in §7 marked above. Seven changed their result type or arity, so they are dropped first. |
+| `r1_reply_notification_target` | `notifications_target` admits REPLY (post + comment, like COMMENT); hashtags stored lower-case; replies keyset on the id. |
+| `r1_media_duration_grant` | `jamii_app` may read `media_assets.duration_ms` (`GET /media/:id`). |
+| `r1_feed_shows_own_processing` | `fn_get_home_feed` returns `status`, and the viewer's own PROCESSING posts (BR-FD-12). |
+| `r1_admin_sees_video` | `fn_admin_get_post` carries the video rendition, poster and length, so a moderator can watch a reported video. |
+
+**Counter rule for replies.** `posts.comment_count` counts replies, and a reply counts only while **both** it and its parent are visible. Deleting a top-level comment soft-deletes its thread; an admin hiding one leaves the replies' own `hidden_at` alone and adjusts the count by `1 + visible replies` each way, so unhiding restores exactly what is still visible in its own right. `fn_maint_reconcile_counters` recomputes this rule and `reply_count`; the tests assert zero drift after every delete and hide.
+
+**Known limits, kept on purpose.** `reply_count` is a stored counter that does not know the viewer's blocks, so a thread can open shorter than its count (the app then shows the loaded number). Tag rows are never deleted. A run of more than 64 tag characters keeps its first 64.

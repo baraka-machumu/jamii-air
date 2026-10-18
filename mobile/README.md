@@ -51,7 +51,7 @@ node dist/worker.js                                                        # aft
 
 The storage addresses are baked into the API at start: after changing Wi-Fi, restart the API and worker with the new address.
 
-**New native modules need a new dev build** (`npm run build:dev`): task 3.5 added `expo-image-picker`, `expo-image-manipulator` and AsyncStorage.
+**New native modules need a new dev build** (`npm run build:dev`): task 3.5 added `expo-image-picker`, `expo-image-manipulator` and AsyncStorage. The R1 scope change (2026-10-16) added **`expo-video`** for video posts, so a dev or `preview` build made before it cannot play video and must be rebuilt (`npm run build:dev` / `npm run build:preview`) — an EAS Update will not do.
 
 ## Check
 

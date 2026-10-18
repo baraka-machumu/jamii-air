@@ -11,9 +11,11 @@ import { MediaService } from './media.service.js';
 export class MediaController {
   constructor(private readonly media: MediaService) {}
 
+  // One intent per file, so a 10-photo carousel costs ten: the hourly budget is per file, not
+  // per post (30 would have allowed three carousels an hour).
   @Post('uploads')
-  @Throttle({ default: { limit: 30, ttl: 3_600_000 } })
-  @ApiOperation({ summary: 'Upload intent: a presigned PUT URL for one photo (15 min)' })
+  @Throttle({ default: { limit: 150, ttl: 3_600_000 } })
+  @ApiOperation({ summary: 'Upload intent: a presigned PUT URL for one photo or video (15 min)' })
   @ApiResponse({ status: 201, type: UploadIntent })
   createUpload(@CurrentUser() user: AuthUser, @Body() dto: CreateUploadDto): Promise<UploadIntent> {
     return this.media.createUpload(user.id, dto);

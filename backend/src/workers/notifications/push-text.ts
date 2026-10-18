@@ -1,18 +1,20 @@
 // Localised push text (TRD NT-03, App Flow §9). English and Swahili; the device's app language
 // wins over the account setting so a shared phone shows what its user reads.
 
-export type NotificationType = 'FOLLOW' | 'LIKE' | 'COMMENT';
+export type NotificationType = 'FOLLOW' | 'LIKE' | 'COMMENT' | 'REPLY';
 type Lang = 'en' | 'sw';
 
 const TEXT: Record<Lang, Record<NotificationType, (username: string) => string>> = {
   en: {
     LIKE: (u) => `${u} liked your post`,
     COMMENT: (u) => `${u} commented on your post`,
+    REPLY: (u) => `${u} replied to your comment`,
     FOLLOW: (u) => `${u} started following you`,
   },
   sw: {
     LIKE: (u) => `${u} amependa chapisho lako`,
     COMMENT: (u) => `${u} ametoa maoni kwenye chapisho lako`,
+    REPLY: (u) => `${u} amejibu maoni yako`,
     FOLLOW: (u) => `${u} ameanza kukufuata`,
   },
 };

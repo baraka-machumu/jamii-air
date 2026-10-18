@@ -5,6 +5,9 @@ import {
   DeleteObjectsCommand, GetObjectCommand, HeadObjectCommand, ListObjectsV2Command, PutObjectCommand, S3Client,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { createWriteStream } from 'node:fs';
+import { pipeline } from 'node:stream/promises';
+import type { Readable } from 'node:stream';
 import { AppConfig } from '../../config/app-config.js';
 
 export const UPLOAD_URL_TTL_SECONDS = 15 * 60; // SE-08: presigned URLs ≤ 15 min
@@ -64,6 +67,15 @@ export class StorageService {
   async getBuffer(key: string): Promise<Buffer> {
     const res = await this.client.send(new GetObjectCommand({ Bucket: this.bucket, Key: key }));
     return Buffer.from(await res.Body!.transformToByteArray());
+  }
+
+  /**
+   * Streams an object to a local file. Used for video originals (BR-CT-07), which run to 150 MB
+   * and must never be held in memory the way getBuffer holds an image.
+   */
+  async downloadTo(key: string, filePath: string): Promise<void> {
+    const res = await this.client.send(new GetObjectCommand({ Bucket: this.bucket, Key: key }));
+    await pipeline(res.Body as Readable, createWriteStream(filePath));
   }
 
   /** Variants are immutable and public through the media cache (MD-05). */

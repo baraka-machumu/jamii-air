@@ -4,7 +4,7 @@ import { ApiBearerAuth, ApiHeader, ApiOperation, ApiResponse, ApiTags } from '@n
 import { Throttle } from '@nestjs/throttler';
 import { type AuthUser, CurrentUser } from '../../common/auth/auth.decorators.js';
 import { PageQuery } from '../users/users.dto.js';
-import { CreatePostDto, FeedPage, GridPage, Post, UpdatePostDto } from './posts.dto.js';
+import { CreatePostDto, FeedPage, GridPage, Post, TagPage, UpdatePostDto } from './posts.dto.js';
 import { PostsService } from './posts.service.js';
 import { IdempotencyKey } from '../../common/http/request-headers.js';
 
@@ -55,6 +55,14 @@ export class PostsController {
   @ApiResponse({ status: 200, type: FeedPage })
   feed(@CurrentUser() user: AuthUser, @Query() page: PageQuery) {
     return this.posts.feed(user.id, page.cursor, page.limit);
+  }
+
+  @Get('tags/:tag/posts')
+  @Throttle({ default: { limit: 120, ttl: 60_000 } })
+  @ApiOperation({ summary: 'Posts carrying one hashtag, newest first (the "#" is optional, case is ignored)' })
+  @ApiResponse({ status: 200, type: TagPage })
+  tagPosts(@CurrentUser() user: AuthUser, @Param('tag') tag: string, @Query() page: PageQuery) {
+    return this.posts.tagPosts(user.id, tag, page.cursor, page.limit);
   }
 
   @Get('users/:username/posts')

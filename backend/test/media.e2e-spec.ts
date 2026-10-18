@@ -86,7 +86,9 @@ describe('media (e2e)', () => {
     expect((await as(app, other).patch('/api/v1/me').send({ avatarMediaId: intent.mediaId }).expect(404)).body.error.code).toBe('MEDIA_NOT_FOUND');
     expect((await as(app, me).post('/api/v1/media/uploads')
       .send({ kind: 'IMAGE', purpose: 'POST', mimeType: 'image/gif', byteSize: 10 }).expect(400)).body.error.code).toBe('VALIDATION_FAILED');
+    // Per-kind ceiling since the R1 scope change: 16 MB is within the DTO's range (video reaches
+    // 150 MB) and is refused for being too large for an image.
     expect((await as(app, me).post('/api/v1/media/uploads')
-      .send({ kind: 'IMAGE', purpose: 'POST', mimeType: 'image/jpeg', byteSize: 16 * 1024 * 1024 }).expect(400)).body.error.code).toBe('VALIDATION_FAILED');
+      .send({ kind: 'IMAGE', purpose: 'POST', mimeType: 'image/jpeg', byteSize: 16 * 1024 * 1024 }).expect(413)).body.error.code).toBe('PAYLOAD_TOO_LARGE');
   });
 });

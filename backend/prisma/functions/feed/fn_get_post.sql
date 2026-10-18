@@ -1,9 +1,11 @@
 -- GET /posts/:id (post detail, shared links). Feed-item shape plus status and is_mine.
 -- Others see PUBLISHED posts only (fn__assert_post_visible); the author also sees their own
 -- PROCESSING and FAILED posts. Hidden and deleted posts are JA404 for everyone.
+-- `media` is as in fn_get_home_feed, and additionally carries each item's own status, which is
+-- what tells the author's screen that one photo of a carousel is still being processed.
 CREATE OR REPLACE FUNCTION fn_get_post(p_viewer_id uuid, p_post_id uuid)
 RETURNS TABLE (
-  post_id uuid, status post_status, created_at timestamptz, caption varchar,
+  post_id uuid, status post_status, type post_type, created_at timestamptz, caption varchar,
   like_count int, comment_count int, liked_by_me boolean, is_mine boolean,
   author_id uuid, author_username citext, author_display_name varchar, author_avatar_key text,
   media jsonb)
@@ -20,18 +22,22 @@ BEGIN
   END IF;
 
   RETURN QUERY
-  SELECT p.id, p.status, p.created_at, p.caption, p.like_count, p.comment_count,
+  SELECT p.id, p.status, p.type, p.created_at, p.caption, p.like_count, p.comment_count,
          EXISTS (SELECT 1 FROM likes l WHERE l.user_id = p_viewer_id AND l.post_id = p.id),
          p.author_id = p_viewer_id,
          u.id, u.username, u.display_name, av.object_key,
          (SELECT jsonb_agg(jsonb_build_object(
                    'id', ma.id, 'kind', ma.kind, 'status', ma.status, 'blurhash', ma.blurhash,
                    'feedKey', fv.object_key, 'thumbKey', tv.object_key,
-                   'width', fv.width, 'height', fv.height) ORDER BY pm.position)
+                   'posterKey', pv.object_key, 'videoKey', vv.object_key, 'durationMs', ma.duration_ms,
+                   'width', COALESCE(fv.width, vv.width), 'height', COALESCE(fv.height, vv.height))
+                   ORDER BY pm.position)
           FROM post_media pm
           JOIN media_assets ma ON ma.id = pm.media_id
           LEFT JOIN media_variants fv ON fv.media_id = ma.id AND fv.variant = 'FEED'
           LEFT JOIN media_variants tv ON tv.media_id = ma.id AND tv.variant = 'THUMB'
+          LEFT JOIN media_variants pv ON pv.media_id = ma.id AND pv.variant = 'POSTER'
+          LEFT JOIN media_variants vv ON vv.media_id = ma.id AND vv.variant = 'VIDEO_720'
           WHERE pm.post_id = p.id)
   FROM posts p
   JOIN users u ON u.id = p.author_id

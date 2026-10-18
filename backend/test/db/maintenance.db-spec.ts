@@ -69,7 +69,7 @@ describe('retention purges', () => {
   it('erases deleted posts and comments after 30 days', async () => {
     const [author, fan] = [await createUser(), await createUser()];
     const [gone, kept] = [await createPost(author.id), await createPost(author.id)];
-    const c = await one('SELECT comment_id FROM fn_add_comment($1, $2, $3, NULL, NULL)', [fan.id, kept, 'hi']);
+    const c = await one('SELECT comment_id FROM fn_add_comment($1, $2, $3, NULL, NULL, NULL)', [fan.id, kept, 'hi']);
     await one('SELECT * FROM fn_like_post($1, $2)', [fan.id, gone]);
     await one('SELECT * FROM fn_delete_post($1, $2)', [author.id, gone]);
     await one('SELECT * FROM fn_delete_comment($1, $2)', [fan.id, c.comment_id]);
@@ -99,7 +99,7 @@ describe('retention purges', () => {
     await follow(leaver.id, friend.id);
     await follow(friend.id, leaver.id);
     await one('SELECT * FROM fn_like_post($1, $2)', [leaver.id, friendPost]);
-    await one('SELECT * FROM fn_add_comment($1, $2, $3, NULL, NULL)', [leaver.id, friendPost, 'bye']);
+    await one('SELECT * FROM fn_add_comment($1, $2, $3, NULL, NULL, NULL)', [leaver.id, friendPost, 'bye']);
     await createPost(leaver.id);
     await one('SELECT * FROM fn_request_account_deletion($1)', [leaver.id]);
 
@@ -122,7 +122,7 @@ describe('retention purges', () => {
     const { notification_id: n } = await follow(fan.id, me.id);
     await one('SELECT * FROM fn_create_password_reset($1, $2, now() + interval \'1 hour\')', [me.email, hash()]);
     const post = await createPost(me.id);
-    await one('SELECT * FROM fn_add_comment($1, $2, $3, $4, $5)', [fan.id, post, 'x', 'key-old', hash()]);
+    await one('SELECT * FROM fn_add_comment($1, $2, $3, NULL, $4, $5)', [fan.id, post, 'x', 'key-old', hash()]);
     await owner.query(`UPDATE refresh_tokens SET revoked_at = now() - interval '8 days' WHERE user_id = $1`, [me.id]);
     await owner.query(`UPDATE password_reset_codes SET created_at = now() - interval '25 hours' WHERE user_id = $1`, [me.id]);
     await owner.query(`UPDATE idempotency_keys SET created_at = now() - interval '25 hours' WHERE user_id = $1`, [fan.id]);

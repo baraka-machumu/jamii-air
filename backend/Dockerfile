@@ -24,6 +24,10 @@ CMD ["npx", "prisma", "migrate", "deploy"]
 FROM node:24-alpine AS runtime
 ENV NODE_ENV=production
 WORKDIR /app
+# ffmpeg and ffprobe: the worker transcodes video uploads with them (BR-CT-08,
+# src/workers/media/video-pipeline.ts). The API never calls them, but one image serves both
+# processes. Alpine's build is about 80 MB unpacked; set FFMPEG_PATH / FFPROBE_PATH to use another.
+RUN apk add --no-cache ffmpeg
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
 COPY --from=build /app/dist ./dist

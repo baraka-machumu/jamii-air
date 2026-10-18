@@ -3,9 +3,9 @@
 | | |
 |---|---|
 | **Document** | 01 — Business Requirements Specification |
-| **Version** | 1.1 (stakeholder decisions applied — see [00 §3](00-README.md)) |
+| **Version** | 1.2 (R1 scope widened by the owner on 2026-10-16: video posts, comment replies, hashtags, multi-photo carousel — see §6.1) |
 | **Date** | 2026-10-09 |
-| **Status** | **Signed off** — 2026-10-10 |
+| **Status** | **Signed off** — 2026-10-10; §6.1 scope change signed off 2026-10-16 |
 | **Related** | [00 Index & Review](00-README.md) · [02 TRD](02-technical-requirements-document.md) · [06 Implementation Plan](06-implementation-plan.md) |
 
 ---
@@ -63,23 +63,47 @@ The product is delivered in releases. **Only Release 1 is committed in detail.**
 
 | Release | Name | Audience | Headline scope |
 |---|---|---|---|
-| **R1** | **MVP — Private Pilot** | 10 invited users | Accounts, profiles, follow, **photo posts**, chronological feed, likes, comments, **share link**, notifications, block/report, **admin portal (web)**. |
-| R1.1 | Public Launch | 100 – 1,000 users | Open sign-up, email verification, multi-photo carousel, illegal-content hash matching, observability hardening, Android/iOS public store release. |
-| **R2** | **Reels** | 1,000+ users | Short vertical video (≤ 60 s): record/upload, transcoding, Reels tab with vertical swipe feed, autoplay, view counts. |
-| R3 | Discovery | 1,000 – 10,000 | Explore page, hashtags & mentions, improved search. AI/ML features (ranking, recommendations, ML moderation) to be scoped in a separate document. |
+| **R1** | **MVP — Private Pilot** | 10 invited users | Accounts, profiles, follow, **photo and video posts**, **multi-photo carousel**, chronological feed, likes, comments with **one level of replies**, **hashtags**, **share link**, notifications, block/report, **admin portal (web)**. |
+| R1.1 | Public Launch | 100 – 1,000 users | Open sign-up, email verification, illegal-content hash matching, observability hardening, Android/iOS public store release. |
+| **R2** | **Reels** | 1,000+ users | The Reels *surface*: a dedicated tab with a vertical swipe feed, autoplay, view counts and an adaptive (HLS) ladder. Video upload itself is R1 (§6.1). |
+| R3 | Discovery | 1,000 – 10,000 | Explore page, @mentions, trending hashtags, improved search. AI/ML features (ranking, recommendations, ML moderation) to be scoped in a separate document. |
 | R4 | Scale & Engage | 10,000+ | Stories, direct messages, creator insights, horizontal scaling. |
 
-> **Why Reels is in R2, not R1 (decision D-1):** video multiplies storage, bandwidth, processing and moderation cost and complexity. Both source guidelines defer it. The R1 data model and media pipeline are deliberately designed so R2 adds video without restructuring (TRD §8, Schema §4).
+> **Decision D-1 (revised 2026-10-16):** R1 originally carried no video at all, because video multiplies
+> storage, bandwidth, processing and moderation cost. The data model and media pipeline were built so that
+> video could be added without restructuring (TRD §8, Schema §4), and that is what §6.1 now does. What stays
+> in R2 is the *Reels surface* — the dedicated tab, the vertical swipe feed, view counts and adaptive
+> streaming — not the ability to post a video.
+
+### 6.1 Scope change — 2026-10-16
+
+After the core loop was demonstrated on a real phone against UAT (Plan §1.1), the owner moved four
+features into R1 rather than waiting for R1.1 or R2:
+
+| Moved into R1 | Was | Requirements | Why it is affordable now |
+|---|---|---|---|
+| Video posts | R2 | BR-CT-07, BR-CT-08 | One 720p MP4 rendition plus a poster frame, capped at 60 s. No adaptive ladder, no Reels tab: the existing media pipeline, worker and post model take it as another media kind (TRD §9.3). |
+| Multi-photo carousel | R1.1 | BR-CT-09 | `post_media` already carries an ordered position and the publish rule already waits for every item (Schema §4.3); only the one-photo guard and the mobile UI had to change. |
+| Replies to comments | out of scope | BR-FD-08, BR-FD-09 | **One** level only — a reply cannot be replied to — so the comment table takes a self-reference and no recursive query is needed. |
+| Hashtags | R3 | BR-FD-10, BR-FD-11 | Tags are parsed from the caption and stored; a tag opens a chronological list of posts. No trending, no ranking, no @mentions — those stay in R3. |
+
+The same session raised one defect to a requirement: a post was not reliably on screen once it finished
+publishing (BR-FD-12).
+
+**What this costs.** Video is the only item with a real running cost: a 60 s 720p upload is roughly
+8–15 MB stored after transcoding, against ~200 KB for a photo, and transcoding is CPU-bound on the host
+that runs the worker. The pilot is ten users, so the pilot-scale cost is accepted; a public launch needs
+the figure re-checked against NFR-07 before R1.1.
 
 ## 7. Scope — Release 1 (MVP)
 
 ### 7.1 In scope
 
-Accounts & sessions · profiles · user search · follow/unfollow · photo post create/delete · chronological home feed · profile grid · post detail · like/unlike · comments (create, list, delete) · share post link · in-app activity + push notifications · block/unblock · report · admin portal — a separate website for moderation (reports, hide content, suspend users), invite codes and audit log · account deletion · English & Swahili UI.
+Accounts & sessions · profiles · user search · follow/unfollow · post create/delete — **one photo, up to 10 photos as a carousel, or one video (≤ 60 s)** · chronological home feed · profile grid · post detail · like/unlike · comments (create, list, delete) with **one level of replies** · **hashtags in captions, and a chronological list of posts per tag** · share post link · in-app activity + push notifications · block/unblock · report · admin portal — a separate website for moderation (reports, hide content, suspend users), invite codes and audit log · account deletion · English & Swahili UI.
 
 ### 7.2 Out of scope (R1)
 
-Reels/video · Stories · live streaming · direct messages · Explore/recommendations · **any AI/ML feature** (ranking, recommendations, ML moderation) · hashtags & mentions · threaded replies · multi-photo carousel · private accounts · ads, payments, shopping · creator analytics · web app for end users · microservices, Kubernetes, Kafka, Elasticsearch, multi-region.
+The **Reels surface** (a dedicated tab, vertical swipe feed, autoplay, view counts, adaptive/HLS streaming) · Stories · live streaming · direct messages · Explore/recommendations · **any AI/ML feature** (ranking, recommendations, ML moderation) · **@mentions** · **trending or ranked hashtags** · **replies to replies** (one level only) · private accounts · ads, payments, shopping · creator analytics · web app for end users · microservices, Kubernetes, Kafka, Elasticsearch, multi-region.
 
 ## 8. Business requirements
 
@@ -112,12 +136,16 @@ Priority: **M** = Must (release blocked without it) · **S** = Should (strongly 
 
 | ID | Requirement | Priority |
 |---|---|---|
-| BR-CT-01 | A user can publish a single-photo post with an optional caption (≤ 2,200 chars) from camera or gallery. | M |
+| BR-CT-01 | A user can publish a post with an optional caption (≤ 2,200 chars) from camera or gallery. | M |
 | BR-CT-02 | Photos are automatically optimised so the feed is fast and data-light; the original is never sent to the feed. | M |
 | BR-CT-03 | A user sees upload progress and can retry a failed upload without re-selecting the photo. | M |
 | BR-CT-04 | A user can delete their own post. | M |
 | BR-CT-05 | A user can edit the caption of their own post. | C |
-| BR-CT-06 | Location data embedded in photos is removed before anyone else can see the photo. | M |
+| BR-CT-06 | Location data embedded in photos is removed before anyone else can see the photo. The same applies to video metadata. | M |
+| BR-CT-07 | A user can publish a post whose media is **one video of at most 60 seconds**, from the gallery or recorded in the app. A longer or unreadable file is refused with a reason, before the upload where the phone can tell. | M |
+| BR-CT-08 | Video is re-encoded server-side to a single 720p MP4 and given a poster image, so it plays on a mid-range Android over a prepaid bundle. The original is never served. | M |
+| BR-CT-09 | A user can publish **up to 10 photos in one post**, in a chosen order, shown as a swipeable carousel with a position indicator. The post appears only once every photo is ready. | M |
+| BR-CT-10 | One post holds **either** photos **or** a single video, never a mix. | M |
 
 ### 8.4 Feed & engagement
 
@@ -130,12 +158,17 @@ Priority: **M** = Must (release blocked without it) · **S** = Should (strongly 
 | BR-FD-05 | A user can delete their own comments; a post author can delete comments on their own post. | M |
 | BR-FD-06 | A user can share a post link via the phone's share sheet (WhatsApp, SMS, etc.). Opening the link on a phone with the app installed opens that post. | M |
 | BR-FD-07 | A user with no follows sees a helpful empty state with suggested next steps (search, invite). | M |
+| BR-FD-08 | A user can reply to a comment. Replies sit under the comment they answer, newest-loaded in pages, and are counted on it. | M |
+| BR-FD-09 | Replies go **one level deep**: a reply cannot itself be replied to. Replying from a reply answers its parent comment. | M |
+| BR-FD-10 | A `#tag` written in a caption becomes a link. Tags are case-insensitive, 1–64 characters, letters, digits and `_`. | M |
+| BR-FD-11 | Opening a tag shows the posts carrying it, newest first, under the same visibility rules as the feed (no hidden or blocked content). | M |
+| BR-FD-12 | Once a post finishes publishing it is **on screen without the user doing anything** — at the top of the home feed and in their profile grid. While it is still processing, its place is held by a progress card. | M |
 
 ### 8.5 Notifications
 
 | ID | Requirement | Priority |
 |---|---|---|
-| BR-NT-01 | A user is notified when someone follows them, likes their post or comments on their post. | M |
+| BR-NT-01 | A user is notified when someone follows them, likes their post, comments on their post, or **replies to their comment**. | M |
 | BR-NT-02 | Notifications appear in an in-app Activity screen with unread indicator. | M |
 | BR-NT-03 | Notifications are also delivered as push notifications when the user has granted permission. | M |
 | BR-NT-04 | Users are never notified about their own actions, and repeated like/unlike does not produce repeated notifications. | M |

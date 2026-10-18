@@ -153,15 +153,51 @@ export async function createUpload(userId: string, purpose: 'POST' | 'AVATAR' = 
   return row.media_id;
 }
 
-/** A post through the real flow: upload intent → fn_create_post → fn_complete_media_processing. */
-export async function createPost(userId: string, opts: { caption?: string; publish?: boolean } = {}): Promise<string> {
-  const mediaId = await createUpload(userId);
-  const post = await one('SELECT * FROM fn_create_post($1, $2, $3, NULL, NULL)', [userId, [mediaId], opts.caption ?? 'hello']);
+/** Upload intent for a video (BR-CT-07); returns the media id. */
+export async function createVideoUpload(userId: string): Promise<string> {
+  const row = await one(`SELECT * FROM fn_create_upload_intent($1, 'VIDEO', 'POST', 'video/mp4', 4000000)`, [userId]);
+  return row.media_id;
+}
+
+/**
+ * A post through the real flow: upload intent → fn_create_post → fn_complete_media_processing.
+ * `photos` makes a carousel (BR-CT-09) and `video: true` a video post (BR-CT-07); both publish
+ * only once every item is READY, which is what `publish` drives.
+ */
+export async function createPost(
+  userId: string,
+  opts: { caption?: string; publish?: boolean; photos?: number; video?: boolean } = {},
+): Promise<string> {
+  const video = opts.video ?? false;
+  const mediaIds = video
+    ? [await createVideoUpload(userId)]
+    : await Promise.all(Array.from({ length: opts.photos ?? 1 }, () => createUpload(userId)));
+  const post = await one('SELECT * FROM fn_create_post($1, $2, $3, NULL, NULL)', [userId, mediaIds, opts.caption ?? 'hello']);
   if (opts.publish ?? true) {
-    await one('SELECT * FROM fn_complete_media_processing($1, 1080, 1350, $2, $3)',
-      [mediaId, 'LEHV6nWB2yk8pyo0adR*.7kCMdnj', JSON.stringify(variantsFor(userId, mediaId))]);
+    for (const mediaId of mediaIds) {
+      await (video
+        ? one('SELECT * FROM fn_complete_media_processing($1, 720, 1280, $2, $3, 12000)',
+            [mediaId, 'LEHV6nWB2yk8pyo0adR*.7kCMdnj', JSON.stringify(videoVariantsFor(userId, mediaId))])
+        : one('SELECT * FROM fn_complete_media_processing($1, 1080, 1350, $2, $3)',
+            [mediaId, 'LEHV6nWB2yk8pyo0adR*.7kCMdnj', JSON.stringify(variantsFor(userId, mediaId))]));
+    }
   }
   return post.post_id;
+}
+
+/** The variants a processed video carries (BR-CT-08): the 720p MP4, its poster and a grid thumb. */
+export function videoVariantsFor(ownerId: string, mediaId: string): object[] {
+  const key = (name: string) => `users/${ownerId}/media/${mediaId}/${name}`;
+  return [
+    { variant: 'VIDEO_720', objectKey: key('video_720.mp4'), width: 720, height: 1280, mimeType: 'video/mp4', byteSize: 900000 },
+    { variant: 'POSTER', objectKey: key('poster.webp'), width: 720, height: 1280, mimeType: 'image/webp', byteSize: 20000 },
+    { variant: 'THUMB', objectKey: key('thumb.webp'), width: 320, height: 320, mimeType: 'image/webp', byteSize: 8000 },
+  ];
+}
+
+/** A comment (p_parent_id NULL) or, with `parent`, a reply to one (BR-FD-08). */
+export async function addComment(viewerId: string, postId: string, body = 'nice!', parent: string | null = null): Promise<Row> {
+  return one('SELECT * FROM fn_add_comment($1, $2, $3, $4, NULL, NULL)', [viewerId, postId, body, parent]);
 }
 
 /** Sets a READY avatar for the user (PATCH /me, then the worker); returns the media id. */

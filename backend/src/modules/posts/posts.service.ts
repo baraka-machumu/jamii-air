@@ -4,20 +4,27 @@
 import { Injectable } from '@nestjs/common';
 import { idempotency } from '../../common/idempotency/idempotency-key.js';
 import { clampLimit, decodeCursor, type Page, toPage } from '../../common/pagination/cursor.js';
-import { type FeedRow, type PostRow, PostsProcedures } from '../../infrastructure/db-procedures/posts.procedures.js';
+import {
+  type FeedRow, type GridRow, type PostRow, PostsProcedures, type TagRow,
+} from '../../infrastructure/db-procedures/posts.procedures.js';
 import { MediaJobs } from '../../infrastructure/queue/queue.module.js';
 import { MediaUrls } from '../../infrastructure/storage/media-urls.js';
 import { ShareLinks } from '../links/share-links.js';
 import { MediaService } from '../media/media.service.js';
-import type { CreatePostDto, GridItem, Post, PostMedia } from './posts.dto.js';
+import type { CreatePostDto, GridItem, Post, PostMedia, TagPage } from './posts.dto.js';
 
 /** One element of the `media` jsonb array the post and feed procedures build. */
 interface MediaJson {
   id: string;
   kind: string;
   blurhash: string | null;
+  /** IMAGE: the ≤ 1080 wide feed image. Null on a video. */
   feedKey: string | null;
   thumbKey: string | null;
+  /** VIDEO: the 720p MP4 and the still shown before it plays. Null on an image. */
+  videoKey: string | null;
+  posterKey: string | null;
+  durationMs: number | null;
   width: number | null;
   height: number | null;
 }
@@ -65,10 +72,29 @@ export class PostsService {
   async profileGrid(viewerId: string, username: string, cursor?: string, limit?: number): Promise<Page<GridItem>> {
     const size = clampLimit(limit);
     const rows = await this.procedures.getProfilePosts(viewerId, username, decodeCursor(cursor), size);
-    return toPage(rows, size, (r) => ({ time: r.created_at!, id: r.post_id! }), (r) => ({
-      id: r.post_id!, status: r.status!, thumbUrl: this.urls.of(r.thumb_key), blurhash: r.blurhash,
-      mediaCount: r.media_count ?? 0, createdAt: r.created_at!.toISOString(),
-    }));
+    return toPage(rows, size, (r) => ({ time: r.created_at!, id: r.post_id! }), (r) => this.toGridItem(r));
+  }
+
+  /**
+   * One tag's posts (BR-FD-11). postCount comes back on every row, so an empty page — an unknown
+   * tag, or one whose posts are all gone — reports 0.
+   */
+  async tagPosts(viewerId: string, tag: string, cursor?: string, limit?: number): Promise<TagPage> {
+    const size = clampLimit(limit);
+    const rows = await this.procedures.getHashtagPosts(viewerId, tag, decodeCursor(cursor), size);
+    const page = toPage(rows, size, (r) => ({ time: r.created_at!, id: r.post_id! }), (r) => this.toGridItem(r));
+    return {
+      tag: rows[0]?.tag ?? tag.replace(/^#/, '').toLowerCase(),
+      postCount: rows[0]?.post_count ?? 0,
+      ...page,
+    };
+  }
+
+  private toGridItem(r: GridRow | TagRow): GridItem {
+    return {
+      id: r.post_id!, status: r.status!, type: r.type!, thumbUrl: this.urls.of(r.thumb_key),
+      blurhash: r.blurhash, mediaCount: r.media_count ?? 0, createdAt: r.created_at!.toISOString(),
+    };
   }
 
   /** Feed rows are always PUBLISHED; post-detail rows carry status and is_mine. */
@@ -77,6 +103,7 @@ export class PostsService {
     return {
       id: r.post_id!,
       status: detail?.status ?? 'PUBLISHED',
+      type: r.type!,
       caption: r.caption,
       likeCount: r.like_count ?? 0,
       commentCount: r.comment_count ?? 0,
@@ -86,9 +113,18 @@ export class PostsService {
         id: r.author_id!, username: r.author_username!, displayName: r.author_display_name,
         avatarUrl: this.urls.of(r.author_avatar_key),
       },
+      // A video's `url` is its 720p MP4, an image's is its feed render (BR-CT-08); one field, so
+      // every carousel item is handled the same way and `kind` says how to play it.
       media: ((r.media ?? []) as unknown as MediaJson[]).map((m): PostMedia => ({
-        id: m.id, kind: m.kind, blurhash: m.blurhash, url: this.urls.of(m.feedKey), thumbUrl: this.urls.of(m.thumbKey),
-        width: m.width, height: m.height,
+        id: m.id,
+        kind: m.kind,
+        blurhash: m.blurhash,
+        url: this.urls.of(m.kind === 'VIDEO' ? m.videoKey : m.feedKey),
+        thumbUrl: this.urls.of(m.thumbKey),
+        posterUrl: this.urls.of(m.posterKey),
+        durationMs: m.durationMs,
+        width: m.width,
+        height: m.height,
       })),
       shareUrl: this.links.post(r.post_id!),
       createdAt: r.created_at!.toISOString(),

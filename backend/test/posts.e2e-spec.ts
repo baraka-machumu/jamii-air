@@ -132,6 +132,56 @@ describe('posts (e2e)', () => {
     expect((await as(app, blocker).get(`/api/v1/users/${author.username}/posts`).expect(200)).body.items).toEqual([]);
   });
 
+  it('publishes a carousel only once every photo is ready, in order (BR-CT-09)', async () => {
+    const me = await registerUser(app);
+    const media = [await upload(me), await upload(me), await upload(me)];
+    const created = (await as(app, me).post('/api/v1/posts').send({ mediaIds: media, caption: 'Three of them' }).expect(201)).body;
+    expect(created).toMatchObject({ type: 'PHOTO', status: 'PROCESSING' });
+
+    // Each item is processed once, by whoever gets there first: calling the processor directly
+    // races any real worker that happens to be draining the queue (a developer's `node
+    // dist/worker.js` does), and an item someone else finished answers SKIPPED. What matters here
+    // is the HTTP contract once every item is done; that a partly-processed post stays
+    // PROCESSING is asserted against the procedures in test/db/r1-scope.db-spec.ts.
+    const processor = await mediaProcessor(app);
+    for (const id of media) {
+      expect(await processor.process(id)).toMatch(/^(READY|SKIPPED)$/);
+    }
+
+    const post = (await as(app, me).get(`/api/v1/posts/${created.id}`).expect(200)).body;
+    expect(post.status).toBe('PUBLISHED');
+    expect(post.media.map((m: { id: string }) => m.id)).toEqual(media);
+    for (const item of post.media) {
+      expect(item).toMatchObject({ kind: 'IMAGE', posterUrl: null, durationMs: null });
+      expect(item.url).toMatch(/feed\.webp$/);
+    }
+    const grid = (await as(app, me).get(`/api/v1/users/${me.username}/posts`).expect(200)).body;
+    expect(grid.items[0]).toMatchObject({ id: created.id, type: 'PHOTO', mediaCount: 3 });
+  });
+
+  it('lists the posts of a hashtag taken from the caption (BR-FD-10/11)', async () => {
+    const [me, stranger] = [await registerUser(app), await registerUser(app)];
+    const tag = `dar${randomUUID().replaceAll('-', '').slice(0, 10)}`;
+    const first = await publishPost(app, stranger, `Sunset #${tag.toUpperCase()}`);
+    const second = await publishPost(app, stranger, `Again #${tag} #${tag}`);
+
+    // A tag is found whatever case it was typed in, with or without the '#', by someone who
+    // does not follow the author.
+    const page = (await as(app, me).get(`/api/v1/tags/${tag}/posts`).expect(200)).body;
+    expect(page).toMatchObject({ tag, postCount: 2 });
+    expect(page.items.map((i: { id: string }) => i.id)).toEqual([second, first]);
+    expect((await as(app, me).get(`/api/v1/tags/${encodeURIComponent(`#${tag.toUpperCase()}`)}/posts`).expect(200)).body.postCount).toBe(2);
+
+    // Editing the tag out of the caption takes the post off the tag.
+    await as(app, stranger).patch(`/api/v1/posts/${second}`).send({ caption: 'no tag now' }).expect(200);
+    expect((await as(app, me).get(`/api/v1/tags/${tag}/posts`).expect(200)).body.items.map((i: { id: string }) => i.id)).toEqual([first]);
+
+    // A tag nobody has used is an empty page, not an error; a malformed one is a 400.
+    expect((await as(app, me).get('/api/v1/tags/nobodyusedthistag/posts').expect(200)).body)
+      .toMatchObject({ tag: 'nobodyusedthistag', postCount: 0, items: [], nextCursor: null });
+    expect((await as(app, me).get(`/api/v1/tags/${encodeURIComponent('not a tag')}/posts`).expect(400)).body.error.code).toBe('TAG_INVALID');
+  });
+
   it('checks ownership, uploads and input', async () => {
     const [me, other] = [await registerUser(app), await registerUser(app)];
     const theirs = await upload(other);
@@ -141,9 +191,12 @@ describe('posts (e2e)', () => {
       .send({ kind: 'IMAGE', purpose: 'POST', mimeType: 'image/jpeg', byteSize: 1000 }).expect(201)).body.mediaId;
     expect((await as(app, me).post('/api/v1/posts').send({ mediaIds: [notUploaded] }).expect(400)).body.error.code).toBe('MEDIA_NOT_UPLOADED');
 
+    // Two photos is a carousel since the R1 scope change (BR-CT-09), not a rejection.
     const two = [await upload(me), await upload(me)];
-    expect((await as(app, me).post('/api/v1/posts').send({ mediaIds: two }).expect(400)).body.error.code).toBe('MEDIA_NOT_ATTACHABLE');
-    for (const body of [{}, { mediaIds: [] }, { mediaIds: ['nope'] }, { mediaIds: [two[0], two[0]] }, { mediaIds: [two[0]], caption: 'x'.repeat(2201) }]) {
+    expect((await as(app, me).post('/api/v1/posts').send({ mediaIds: two }).expect(201)).body)
+      .toMatchObject({ type: 'PHOTO', status: 'PROCESSING' });
+    const spare = await upload(me);
+    for (const body of [{}, { mediaIds: [] }, { mediaIds: ['nope'] }, { mediaIds: [spare, spare] }, { mediaIds: [spare], caption: 'x'.repeat(2201) }]) {
       expect((await as(app, me).post('/api/v1/posts').send(body).expect(400)).body.error.code).toBe('VALIDATION_FAILED');
     }
     expect((await as(app, me).get('/api/v1/posts/not-a-uuid').expect(400)).body.error.code).toBe('VALIDATION_FAILED');

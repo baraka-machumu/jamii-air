@@ -4,7 +4,9 @@ import { ApiBearerAuth, ApiHeader, ApiOperation, ApiResponse, ApiTags } from '@n
 import { Throttle } from '@nestjs/throttler';
 import { type AuthUser, CurrentUser } from '../../common/auth/auth.decorators.js';
 import { PageQuery } from '../users/users.dto.js';
-import { CommentPage, CreateCommentDto, CreatedComment, DeletedComment, LikeState } from './engagement.dto.js';
+import {
+  CommentPage, CreateCommentDto, CreatedComment, DeletedComment, LikeState, ReplyPage,
+} from './engagement.dto.js';
 import { EngagementService } from './engagement.service.js';
 import { IdempotencyKey } from '../../common/http/request-headers.js';
 
@@ -33,7 +35,7 @@ export class EngagementController {
   }
 
   @Get('posts/:id/comments')
-  @ApiOperation({ summary: 'Comments, newest first' })
+  @ApiOperation({ summary: 'Top-level comments, newest first. Replies come from /comments/:id/replies' })
   @ApiResponse({ status: 200, type: CommentPage })
   comments(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string, @Query() page: PageQuery) {
     return this.engagement.comments(user.id, id, page.cursor, page.limit);
@@ -41,7 +43,7 @@ export class EngagementController {
 
   @Post('posts/:id/comments')
   @Throttle({ default: { limit: 60, ttl: HOUR } })
-  @ApiOperation({ summary: 'Add a comment' })
+  @ApiOperation({ summary: 'Add a comment, or a reply when parentId is given' })
   @ApiHeader({ name: 'Idempotency-Key', required: false, description: 'Retry-safe: a repeat within 24 h returns the original comment' })
   @ApiResponse({ status: 201, type: CreatedComment })
   addComment(
@@ -50,12 +52,19 @@ export class EngagementController {
     @Body() dto: CreateCommentDto,
     @IdempotencyKey() idempotencyKey?: string,
   ): Promise<CreatedComment> {
-    return this.engagement.addComment(user.id, id, dto.body, idempotencyKey);
+    return this.engagement.addComment(user.id, id, dto.body, dto.parentId, idempotencyKey);
+  }
+
+  @Get('comments/:id/replies')
+  @ApiOperation({ summary: 'The replies under one comment, oldest first (BR-FD-08)' })
+  @ApiResponse({ status: 200, type: ReplyPage })
+  replies(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string, @Query() page: PageQuery) {
+    return this.engagement.replies(user.id, id, page.cursor, page.limit);
   }
 
   @Delete('comments/:id')
   @Throttle({ default: { limit: 60, ttl: HOUR } })
-  @ApiOperation({ summary: 'Delete a comment (yours, or any on your own post)' })
+  @ApiOperation({ summary: 'Delete a comment or reply (yours, or any on your own post). Deleting a comment deletes its thread' })
   @ApiResponse({ status: 200, type: DeletedComment })
   deleteComment(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string): Promise<DeletedComment> {
     return this.engagement.deleteComment(user.id, id);

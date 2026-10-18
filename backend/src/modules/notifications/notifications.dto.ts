@@ -51,7 +51,7 @@ export class NotificationActor {
 
 export class Notification {
   @ApiProperty() id!: string;
-  @ApiProperty({ enum: ['FOLLOW', 'LIKE', 'COMMENT'] }) type!: string;
+  @ApiProperty({ enum: ['FOLLOW', 'LIKE', 'COMMENT', 'REPLY'], description: 'REPLY: someone answered your comment (BR-FD-08). Its commentId is the reply' }) type!: string;
   @ApiProperty({ type: NotificationActor }) actor!: NotificationActor;
   @ApiProperty({ nullable: true, type: String }) postId!: string | null;
   @ApiProperty({ nullable: true, type: String, description: '320 × 320; null when the post is gone' }) postThumbUrl!: string | null;

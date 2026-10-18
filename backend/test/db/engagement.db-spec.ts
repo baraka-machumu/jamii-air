@@ -7,7 +7,7 @@ import {
 const like = (viewer: string, post: string) => one('SELECT * FROM fn_like_post($1, $2)', [viewer, post]);
 const unlike = (viewer: string, post: string) => one('SELECT * FROM fn_unlike_post($1, $2)', [viewer, post]);
 const comment = (viewer: string, post: string, body = 'nice!') =>
-  one('SELECT * FROM fn_add_comment($1, $2, $3, NULL, NULL)', [viewer, post, body]);
+  one('SELECT * FROM fn_add_comment($1, $2, $3, NULL, NULL, NULL)', [viewer, post, body]);
 
 describe('likes', () => {
   it('likes idempotently, counts, and notifies the author once across like → unlike → like', async () => {
@@ -64,10 +64,10 @@ describe('comments', () => {
     const [author, fan] = [await createUser(), await createUser()];
     const post = await createPost(author.id);
     const req = hash();
-    const first = await one('SELECT * FROM fn_add_comment($1, $2, $3, $4, $5)', [fan.id, post, 'hi', 'c-1', req]);
-    const again = await one('SELECT * FROM fn_add_comment($1, $2, $3, $4, $5)', [fan.id, post, 'hi', 'c-1', req]);
+    const first = await one('SELECT * FROM fn_add_comment($1, $2, $3, NULL, $4, $5)', [fan.id, post, 'hi', 'c-1', req]);
+    const again = await one('SELECT * FROM fn_add_comment($1, $2, $3, NULL, $4, $5)', [fan.id, post, 'hi', 'c-1', req]);
     expect(again).toMatchObject({ comment_id: first.comment_id, replayed: true, comment_count: 1 });
-    await expectJa(app.query('SELECT * FROM fn_add_comment($1, $2, $3, $4, $5)', [fan.id, post, 'other', 'c-1', hash()]),
+    await expectJa(app.query('SELECT * FROM fn_add_comment($1, $2, $3, NULL, $4, $5)', [fan.id, post, 'other', 'c-1', hash()]),
       'JA409', 'IDEMPOTENCY_KEY_REUSED');
   });
 
@@ -77,8 +77,8 @@ describe('comments', () => {
     const c1 = await comment(fan.id, post);
     const c2 = await comment(fan.id, post);
     await expectJa(app.query('SELECT * FROM fn_delete_comment($1, $2)', [other.id, c1.comment_id]), 'JA403', 'NOT_OWNER');
-    expect(await one('SELECT * FROM fn_delete_comment($1, $2)', [fan.id, c1.comment_id])).toEqual({ deleted: true, comment_count: 1 });
-    expect(await one('SELECT * FROM fn_delete_comment($1, $2)', [author.id, c2.comment_id])).toEqual({ deleted: true, comment_count: 0 });
+    expect(await one('SELECT * FROM fn_delete_comment($1, $2)', [fan.id, c1.comment_id])).toEqual({ deleted: true, comment_count: 1, parent_reply_count: 0 });
+    expect(await one('SELECT * FROM fn_delete_comment($1, $2)', [author.id, c2.comment_id])).toEqual({ deleted: true, comment_count: 0, parent_reply_count: 0 });
     await expectJa(app.query('SELECT * FROM fn_delete_comment($1, $2)', [fan.id, c1.comment_id]), 'JA404', 'COMMENT_NOT_FOUND');
   });
 

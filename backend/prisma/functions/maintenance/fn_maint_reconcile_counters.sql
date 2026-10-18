@@ -5,7 +5,10 @@
 --   users.follower_count / following_count  rows in follows
 --   users.post_count                        PUBLISHED posts
 --   posts.like_count                        rows in likes
---   posts.comment_count                     comments neither deleted nor hidden
+--   posts.comment_count                     visible comments: neither deleted nor hidden, and
+--                                           not sitting under a parent that is (a reply is only
+--                                           ever read through its parent, BR-FD-08)
+--   comments.reply_count                    visible replies to a top-level comment
 -- Rows are locked (posts first, then users, the order the procedures use) before counting, so a
 -- concurrent like or follow is either fully counted or applies its own +1 / -1 afterwards.
 CREATE OR REPLACE FUNCTION fn_maint_reconcile_counters(p_since timestamptz DEFAULT NULL)
@@ -32,10 +35,28 @@ BEGIN
   FROM (
     SELECT x.id,
            (SELECT count(*)::int FROM likes l WHERE l.post_id = x.id) AS likes,
-           (SELECT count(*)::int FROM comments k WHERE k.post_id = x.id AND k.deleted_at IS NULL AND k.hidden_at IS NULL) AS comments
+           (SELECT count(*)::int FROM comments k
+            LEFT JOIN comments pk ON pk.id = k.parent_id
+            WHERE k.post_id = x.id AND k.deleted_at IS NULL AND k.hidden_at IS NULL
+              AND (k.parent_id IS NULL OR (pk.deleted_at IS NULL AND pk.hidden_at IS NULL))) AS comments
     FROM posts x WHERE x.id = ANY (COALESCE(v_posts, '{}'))
   ) a
   WHERE p.id = a.id AND (p.like_count, p.comment_count) IS DISTINCT FROM (a.likes, a.comments);
+  GET DIAGNOSTICS v_rows = ROW_COUNT;
+  v_drift := v_drift + v_rows;
+
+  -- reply_count on the top-level comments of those posts (BR-FD-08). Independent of whether the
+  -- parent itself is hidden: it counts the replies' own state, which is what "N replies" means
+  -- once the parent is back.
+  UPDATE comments k SET reply_count = a.replies
+  FROM (
+    SELECT x.id,
+           (SELECT count(*)::int FROM comments r
+            WHERE r.parent_id = x.id AND r.deleted_at IS NULL AND r.hidden_at IS NULL) AS replies
+    FROM comments x
+    WHERE x.post_id = ANY (COALESCE(v_posts, '{}')) AND x.parent_id IS NULL
+  ) a
+  WHERE k.id = a.id AND k.reply_count IS DISTINCT FROM a.replies;
   GET DIAGNOSTICS v_rows = ROW_COUNT;
   v_drift := v_drift + v_rows;
 

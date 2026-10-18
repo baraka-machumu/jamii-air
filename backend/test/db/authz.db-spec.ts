@@ -88,7 +88,7 @@ describe('blocked users are invisible to each other in every read', () => {
     await follow(friend.id, me.id);
     const theirPost = await createPost(them.id);
     const myPost = await createPost(me.id);
-    await one('SELECT * FROM fn_add_comment($1, $2, $3, NULL, NULL)', [them.id, myPost, 'hello']);
+    await one('SELECT * FROM fn_add_comment($1, $2, $3, NULL, NULL, NULL)', [them.id, myPost, 'hello']);
     await one('SELECT * FROM fn_like_post($1, $2)', [them.id, myPost]);
     await block(them.id, me.id); // they block me: I must not see them anywhere
 

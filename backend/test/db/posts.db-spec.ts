@@ -62,7 +62,7 @@ describe('fn_create_post and media processing', () => {
     expect(rows.filter((r) => !r.replayed)).toHaveLength(1);
   });
 
-  it('rejects other users’ media, used media, avatars, several photos and long captions', async () => {
+  it('rejects other users’ media, used media, avatars and long captions', async () => {
     const [user, other] = [await createUser(), await createUser()];
     const theirs = await createUpload(other.id);
     await expectJa(app.query('SELECT * FROM fn_create_post($1, $2, NULL, NULL, NULL)', [user.id, [theirs]]), 'JA404', 'MEDIA_NOT_FOUND');
@@ -74,9 +74,13 @@ describe('fn_create_post and media processing', () => {
 
     const avatar = await createUpload(user.id, 'AVATAR');
     await expectJa(app.query('SELECT * FROM fn_create_post($1, $2, NULL, NULL, NULL)', [user.id, [avatar]]), 'JA400', 'MEDIA_NOT_ATTACHABLE');
+    // Two photos in one post is a carousel since the R1 scope change (BR-CT-09); the limits that
+    // replaced the old one-photo rule are in r1-scope.db-spec.ts.
     const two = [await createUpload(user.id), await createUpload(user.id)];
-    await expectJa(app.query('SELECT * FROM fn_create_post($1, $2, NULL, NULL, NULL)', [user.id, two]), 'JA400', 'MEDIA_NOT_ATTACHABLE');
-    await expectJa(app.query('SELECT * FROM fn_create_post($1, $2, $3, NULL, NULL)', [user.id, [two[0]], 'x'.repeat(2201)]),
+    expect(await one('SELECT * FROM fn_create_post($1, $2, NULL, NULL, NULL)', [user.id, two]))
+      .toMatchObject({ status: 'PROCESSING', type: 'PHOTO' });
+    const spare = await createUpload(user.id);
+    await expectJa(app.query('SELECT * FROM fn_create_post($1, $2, $3, NULL, NULL)', [user.id, [spare], 'x'.repeat(2201)]),
       'JA400', 'CAPTION_TOO_LONG');
   });
 

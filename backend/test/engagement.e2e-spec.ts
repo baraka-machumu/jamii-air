@@ -76,10 +76,60 @@ describe('engagement (e2e)', () => {
     const c2 = (await as(app, writer).post(`/api/v1/posts/${postId}/comments`).send({ body: 'Two' }).expect(201)).body;
 
     expect((await as(app, other).delete(`/api/v1/comments/${c1.id}`).expect(403)).body.error.code).toBe('NOT_OWNER');
-    expect((await as(app, writer).delete(`/api/v1/comments/${c1.id}`).expect(200)).body).toEqual({ deleted: true, commentCount: 1 });
-    expect((await as(app, author).delete(`/api/v1/comments/${c2.id}`).expect(200)).body).toEqual({ deleted: true, commentCount: 0 });
+    expect((await as(app, writer).delete(`/api/v1/comments/${c1.id}`).expect(200)).body).toEqual({ deleted: true, commentCount: 1, parentReplyCount: 0 });
+    expect((await as(app, author).delete(`/api/v1/comments/${c2.id}`).expect(200)).body).toEqual({ deleted: true, commentCount: 0, parentReplyCount: 0 });
     expect((await as(app, writer).delete(`/api/v1/comments/${c1.id}`).expect(404)).body.error.code).toBe('COMMENT_NOT_FOUND');
     expect((await as(app, other).get(`/api/v1/posts/${postId}/comments`).expect(200)).body.items).toEqual([]);
+  });
+
+  it('replies to a comment, threads them one level deep and counts them (BR-FD-08/09)', async () => {
+    const [author, fan] = [await registerUser(app), await registerUser(app)];
+    const postId = await publishPost(app, author);
+    const parent = (await as(app, fan).post(`/api/v1/posts/${postId}/comments`).send({ body: 'Nice' }).expect(201)).body;
+    expect(parent).toMatchObject({ parentId: null, commentCount: 1, parentReplyCount: 0 });
+
+    const reply = (await as(app, author).post(`/api/v1/posts/${postId}/comments`)
+      .send({ body: 'Asante', parentId: parent.id }).expect(201)).body;
+    expect(reply).toMatchObject({ parentId: parent.id, commentCount: 2, parentReplyCount: 1 });
+
+    // Replying to a reply answers its parent instead: the thread never goes deeper.
+    const deeper = (await as(app, fan).post(`/api/v1/posts/${postId}/comments`)
+      .send({ body: 'Karibu', parentId: reply.id }).expect(201)).body;
+    expect(deeper).toMatchObject({ parentId: parent.id, parentReplyCount: 2 });
+
+    // The post's list holds only the top-level comment, carrying its reply count.
+    const top = (await as(app, fan).get(`/api/v1/posts/${postId}/comments`).expect(200)).body;
+    expect(top.items).toHaveLength(1);
+    expect(top.items[0]).toMatchObject({ id: parent.id, replyCount: 2 });
+    expect((await as(app, fan).get(`/api/v1/posts/${postId}`).expect(200)).body.commentCount).toBe(3);
+
+    // The thread itself reads oldest first.
+    const thread = (await as(app, fan).get(`/api/v1/comments/${parent.id}/replies`).expect(200)).body;
+    expect(thread.items.map((r: { id: string }) => r.id)).toEqual([reply.id, deeper.id]);
+    expect(thread.nextCursor).toBeNull();
+
+    // Deleting the top-level comment takes its thread with it.
+    expect((await as(app, fan).delete(`/api/v1/comments/${parent.id}`).expect(200)).body)
+      .toEqual({ deleted: true, commentCount: 0, parentReplyCount: 0 });
+    expect((await as(app, fan).get(`/api/v1/comments/${parent.id}/replies`).expect(404)).body.error.code).toBe('COMMENT_NOT_FOUND');
+    expect((await as(app, fan).get(`/api/v1/posts/${postId}/comments`).expect(200)).body.items).toEqual([]);
+  });
+
+  it('refuses a reply to a comment that cannot be seen', async () => {
+    const [author, fan] = [await registerUser(app), await registerUser(app)];
+    const postId = await publishPost(app, author);
+    const parent = (await as(app, fan).post(`/api/v1/posts/${postId}/comments`).send({ body: 'Hi' }).expect(201)).body;
+
+    expect((await as(app, author).post(`/api/v1/posts/${postId}/comments`)
+      .send({ body: 'x', parentId: randomUUID() }).expect(404)).body.error.code).toBe('COMMENT_NOT_FOUND');
+    expect((await as(app, author).post(`/api/v1/posts/${postId}/comments`)
+      .send({ body: 'x', parentId: 'not-a-uuid' }).expect(400)).body.error.code).toBe('VALIDATION_FAILED');
+    expect((await as(app, author).get('/api/v1/comments/not-a-uuid/replies').expect(400)).body.error.code).toBe('VALIDATION_FAILED');
+
+    // A parent belonging to another post is not a parent here.
+    const elsewhere = await publishPost(app, author);
+    expect((await as(app, author).post(`/api/v1/posts/${elsewhere}/comments`)
+      .send({ body: 'x', parentId: parent.id }).expect(404)).body.error.code).toBe('COMMENT_NOT_FOUND');
   });
 
   it('applies blocks in either direction to likes and comments (AU-08)', async () => {

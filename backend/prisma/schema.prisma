@@ -27,7 +27,8 @@ enum UserStatus {
 }
 
 enum MediaKind {
-  IMAGE // VIDEO in R2
+  IMAGE
+  VIDEO // BR-CT-07 (R1 scope change 2026-10-16)
 
   @@map("media_kind")
 }
@@ -54,13 +55,16 @@ enum MediaVariantType {
   THUMB
   FEED
   AVATAR_S
-  AVATAR_M // POSTER, HLS_* in R2
+  AVATAR_M
+  POSTER // video: the still shown before playback (BR-CT-08)
+  VIDEO_720 // video: the single 720p MP4 rendition that is played. HLS_* stays in R2
 
   @@map("media_variant_type")
 }
 
 enum PostType {
-  PHOTO // REEL in R2
+  PHOTO // one photo, or up to 10 as a carousel (BR-CT-09)
+  VIDEO // exactly one video (BR-CT-07). REEL — the R2 surface — stays out
 
   @@map("post_type")
 }
@@ -79,6 +83,7 @@ enum NotificationType {
   FOLLOW
   LIKE
   COMMENT
+  REPLY // someone answered your comment (BR-NT-01)
 
   @@map("notification_type")
 }
@@ -361,6 +366,7 @@ model Post {
 
   author        User               @relation(fields: [authorId], references: [id], onDelete: Cascade)
   media         PostMedia[]
+  hashtags      PostHashtag[]
   comments      Comment[]
   likes         Like[]
   notifications Notification[]
@@ -431,20 +437,60 @@ model Comment {
   id        String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
   postId    String    @map("post_id") @db.Uuid
   authorId  String    @map("author_id") @db.Uuid
-  body      String    @db.VarChar(1000)
-  hiddenAt  DateTime? @map("hidden_at") @db.Timestamptz
-  deletedAt DateTime? @map("deleted_at") @db.Timestamptz
-  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  /// The comment this one answers. NULL = a top-level comment. Replies are ONE level deep
+  /// (BR-FD-09): fn_add_comment re-points a reply-to-a-reply at its parent, so a row with
+  /// parent_id IS NOT NULL always points at a row with parent_id IS NULL.
+  parentId   String?   @map("parent_id") @db.Uuid
+  body       String    @db.VarChar(1000)
+  /// Visible (not hidden, not deleted) replies to this comment. Always 0 on a reply.
+  replyCount Int       @default(0) @map("reply_count")
+  hiddenAt   DateTime? @map("hidden_at") @db.Timestamptz
+  deletedAt  DateTime? @map("deleted_at") @db.Timestamptz
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz
 
   post          Post               @relation(fields: [postId], references: [id], onDelete: Cascade)
   author        User               @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  parent        Comment?           @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies       Comment[]          @relation("CommentReplies")
   notifications Notification[]
   reports       Report[]
   modActions    ModerationAction[]
 
   @@index([authorId])
   @@index([createdAt])
+  // The thread under one comment, newest first (fn_get_comment_replies).
+  @@index([parentId, createdAt(sort: Desc), id(sort: Desc)])
   @@map("comments")
+}
+
+// ───────────── Hashtags (BR-FD-10/11, R1 scope change 2026-10-16) ─────────────
+
+/// One tag, stored without its '#' and matched case-insensitively (citext), so #Dar and #dar
+/// are the same tag. Rows are created on demand by fn__sync_post_hashtags and never deleted:
+/// a tag nobody uses any more is a handful of bytes, and keeping it keeps old links working.
+model Hashtag {
+  id        String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  tag       String   @unique @db.Citext
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  posts PostHashtag[]
+
+  @@map("hashtags")
+}
+
+/// Which posts carry which tag. Rewritten from the caption whenever the caption changes
+/// (fn_create_post, fn_update_post_caption).
+model PostHashtag {
+  postId    String @map("post_id") @db.Uuid
+  hashtagId String @map("hashtag_id") @db.Uuid
+
+  post    Post    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  hashtag Hashtag @relation(fields: [hashtagId], references: [id], onDelete: Cascade)
+
+  @@id([postId, hashtagId])
+  // The tag's own feed, newest first: post ids are uuidv7, so id DESC is time DESC.
+  @@index([hashtagId, postId(sort: Desc)])
+  @@map("post_hashtags")
 }
 
 // ───────────── Notifications (notifications, Plan 1.9) ─────────────

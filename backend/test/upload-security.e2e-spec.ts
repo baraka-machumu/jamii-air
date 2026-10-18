@@ -25,22 +25,37 @@ describe('upload security (e2e)', () => {
   const put = (url: string, headers: Record<string, string>, bytes: Buffer) =>
     fetch(url, { method: 'PUT', headers, body: new Uint8Array(bytes) });
 
-  it('refuses oversized files: declared over 15 MB, or more bytes than were signed', async () => {
+  it('refuses oversized files: over the limit for the kind, or more bytes than were signed', async () => {
     const user = await registerUser(app);
-    expect((await intent(user, { kind: 'IMAGE', purpose: 'POST', mimeType: 'image/jpeg', byteSize: 15 * MB + 1 }).expect(400)).body.error.code)
+    // Since the R1 scope change the ceiling is per kind (15 MB image, 150 MB video), so a
+    // 16 MB image is no longer out of the DTO's range: the service refuses it as 413 instead.
+    expect((await intent(user, { kind: 'IMAGE', purpose: 'POST', mimeType: 'image/jpeg', byteSize: 15 * MB + 1 }).expect(413)).body.error.code)
+      .toBe('PAYLOAD_TOO_LARGE');
+    // 150 MB is the absolute ceiling, so a video past it never reaches the service: the DTO's
+    // own @Max rejects it as a validation error.
+    expect((await intent(user, { kind: 'VIDEO', purpose: 'POST', mimeType: 'video/mp4', byteSize: 150 * MB + 1 }).expect(400)).body.error.code)
       .toBe('VALIDATION_FAILED');
+    expect((await intent(user, { kind: 'VIDEO', purpose: 'POST', mimeType: 'video/mp4', byteSize: 150 * MB }).expect(201)).body.mediaId)
+      .toBeTruthy();
 
     const small = (await intent(user, { kind: 'IMAGE', purpose: 'POST', mimeType: 'image/jpeg', byteSize: 1000 }).expect(201)).body;
     const res = await put(small.uploadUrl, { ...small.headers, 'Content-Length': String(2 * MB) }, Buffer.alloc(2 * MB));
     expect(res.status).toBe(403);
   });
 
-  it('refuses types outside the allow-list, and bytes sent with another type than signed', async () => {
+  it('refuses types outside the allow-list, types that do not match the kind, and bytes sent with another type than signed', async () => {
     const user = await registerUser(app);
-    for (const mimeType of ['image/gif', 'image/svg+xml', 'application/pdf', 'text/html', 'video/mp4']) {
+    for (const mimeType of ['image/gif', 'image/svg+xml', 'application/pdf', 'text/html', 'video/webm']) {
       expect((await intent(user, { kind: 'IMAGE', purpose: 'POST', mimeType, byteSize: 1000 }).expect(400)).body.error.code).toBe('VALIDATION_FAILED');
     }
-    expect((await intent(user, { kind: 'VIDEO', purpose: 'POST', mimeType: 'image/jpeg', byteSize: 1000 }).expect(400)).body.error.code).toBe('VALIDATION_FAILED');
+    // Both lists are accepted by the DTO now, so crossing them is refused by kind, not by enum.
+    expect((await intent(user, { kind: 'IMAGE', purpose: 'POST', mimeType: 'video/mp4', byteSize: 1000 }).expect(400)).body.error.code)
+      .toBe('UNSUPPORTED_MEDIA_TYPE');
+    expect((await intent(user, { kind: 'VIDEO', purpose: 'POST', mimeType: 'image/jpeg', byteSize: 1000 }).expect(400)).body.error.code)
+      .toBe('UNSUPPORTED_MEDIA_TYPE');
+    // A video is never an avatar (BR-CT-07).
+    expect((await intent(user, { kind: 'VIDEO', purpose: 'AVATAR', mimeType: 'video/mp4', byteSize: 1000 }).expect(400)).body.error.code)
+      .toBe('UNSUPPORTED_MEDIA_TYPE');
 
     const bytes = await sharp({ create: { width: 400, height: 400, channels: 3, background: '#123' } }).png().toBuffer();
     const signed = (await intent(user, { kind: 'IMAGE', purpose: 'POST', mimeType: 'image/jpeg', byteSize: bytes.length }).expect(201)).body;

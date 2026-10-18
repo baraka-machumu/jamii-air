@@ -5,7 +5,7 @@ import { failMediaProcessing } from '../../generated/prisma/sql/failMediaProcess
 import { ProcedureRunner } from './procedure-runner.js';
 
 export interface VariantRecord {
-  variant: 'THUMB' | 'FEED' | 'AVATAR_S' | 'AVATAR_M';
+  variant: 'THUMB' | 'FEED' | 'AVATAR_S' | 'AVATAR_M' | 'POSTER' | 'VIDEO_720';
   objectKey: string;
   width: number;
   height: number;
@@ -18,15 +18,17 @@ export interface VariantRecord {
 export class MediaProcedures {
   constructor(private readonly db: ProcedureRunner) {}
 
-  async createUploadIntent(viewerId: string, purpose: 'POST' | 'AVATAR', mimeType: string, byteSize: number) {
-    const row = await this.db.one('fn_create_upload_intent', createUploadIntent(viewerId, 'IMAGE', purpose, mimeType, byteSize));
+  async createUploadIntent(viewerId: string, kind: 'IMAGE' | 'VIDEO', purpose: 'POST' | 'AVATAR', mimeType: string, byteSize: number) {
+    const row = await this.db.one('fn_create_upload_intent', createUploadIntent(viewerId, kind, purpose, mimeType, byteSize));
     return { mediaId: row.media_id!, originalKey: row.original_key! };
   }
 
-  async complete(mediaId: string, width: number, height: number, blurhash: string, variants: VariantRecord[]) {
+  /** durationMs is video only (BR-CT-08); a CHECK refuses it on an image. */
+  async complete(mediaId: string, width: number, height: number, blurhash: string, variants: VariantRecord[],
+    durationMs: number | null = null) {
     // Sent as JSON text (cast to jsonb in the call file): the procedure takes a JSON array.
     const row = await this.db.one('fn_complete_media_processing',
-      completeMediaProcessing(mediaId, width, height, blurhash, JSON.stringify(variants)));
+      completeMediaProcessing(mediaId, width, height, blurhash, JSON.stringify(variants), durationMs));
     return { postId: row.post_id, postPublished: row.post_published ?? false, authorId: row.author_id };
   }
 

@@ -2,6 +2,8 @@
 -- READY and publishes its post once every media item of the post is READY (post_count + 1).
 -- p_variants: [{ "variant": "FEED", "objectKey": "...", "width": 1080, "height": 1350,
 --                "mimeType": "image/webp", "byteSize": 123456 }, ...]
+-- p_duration_ms: video only (BR-CT-08), the length of the rendition that was produced. A CHECK
+-- refuses it on an image and caps it at 65 s.
 -- Safe to retry: a READY asset returns post_published = false. If the post was deleted while
 -- processing, the variants just written are queued for deletion and nothing is published.
 CREATE OR REPLACE FUNCTION fn_complete_media_processing(
@@ -9,7 +11,8 @@ CREATE OR REPLACE FUNCTION fn_complete_media_processing(
   p_width    int,
   p_height   int,
   p_blurhash text,
-  p_variants jsonb)
+  p_variants jsonb,
+  p_duration_ms int DEFAULT NULL)
 RETURNS TABLE (post_id uuid, post_published boolean, author_id uuid)
 LANGUAGE plpgsql VOLATILE SECURITY DEFINER
 SET search_path = public, pg_temp
@@ -52,6 +55,7 @@ BEGIN
 
   UPDATE media_assets a
   SET status = 'READY', width = p_width, height = p_height, blurhash = p_blurhash,
+      duration_ms = COALESCE(p_duration_ms, a.duration_ms),
       failure_reason = NULL, processed_at = now()
   WHERE a.id = p_media_id;
 

@@ -1,4 +1,6 @@
 -- PATCH /posts/:id (BR-CT-05, Could). Author only; hidden and deleted posts are not editable.
+-- The post's hashtags are rewritten from the new caption (BR-FD-10), so editing a tag out of a
+-- caption also takes the post out of that tag's list.
 CREATE OR REPLACE FUNCTION fn_update_post_caption(p_viewer_id uuid, p_post_id uuid, p_caption text)
 RETURNS TABLE (post_id uuid, caption varchar, updated_at timestamptz)
 LANGUAGE plpgsql VOLATILE SECURITY DEFINER
@@ -24,10 +26,9 @@ BEGIN
     RAISE EXCEPTION USING ERRCODE = 'JA400', MESSAGE = 'CAPTION_TOO_LONG';
   END IF;
 
+  UPDATE posts p SET caption = v_caption WHERE p.id = p_post_id;
+  PERFORM fn__sync_post_hashtags(p_post_id, v_caption);
+
   RETURN QUERY
-  WITH updated AS (
-    UPDATE posts p SET caption = v_caption WHERE p.id = p_post_id
-    RETURNING p.id, p.caption, p.updated_at
-  )
-  SELECT * FROM updated;
+  SELECT p.id, p.caption, p.updated_at FROM posts p WHERE p.id = p_post_id;
 END $$;

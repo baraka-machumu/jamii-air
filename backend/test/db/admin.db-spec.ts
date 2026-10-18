@@ -7,7 +7,7 @@ import {
 const report = (viewer: string, type: string, target: string, reason = 'SPAM', details: string | null = null) =>
   app.query('SELECT * FROM fn_submit_report($1, $2, $3, $4, $5)', [viewer, type, target, reason, details]);
 const comment = async (viewer: string, post: string) =>
-  (await one('SELECT * FROM fn_add_comment($1, $2, $3, NULL, NULL)', [viewer, post, 'rude words'])).comment_id as string;
+  (await one('SELECT * FROM fn_add_comment($1, $2, $3, NULL, NULL, NULL)', [viewer, post, 'rude words'])).comment_id as string;
 
 describe('fn_submit_report', () => {
   it('reports users, posts and comments, returning the open report on a repeat', async () => {

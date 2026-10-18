@@ -2,11 +2,13 @@
 import { createContext, type ReactNode, useContext, useMemo } from 'react';
 import { useColorScheme } from 'react-native';
 import { type ThemePref, useSettings } from '@/stores/settings';
-import { type ColorScheme, type Palette, palettes, radius, space, type } from './tokens';
+import { type ColorScheme, overlay, type Palette, palettes, radius, space, type } from './tokens';
 
 export interface Theme {
   scheme: ColorScheme;
   colors: Palette;
+  /** Chrome over media; the same in both schemes (tokens.ts). */
+  overlay: typeof overlay;
   space: typeof space;
   radius: typeof radius;
   type: typeof type;
@@ -18,7 +20,7 @@ export function resolveScheme(pref: ThemePref, system: string | null | undefined
 }
 
 export function buildTheme(scheme: ColorScheme): Theme {
-  return { scheme, colors: palettes[scheme], space, radius, type };
+  return { scheme, colors: palettes[scheme], overlay, space, radius, type };
 }
 
 const ThemeContext = createContext<Theme>(buildTheme('light'));

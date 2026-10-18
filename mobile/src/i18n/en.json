@@ -127,6 +127,7 @@
     "INVALID_VARIANT_KEY": "We couldn't process this photo. Try another one.",
     "INVITE_INVALID": "This invite code isn't valid.",
     "INVITE_NOT_FOUND": "This invite code isn't valid.",
+    "MEDIA_KINDS_MIXED": "A post can hold photos or one video, not both.",
     "MEDIA_NOT_ATTACHABLE": "This photo can't be used. Pick it again.",
     "MEDIA_NOT_FOUND": "This photo is no longer available. Pick it again.",
     "MEDIA_NOT_UPLOADED": "The photo didn't finish uploading. Try again.",
@@ -148,15 +149,17 @@
     "SESSION_EXPIRED": "Your session expired. Please log in again.",
     "SESSION_INVALID": "Please log in again.",
     "SESSION_REUSE_DETECTED": "For your safety, please log in again.",
+    "TAG_INVALID": "That isn't a valid hashtag.",
     "TIMEOUT": "That took too long. Check your connection and try again.",
     "TOKEN_INVALID": "Please log in again.",
     "UNAUTHORIZED": "Please log in again.",
     "UNDER_MINIMUM_AGE": "You must be 18 or older to use Jamii Air.",
     "UNKNOWN": "Something went wrong. Please try again.",
+    "UNSUPPORTED_MEDIA_TYPE": "That kind of file can't be posted.",
+    "UPLOAD_FAILED": "The photo didn't upload. Check your connection and try again.",
     "USERNAME_TAKEN": "This username is taken.",
     "USER_NOT_FOUND": "This account isn't available.",
-    "VALIDATION_FAILED": "Please check what you entered.",
-    "UPLOAD_FAILED": "The photo didn't upload. Check your connection and try again."
+    "VALIDATION_FAILED": "Please check what you entered."
   },
   "profile": {
     "posts": "Posts",
@@ -181,7 +184,9 @@
     "avatarFailed": "Your profile photo couldn't be updated.",
     "cameraDeniedTitle": "Camera access is off",
     "cameraDeniedBody": "To take a photo, allow Jamii Air to use the camera in your phone's settings.",
-    "openSettings": "Open settings"
+    "openSettings": "Open settings",
+    "chooseVideo": "Choose a video",
+    "recordVideo": "Record a video"
   },
   "onboarding": {
     "welcome": "Welcome, {{username}}",
@@ -226,7 +231,7 @@
     "noFollowing": "Not following anyone yet"
   },
   "create": {
-    "intro": "Share a photo with your people.",
+    "intro": "Share photos or a video with your people.",
     "cantOpen": "This photo couldn't be opened",
     "discardTitle": "Discard this post?",
     "discard": "Discard",
@@ -240,7 +245,7 @@
     "portrait": "Portrait",
     "original": "Original",
     "captionTitle": "New post",
-    "preview": "Your photo",
+    "preview": "What you are posting",
     "caption": "Caption",
     "captionPlaceholder": "Write a caption…",
     "share": "Share",
@@ -251,7 +256,18 @@
     "failures": {
       "INTERRUPTED": "Your post was interrupted.",
       "PROCESSING_FAILED": "We couldn't process this photo. Retry, or try another one."
-    }
+    },
+    "carouselOrder": "{{count}} photos, in this order",
+    "carouselCount_one": "1 photo",
+    "carouselCount_other": "Photo {{position}} of {{count}}",
+    "photoAt": "Photo {{position}} of {{total}}",
+    "removePhoto": "Remove photo {{position}}",
+    "tooManyPhotosTitle": "Too many photos",
+    "tooManyPhotosBody": "A post can hold {{count}} photos. The first {{count}} were kept.",
+    "videoTooLongTitle": "Video too long",
+    "videoTooLongBody": "A video can be up to {{seconds}} seconds. Trim it and try again.",
+    "videoTooBigTitle": "Video too large",
+    "videoTooBigBody": "A video can be up to {{megabytes}} MB. Record a shorter one, or choose a smaller file."
   },
   "feed": {
     "postBy": "Post by {{username}}",
@@ -279,7 +295,15 @@
     "like": "Like",
     "unlike": "Unlike",
     "likeFailed": "Couldn't like post",
-    "unlikeFailed": "Couldn't unlike post"
+    "unlikeFailed": "Couldn't unlike post",
+    "videoBy": "Video by {{username}}",
+    "carouselPosition": "{{position}}/{{total}}",
+    "playVideo": "Play video",
+    "mute": "Mute",
+    "unmute": "Unmute",
+    "openVideo": "Open video post",
+    "openCarousel_one": "Open post",
+    "openCarousel_other": "Open post with {{count}} photos"
   },
   "share": {
     "share": "Share",
@@ -302,7 +326,16 @@
     "deleteTitle": "Delete comment?",
     "deleted": "Comment deleted",
     "deleteFailed": "Couldn't delete the comment",
-    "counter": "{{length}}/{{max}}"
+    "counter": "{{length}}/{{max}}",
+    "reply": "Reply",
+    "replyingTo": "Replying to {{username}}",
+    "cancelReply": "Cancel reply",
+    "replyPlaceholder": "Reply to {{username}}…",
+    "viewReplies_one": "View 1 reply",
+    "viewReplies_other": "View {{formatted}} replies",
+    "moreReplies": "More replies",
+    "hideReplies": "Hide replies",
+    "deleteThreadTitle": "Delete comment and its replies?"
   },
   "activity": {
     "new": "New",
@@ -369,5 +402,12 @@
     "minVersion": "Version {{version}} or newer is needed.",
     "openStore": "Update now",
     "noStoreLink": "Please install the latest build to continue."
+  },
+  "tags": {
+    "postCount_one": "1 post",
+    "postCount_other": "{{formatted}} posts",
+    "emptyTitle": "Nothing here yet",
+    "emptyBody": "No posts carry this hashtag. Add it to a caption to be the first.",
+    "loadFailed": "Couldn't load this hashtag"
   }
 }

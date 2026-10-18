@@ -26,6 +26,10 @@ export interface KpiProps {
   reason?: string;
   /** For share_tapped: where the share came from. */
   from?: 'post' | 'profile';
+  /** For post_created: what was posted (BR-CT-07/09), to see how the pilot uses carousels and video. */
+  kind?: 'photo' | 'video';
+  /** For post_created: how many files the post holds (1 for a video). */
+  media?: number;
 }
 
 const KEY = process.env.EXPO_PUBLIC_POSTHOG_KEY;

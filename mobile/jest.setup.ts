@@ -10,6 +10,21 @@ jest.mock('@shopify/flash-list/dist/recyclerview/utils/measureLayout', () => ({
   measureItemLayout: jest.fn(() => ({ x: 0, y: 0, width: 400, height: 100 })),
 }));
 
+// expo-video (native): a player object that records what was asked of it, and a view that renders
+// nothing. Enough for the tests to assert that a video post shows its poster first and only
+// creates a player once it is tapped (BR-CT-07).
+jest.mock('expo-video', () => {
+  const { View } = jest.requireActual('react-native');
+  return {
+    useVideoPlayer: jest.fn((_source: unknown, setup?: (player: unknown) => void) => {
+      const player = { loop: false, muted: true, playing: false, play: jest.fn(), pause: jest.fn() };
+      setup?.(player);
+      return player;
+    }),
+    VideoView: View,
+  };
+});
+
 // expo-file-system's File (native): a photo file of 2048 bytes; upload() goes through the global
 // fetch, so tests that stub fetch also see the storage PUT (and can fail it).
 jest.mock('expo-file-system', () => ({

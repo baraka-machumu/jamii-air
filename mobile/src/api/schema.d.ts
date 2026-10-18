@@ -271,7 +271,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Upload intent: a presigned PUT URL for one photo (15 min) */
+        /** Upload intent: a presigned PUT URL for one photo or video (15 min) */
         post: operations["MediaController_createUpload"];
         delete?: never;
         options?: never;
@@ -349,6 +349,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/tags/{tag}/posts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Posts carrying one hashtag, newest first (the "#" is optional, case is ignored) */
+        get: operations["PostsController_tagPosts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/users/{username}/posts": {
         parameters: {
             query?: never;
@@ -391,11 +408,28 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Comments, newest first */
+        /** Top-level comments, newest first. Replies come from /comments/:id/replies */
         get: operations["EngagementController_comments"];
         put?: never;
-        /** Add a comment */
+        /** Add a comment, or a reply when parentId is given */
         post: operations["EngagementController_addComment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/comments/{id}/replies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The replies under one comment, oldest first (BR-FD-08) */
+        get: operations["EngagementController_replies"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -412,7 +446,7 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Delete a comment (yours, or any on your own post) */
+        /** Delete a comment or reply (yours, or any on your own post). Deleting a comment deletes its thread */
         delete: operations["EngagementController_deleteComment"];
         options?: never;
         head?: never;
@@ -600,7 +634,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Rotate the session cookie (extends the 30-minute idle timeout, never past 12 h) */
+        /** Rotate the session cookie (extends the 60-minute idle timeout, never past 12 h) */
         post: operations["AdminAuthController_refresh"];
         delete?: never;
         options?: never;
@@ -1119,17 +1153,18 @@ export interface components {
         };
         CreateUploadDto: {
             /**
-             * @description VIDEO arrives with Reels (R2)
+             * @description VIDEO is only ever a POST (BR-CT-07)
              * @enum {string}
              */
-            kind: "IMAGE";
+            kind: "IMAGE" | "VIDEO";
             /** @enum {string} */
             purpose: "POST" | "AVATAR";
             /**
-             * @description The app sends JPEG after downscaling (HEIC is converted on the phone)
+             * @description Must match `kind`: images are JPEG/PNG/HEIC/WebP (the app sends JPEG after downscaling), video is MP4 or QuickTime
              * @enum {string}
              */
-            mimeType: "image/jpeg" | "image/png" | "image/heic" | "image/heif" | "image/webp";
+            mimeType: "image/jpeg" | "image/png" | "image/heic" | "image/heif" | "image/webp" | "video/mp4" | "video/quicktime";
+            /** @description 15 MB for an image, 150 MB for a video */
             byteSize: number;
         };
         UploadIntent: {
@@ -1151,9 +1186,13 @@ export interface components {
         MediaStatus: {
             id: string;
             /** @enum {string} */
+            kind: "IMAGE" | "VIDEO";
+            /** @enum {string} */
             purpose: "POST" | "AVATAR";
             /** @enum {string} */
             status: "PENDING_UPLOAD" | "UPLOADED" | "PROCESSING" | "READY" | "FAILED" | "DELETED";
+            /** @description Video only, once processed */
+            durationMs: number | null;
             width: number | null;
             height: number | null;
             blurhash: string | null;
@@ -1161,7 +1200,7 @@ export interface components {
             createdAt: string;
         };
         CreatePostDto: {
-            /** @description POST uploads (POST /media/uploads). R1 posts take exactly one photo */
+            /** @description POST uploads (POST /media/uploads), in the order they should appear: 1-10 photos as a carousel, or exactly one video. A post never mixes the two (BR-CT-09/10) */
             mediaIds: string[];
             caption?: string | null;
         };
@@ -1174,14 +1213,18 @@ export interface components {
         PostMedia: {
             id: string;
             /** @enum {string} */
-            kind: "IMAGE";
-            /** @description Placeholder while the image loads */
+            kind: "IMAGE" | "VIDEO";
+            /** @description Placeholder while the image or poster loads */
             blurhash: string | null;
-            /** @description Feed image (≤ 1080 wide); null until processed */
+            /** @description What to show: the feed image (≤ 1080 wide) for IMAGE, the 720p MP4 for VIDEO. Null until processed */
             url: string | null;
             /** @description 320 × 320 */
             thumbUrl: string | null;
-            /** @description Of the feed image: reserve the aspect ratio */
+            /** @description VIDEO only: the still to show before playback (BR-CT-08) */
+            posterUrl: string | null;
+            /** @description VIDEO only: length in milliseconds (≤ 60 s) */
+            durationMs: number | null;
+            /** @description Of the image or video: reserve the aspect ratio */
             width: number | null;
             height: number | null;
         };
@@ -1192,12 +1235,18 @@ export interface components {
              * @enum {string}
              */
             status: "PROCESSING" | "PUBLISHED" | "FAILED";
+            /**
+             * @description PHOTO covers one photo and a carousel; media.length says which
+             * @enum {string}
+             */
+            type: "PHOTO" | "VIDEO";
             caption: string | null;
             likeCount: number;
             commentCount: number;
             likedByMe: boolean;
             isMine: boolean;
             author: components["schemas"]["PostAuthor"];
+            /** @description In carousel order */
             media: components["schemas"]["PostMedia"][];
             /** @description Opens the post in the app, else a landing page with store links */
             shareUrl: string;
@@ -1214,6 +1263,11 @@ export interface components {
         GridItem: {
             id: string;
             /**
+             * @description VIDEO shows a play badge on the tile
+             * @enum {string}
+             */
+            type: "PHOTO" | "VIDEO";
+            /**
              * @description Your own grid only: PROCESSING, FAILED, and HIDDEN ("Removed for violating Community Guidelines")
              * @enum {string}
              */
@@ -1223,6 +1277,14 @@ export interface components {
             /** @description > 1 shows the carousel badge */
             mediaCount: number;
             createdAt: string;
+        };
+        TagPage: {
+            /** @description The tag as stored: lower case, without the "#" */
+            tag: string;
+            /** @description Published posts on this tag, before the viewer's own blocks */
+            postCount: number;
+            items: components["schemas"]["GridItem"][];
+            nextCursor: string | null;
         };
         GridPage: {
             items: components["schemas"]["GridItem"][];
@@ -1238,6 +1300,8 @@ export interface components {
             author: components["schemas"]["PostAuthor"];
             /** @description You wrote it or own the post */
             canDelete: boolean;
+            /** @description Visible replies under this comment. It ignores the viewer's blocks, so the thread can open shorter than this */
+            replyCount: number;
             createdAt: string;
         };
         CommentPage: {
@@ -1247,18 +1311,40 @@ export interface components {
         };
         CreateCommentDto: {
             body: string;
+            /** @description The comment being answered (BR-FD-08). Replies are one level deep: passing a reply answers its parent instead (BR-FD-09) */
+            parentId?: string;
         };
         CreatedComment: {
             id: string;
             postId: string;
+            /** @description The comment this answers; null for a top-level comment */
+            parentId: string | null;
             body: string;
             createdAt: string;
-            /** @description The post's new comment count */
+            /** @description The post's new comment count, replies included */
             commentCount: number;
+            /** @description On a reply, the parent's new replyCount; 0 otherwise */
+            parentReplyCount: number;
+        };
+        Reply: {
+            id: string;
+            body: string;
+            author: components["schemas"]["PostAuthor"];
+            /** @description You wrote it or own the post */
+            canDelete: boolean;
+            createdAt: string;
+        };
+        ReplyPage: {
+            /** @description OLDEST first — a thread reads as a conversation — and pages forwards */
+            items: components["schemas"]["Reply"][];
+            nextCursor: string | null;
         };
         DeletedComment: {
             deleted: boolean;
+            /** @description Replies are counted too, and deleting a comment deletes its thread */
             commentCount: number;
+            /** @description On a reply, the parent's new replyCount; 0 otherwise */
+            parentReplyCount: number;
         };
         NotificationActor: {
             id: string;
@@ -1270,8 +1356,11 @@ export interface components {
         };
         Notification: {
             id: string;
-            /** @enum {string} */
-            type: "FOLLOW" | "LIKE" | "COMMENT";
+            /**
+             * @description REPLY: someone answered your comment (BR-FD-08). Its commentId is the reply
+             * @enum {string}
+             */
+            type: "FOLLOW" | "LIKE" | "COMMENT" | "REPLY";
             actor: components["schemas"]["NotificationActor"];
             postId: string | null;
             /** @description 320 × 320; null when the post is gone */
@@ -1716,7 +1805,7 @@ export interface components {
              * @description Stable: translate this, not `message`
              * @enum {string}
              */
-            code: "ACCOUNT_NOT_ACTIVE" | "ACCOUNT_PENDING_DELETION" | "ACCOUNT_SUSPENDED" | "ADMIN_FORBIDDEN" | "ADMIN_LOCKED" | "ADMIN_NOT_FOUND" | "APP_VERSION_UNSUPPORTED" | "BLOCKED" | "CANNOT_BLOCK_SELF" | "CANNOT_FOLLOW_SELF" | "CANNOT_REPORT_SELF" | "CAPTION_TOO_LONG" | "CHALLENGE_EXPIRED" | "COMMENT_NOT_FOUND" | "CSRF_CHECK_FAILED" | "EMAIL_TAKEN" | "FORBIDDEN" | "IDEMPOTENCY_KEY_REUSED" | "INTERNAL_ERROR" | "INVALID_CREDENTIALS" | "INVALID_CURSOR" | "INVALID_IDEMPOTENCY_KEY" | "INVALID_PASSWORD" | "INVALID_STATE" | "INVALID_TOTP" | "INVALID_VARIANT_KEY" | "INVITE_INVALID" | "INVITE_NOT_FOUND" | "MEDIA_NOT_ATTACHABLE" | "MEDIA_NOT_FOUND" | "MEDIA_NOT_UPLOADED" | "NOT_FOUND" | "NOT_OWNER" | "NOTE_REQUIRED" | "PASSWORD_TOO_COMMON" | "PASSWORD_TOO_SHORT" | "PAYLOAD_TOO_LARGE" | "POST_NOT_FOUND" | "RATE_LIMITED" | "REPORT_ALREADY_HANDLED" | "REPORT_NOT_FOUND" | "RESET_CODE_EXPIRED" | "RESET_CODE_INVALID" | "RESET_CODE_LOCKED" | "SERVICE_UNAVAILABLE" | "SESSION_EXPIRED" | "SESSION_INVALID" | "SESSION_REUSE_DETECTED" | "TOKEN_INVALID" | "UNAUTHORIZED" | "UNDER_MINIMUM_AGE" | "USER_NOT_FOUND" | "USERNAME_TAKEN" | "VALIDATION_FAILED";
+            code: "ACCOUNT_NOT_ACTIVE" | "ACCOUNT_PENDING_DELETION" | "ACCOUNT_SUSPENDED" | "ADMIN_FORBIDDEN" | "ADMIN_LOCKED" | "ADMIN_NOT_FOUND" | "APP_VERSION_UNSUPPORTED" | "BLOCKED" | "CANNOT_BLOCK_SELF" | "CANNOT_FOLLOW_SELF" | "CANNOT_REPORT_SELF" | "CAPTION_TOO_LONG" | "CHALLENGE_EXPIRED" | "COMMENT_NOT_FOUND" | "CSRF_CHECK_FAILED" | "EMAIL_TAKEN" | "FORBIDDEN" | "IDEMPOTENCY_KEY_REUSED" | "INTERNAL_ERROR" | "INVALID_CREDENTIALS" | "INVALID_CURSOR" | "INVALID_IDEMPOTENCY_KEY" | "INVALID_PASSWORD" | "INVALID_STATE" | "INVALID_TOTP" | "INVALID_VARIANT_KEY" | "INVITE_INVALID" | "INVITE_NOT_FOUND" | "MEDIA_KINDS_MIXED" | "MEDIA_NOT_ATTACHABLE" | "MEDIA_NOT_FOUND" | "MEDIA_NOT_UPLOADED" | "NOT_FOUND" | "NOT_OWNER" | "NOTE_REQUIRED" | "PASSWORD_TOO_COMMON" | "PASSWORD_TOO_SHORT" | "PAYLOAD_TOO_LARGE" | "POST_NOT_FOUND" | "RATE_LIMITED" | "REPORT_ALREADY_HANDLED" | "REPORT_NOT_FOUND" | "RESET_CODE_EXPIRED" | "RESET_CODE_INVALID" | "RESET_CODE_LOCKED" | "SERVICE_UNAVAILABLE" | "SESSION_EXPIRED" | "SESSION_INVALID" | "SESSION_REUSE_DETECTED" | "TAG_INVALID" | "TOKEN_INVALID" | "UNAUTHORIZED" | "UNDER_MINIMUM_AGE" | "UNSUPPORTED_MEDIA_TYPE" | "USER_NOT_FOUND" | "USERNAME_TAKEN" | "VALIDATION_FAILED";
             /** @description English, for developers */
             message: string;
             /** @description e.g. { fields: [...] } for VALIDATION_FAILED, { minVersion } for APP_VERSION_UNSUPPORTED */
@@ -2300,6 +2389,31 @@ export interface operations {
             };
         };
     };
+    PostsController_tagPosts: {
+        parameters: {
+            query?: {
+                /** @description nextCursor of the previous page */
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                tag: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TagPage"];
+                };
+            };
+        };
+    };
     PostsController_profileGrid: {
         parameters: {
             query?: {
@@ -2416,6 +2530,31 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CreatedComment"];
+                };
+            };
+        };
+    };
+    EngagementController_replies: {
+        parameters: {
+            query?: {
+                /** @description nextCursor of the previous page */
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReplyPage"];
                 };
             };
         };

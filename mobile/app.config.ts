@@ -15,6 +15,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   plugins: [
     ...(config.plugins ?? []),
     ['expo-build-properties', { android: { usesCleartextTraffic: variant !== 'production' } }],
+    // Video playback for video posts (BR-CT-07). A native module, so adding it needs a new
+    // dev/preview build: an EAS Update alone cannot ship it.
+    'expo-video',
   ],
   ...(linkHost && {
     android: {

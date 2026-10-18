@@ -3,7 +3,7 @@
 // (BR-FD-10/11).
 import {
   ARGON, addComment, app, block, createPost, createUpload, createUser, createVideoUpload, expectJa,
-  expectSqlState, one, owner, q, setUserStatus, uniq, variantsFor, videoVariantsFor,
+  expectSqlState, follow, one, owner, q, setUserStatus, uniq, variantsFor, videoVariantsFor,
 } from './helpers.ts';
 
 const createRaw = (userId: string, mediaIds: string[], caption: string | null = null) =>
@@ -341,5 +341,54 @@ describe('hashtags', () => {
       'JA400', 'TAG_INVALID');
     await expectJa(app.query('SELECT * FROM fn_get_hashtag_posts($1, $2, NULL, NULL, 20)', [viewer.id, '#']),
       'JA400', 'TAG_INVALID');
+  });
+});
+
+// ───────────── A post is on screen as soon as it is shared (BR-FD-12) ─────────────
+
+describe('the home feed and a post still being processed', () => {
+  it("shows the viewer's own PROCESSING post, so sharing puts it on screen at once", async () => {
+    const user = await createUser();
+    const processing = await createPost(user.id, { caption: 'Just shared', publish: false });
+
+    const feed = await q('SELECT * FROM fn_get_home_feed($1, NULL, NULL, 20)', [user.id]);
+    expect(feed.map((r) => r.post_id)).toEqual([processing]);
+    expect(feed[0]).toMatchObject({ status: 'PROCESSING', caption: 'Just shared' });
+    // No variants yet: the card holds the place rather than showing a broken image.
+    expect(feed[0]!.media[0]).toMatchObject({ feedKey: null, thumbKey: null });
+  });
+
+  it("does not show anyone else's PROCESSING post, however closely they are followed", async () => {
+    const [viewer, author] = [await createUser(), await createUser()];
+    await follow(viewer.id, author.id);
+    const hidden = await createPost(author.id, { publish: false });
+    const visible = await createPost(author.id);
+
+    const feed = await q('SELECT * FROM fn_get_home_feed($1, NULL, NULL, 20)', [viewer.id]);
+    expect(feed.map((r) => r.post_id)).toEqual([visible]);
+    expect(feed.map((r) => r.post_id)).not.toContain(hidden);
+  });
+
+  it('leaves a FAILED post out of the feed, even the viewer’s own', async () => {
+    const user = await createUser();
+    const media = await createUpload(user.id);
+    const post = await createRaw(user.id, [media]);
+    await one('SELECT * FROM fn_fail_media_processing($1, $2)', [media, 'not an image']);
+
+    expect(await statusOf(post.post_id)).toEqual({ status: 'FAILED', type: 'PHOTO' });
+    expect(await q('SELECT * FROM fn_get_home_feed($1, NULL, NULL, 20)', [user.id])).toEqual([]);
+  });
+
+  it('turns into the finished post once the media is ready, without a second share', async () => {
+    const user = await createUser();
+    const media = await createUpload(user.id);
+    const created = await createRaw(user.id, [media], 'Sokoni');
+    expect((await q('SELECT * FROM fn_get_home_feed($1, NULL, NULL, 20)', [user.id]))[0])
+      .toMatchObject({ status: 'PROCESSING' });
+
+    await completePhoto(user.id, media);
+    const feed = await q('SELECT * FROM fn_get_home_feed($1, NULL, NULL, 20)', [user.id]);
+    expect(feed[0]).toMatchObject({ post_id: created.post_id, status: 'PUBLISHED' });
+    expect(feed[0]!.media[0].feedKey).toContain('/feed.webp');
   });
 });

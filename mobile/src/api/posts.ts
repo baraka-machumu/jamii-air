@@ -8,12 +8,15 @@ import type { components } from './schema';
 
 export type Post = components['schemas']['Post'];
 export type GridItem = components['schemas']['GridItem'];
+export type PostMediaItem = Post['media'][number];
 type FeedPage = components['schemas']['FeedPage'];
 type GridPage = components['schemas']['GridPage'];
+type TagPage = components['schemas']['TagPage'];
 
 export const feedKey = ['feed'] as const;
 export const postKey = (id: string) => ['post', id] as const;
 export const gridKey = (username: string) => [...peopleKey, 'grid', username.toLowerCase()] as const;
+export const tagKey = (tag: string) => ['tag', tag.toLowerCase()] as const;
 
 export const FEED_PAGE = 20;
 
@@ -34,6 +37,18 @@ export function usePost(id: string) {
     queryFn: ({ signal }) => call(api.GET('/api/v1/posts/{id}', { params: { path: { id } }, signal })),
     placeholderData: (): Post | undefined => queryClient.getQueryData<InfiniteData<FeedPage>>(feedKey)?.pages
       .flatMap((page) => page.items).find((post) => post.id === id),
+  });
+}
+
+/** One hashtag's posts, newest first (BR-FD-11). */
+export function useTagPosts(tag: string) {
+  return useInfiniteQuery({
+    queryKey: tagKey(tag),
+    queryFn: ({ pageParam, signal }) => call(api.GET('/api/v1/tags/{tag}/posts', {
+      params: { path: { tag }, query: { cursor: pageParam, limit: 30 } }, signal,
+    })),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (page) => page.nextCursor ?? undefined,
   });
 }
 
@@ -67,6 +82,9 @@ export function forgetPost(queryClient: QueryClient, id: string): void {
   });
   queryClient.setQueriesData<InfiniteData<GridPage>>({ queryKey: [...peopleKey, 'grid'] }, (grid) => grid && {
     ...grid, pages: grid.pages.map((page) => ({ ...page, items: page.items.filter((item) => item.id !== id) })),
+  });
+  queryClient.setQueriesData<InfiniteData<TagPage>>({ queryKey: ['tag'] }, (tagged) => tagged && {
+    ...tagged, pages: tagged.pages.map((page) => ({ ...page, items: page.items.filter((item) => item.id !== id) })),
   });
   queryClient.removeQueries({ queryKey: postKey(id) });
 }

@@ -97,12 +97,15 @@ export class PostsService {
     };
   }
 
-  /** Feed rows are always PUBLISHED; post-detail rows carry status and is_mine. */
+  /**
+   * Both the feed and post detail carry status; only detail carries is_mine. A feed row may be
+   * PROCESSING, but only ever the viewer's own (BR-FD-12, fn_get_home_feed).
+   */
   private toPost(viewerId: string, r: FeedRow | PostRow): Post {
-    const detail = 'status' in r ? r : undefined;
+    const detail = 'is_mine' in r ? r : undefined;
     return {
       id: r.post_id!,
-      status: detail?.status ?? 'PUBLISHED',
+      status: r.status!,
       type: r.type!,
       caption: r.caption,
       likeCount: r.like_count ?? 0,

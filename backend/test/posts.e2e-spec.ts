@@ -36,9 +36,14 @@ describe('posts (e2e)', () => {
     });
     const postId = created.body.id as string;
 
-    // Others cannot see it yet; the author sees it in the grid but not in the feed.
+    // Others cannot see it yet. The author sees it in their own grid AND at the top of their own
+    // feed, still PROCESSING, which is what puts a post on screen the moment it is shared
+    // (BR-FD-12); a follower's feed stays empty until it is published.
     expect((await as(app, fan).get(`/api/v1/posts/${postId}`).expect(404)).body.error.code).toBe('POST_NOT_FOUND');
-    expect((await as(app, author).get('/api/v1/feed').expect(200)).body.items).toEqual([]);
+    const ownFeed = (await as(app, author).get('/api/v1/feed').expect(200)).body;
+    expect(ownFeed.items).toEqual([expect.objectContaining({ id: postId, status: 'PROCESSING' })]);
+    expect(ownFeed.items[0].media).toEqual([expect.objectContaining({ url: null, thumbUrl: null })]);
+    expect((await as(app, fan).get('/api/v1/feed').expect(200)).body.items).toEqual([]);
     const ownGrid = (await as(app, author).get(`/api/v1/users/${author.username}/posts`).expect(200)).body;
     expect(ownGrid.items).toEqual([expect.objectContaining({ id: postId, status: 'PROCESSING', thumbUrl: null })]);
     expect((await as(app, fan).get(`/api/v1/users/${author.username}/posts`).expect(200)).body.items).toEqual([]);

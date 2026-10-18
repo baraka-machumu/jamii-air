@@ -648,7 +648,7 @@
             "bearer": []
           }
         ],
-        "summary": "Upload intent: a presigned PUT URL for one photo (15 min)",
+        "summary": "Upload intent: a presigned PUT URL for one photo or video (15 min)",
         "tags": [
           "media"
         ]
@@ -892,6 +892,62 @@
         ]
       }
     },
+    "/api/v1/tags/{tag}/posts": {
+      "get": {
+        "operationId": "PostsController_tagPosts",
+        "parameters": [
+          {
+            "name": "tag",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "description": "nextCursor of the previous page",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TagPage"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Posts carrying one hashtag, newest first (the \"#\" is optional, case is ignored)",
+        "tags": [
+          "posts"
+        ]
+      }
+    },
     "/api/v1/users/{username}/posts": {
       "get": {
         "operationId": "PostsController_profileGrid",
@@ -1068,7 +1124,7 @@
             "bearer": []
           }
         ],
-        "summary": "Comments, newest first",
+        "summary": "Top-level comments, newest first. Replies come from /comments/:id/replies",
         "tags": [
           "engagement"
         ]
@@ -1121,7 +1177,63 @@
             "bearer": []
           }
         ],
-        "summary": "Add a comment",
+        "summary": "Add a comment, or a reply when parentId is given",
+        "tags": [
+          "engagement"
+        ]
+      }
+    },
+    "/api/v1/comments/{id}/replies": {
+      "get": {
+        "operationId": "EngagementController_replies",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "description": "nextCursor of the previous page",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReplyPage"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "The replies under one comment, oldest first (BR-FD-08)",
         "tags": [
           "engagement"
         ]
@@ -1157,7 +1269,7 @@
             "bearer": []
           }
         ],
-        "summary": "Delete a comment (yours, or any on your own post)",
+        "summary": "Delete a comment or reply (yours, or any on your own post). Deleting a comment deletes its thread",
         "tags": [
           "engagement"
         ]
@@ -1618,7 +1730,7 @@
             }
           }
         },
-        "summary": "Rotate the session cookie (extends the 30-minute idle timeout, never past 12 h)",
+        "summary": "Rotate the session cookie (extends the 60-minute idle timeout, never past 12 h)",
         "tags": [
           "admin auth"
         ]
@@ -3225,9 +3337,10 @@
           "kind": {
             "type": "string",
             "enum": [
-              "IMAGE"
+              "IMAGE",
+              "VIDEO"
             ],
-            "description": "VIDEO arrives with Reels (R2)"
+            "description": "VIDEO is only ever a POST (BR-CT-07)"
           },
           "purpose": {
             "type": "string",
@@ -3243,13 +3356,16 @@
               "image/png",
               "image/heic",
               "image/heif",
-              "image/webp"
+              "image/webp",
+              "video/mp4",
+              "video/quicktime"
             ],
-            "description": "The app sends JPEG after downscaling (HEIC is converted on the phone)"
+            "description": "Must match `kind`: images are JPEG/PNG/HEIC/WebP (the app sends JPEG after downscaling), video is MP4 or QuickTime"
           },
           "byteSize": {
             "type": "number",
-            "maximum": 15728640
+            "maximum": 157286400,
+            "description": "15 MB for an image, 150 MB for a video"
           }
         },
         "required": [
@@ -3297,6 +3413,13 @@
           "id": {
             "type": "string"
           },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "IMAGE",
+              "VIDEO"
+            ]
+          },
           "purpose": {
             "type": "string",
             "enum": [
@@ -3314,6 +3437,11 @@
               "FAILED",
               "DELETED"
             ]
+          },
+          "durationMs": {
+            "type": "number",
+            "nullable": true,
+            "description": "Video only, once processed"
           },
           "width": {
             "type": "number",
@@ -3337,8 +3465,10 @@
         },
         "required": [
           "id",
+          "kind",
           "purpose",
           "status",
+          "durationMs",
           "width",
           "height",
           "blurhash",
@@ -3352,7 +3482,7 @@
           "mediaIds": {
             "minItems": 1,
             "maxItems": 10,
-            "description": "POST uploads (POST /media/uploads). R1 posts take exactly one photo",
+            "description": "POST uploads (POST /media/uploads), in the order they should appear: 1-10 photos as a carousel, or exactly one video. A post never mixes the two (BR-CT-09/10)",
             "type": "array",
             "items": {
               "type": "string"
@@ -3402,28 +3532,39 @@
           "kind": {
             "type": "string",
             "enum": [
-              "IMAGE"
+              "IMAGE",
+              "VIDEO"
             ]
           },
           "blurhash": {
             "type": "string",
             "nullable": true,
-            "description": "Placeholder while the image loads"
+            "description": "Placeholder while the image or poster loads"
           },
           "url": {
             "type": "string",
             "nullable": true,
-            "description": "Feed image (≤ 1080 wide); null until processed"
+            "description": "What to show: the feed image (≤ 1080 wide) for IMAGE, the 720p MP4 for VIDEO. Null until processed"
           },
           "thumbUrl": {
             "type": "string",
             "nullable": true,
             "description": "320 × 320"
           },
+          "posterUrl": {
+            "type": "string",
+            "nullable": true,
+            "description": "VIDEO only: the still to show before playback (BR-CT-08)"
+          },
+          "durationMs": {
+            "type": "number",
+            "nullable": true,
+            "description": "VIDEO only: length in milliseconds (≤ 60 s)"
+          },
           "width": {
             "type": "number",
             "nullable": true,
-            "description": "Of the feed image: reserve the aspect ratio"
+            "description": "Of the image or video: reserve the aspect ratio"
           },
           "height": {
             "type": "number",
@@ -3436,6 +3577,8 @@
           "blurhash",
           "url",
           "thumbUrl",
+          "posterUrl",
+          "durationMs",
           "width",
           "height"
         ]
@@ -3454,6 +3597,14 @@
               "FAILED"
             ],
             "description": "Only the author ever sees PROCESSING or FAILED"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "PHOTO",
+              "VIDEO"
+            ],
+            "description": "PHOTO covers one photo and a carousel; media.length says which"
           },
           "caption": {
             "type": "string",
@@ -3475,6 +3626,7 @@
             "$ref": "#/components/schemas/PostAuthor"
           },
           "media": {
+            "description": "In carousel order",
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/PostMedia"
@@ -3491,6 +3643,7 @@
         "required": [
           "id",
           "status",
+          "type",
           "caption",
           "likeCount",
           "commentCount",
@@ -3541,6 +3694,14 @@
           "id": {
             "type": "string"
           },
+          "type": {
+            "type": "string",
+            "enum": [
+              "PHOTO",
+              "VIDEO"
+            ],
+            "description": "VIDEO shows a play badge on the tile"
+          },
           "status": {
             "type": "string",
             "enum": [
@@ -3569,11 +3730,41 @@
         },
         "required": [
           "id",
+          "type",
           "status",
           "thumbUrl",
           "blurhash",
           "mediaCount",
           "createdAt"
+        ]
+      },
+      "TagPage": {
+        "type": "object",
+        "properties": {
+          "tag": {
+            "type": "string",
+            "description": "The tag as stored: lower case, without the \"#\""
+          },
+          "postCount": {
+            "type": "number",
+            "description": "Published posts on this tag, before the viewer's own blocks"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GridItem"
+            }
+          },
+          "nextCursor": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "tag",
+          "postCount",
+          "items",
+          "nextCursor"
         ]
       },
       "GridPage": {
@@ -3626,6 +3817,10 @@
             "type": "boolean",
             "description": "You wrote it or own the post"
           },
+          "replyCount": {
+            "type": "number",
+            "description": "Visible replies under this comment. It ignores the viewer's blocks, so the thread can open shorter than this"
+          },
           "createdAt": {
             "type": "string"
           }
@@ -3635,6 +3830,7 @@
           "body",
           "author",
           "canDelete",
+          "replyCount",
           "createdAt"
         ]
       },
@@ -3665,6 +3861,10 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 1000
+          },
+          "parentId": {
+            "type": "string",
+            "description": "The comment being answered (BR-FD-08). Replies are one level deep: passing a reply answers its parent instead (BR-FD-09)"
           }
         },
         "required": [
@@ -3680,6 +3880,11 @@
           "postId": {
             "type": "string"
           },
+          "parentId": {
+            "type": "string",
+            "nullable": true,
+            "description": "The comment this answers; null for a top-level comment"
+          },
           "body": {
             "type": "string"
           },
@@ -3688,15 +3893,69 @@
           },
           "commentCount": {
             "type": "number",
-            "description": "The post's new comment count"
+            "description": "The post's new comment count, replies included"
+          },
+          "parentReplyCount": {
+            "type": "number",
+            "description": "On a reply, the parent's new replyCount; 0 otherwise"
           }
         },
         "required": [
           "id",
           "postId",
+          "parentId",
           "body",
           "createdAt",
-          "commentCount"
+          "commentCount",
+          "parentReplyCount"
+        ]
+      },
+      "Reply": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "author": {
+            "$ref": "#/components/schemas/PostAuthor"
+          },
+          "canDelete": {
+            "type": "boolean",
+            "description": "You wrote it or own the post"
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "body",
+          "author",
+          "canDelete",
+          "createdAt"
+        ]
+      },
+      "ReplyPage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "description": "OLDEST first — a thread reads as a conversation — and pages forwards",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Reply"
+            }
+          },
+          "nextCursor": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor"
         ]
       },
       "DeletedComment": {
@@ -3706,12 +3965,18 @@
             "type": "boolean"
           },
           "commentCount": {
-            "type": "number"
+            "type": "number",
+            "description": "Replies are counted too, and deleting a comment deletes its thread"
+          },
+          "parentReplyCount": {
+            "type": "number",
+            "description": "On a reply, the parent's new replyCount; 0 otherwise"
           }
         },
         "required": [
           "deleted",
-          "commentCount"
+          "commentCount",
+          "parentReplyCount"
         ]
       },
       "NotificationActor": {
@@ -3755,8 +4020,10 @@
             "enum": [
               "FOLLOW",
               "LIKE",
-              "COMMENT"
-            ]
+              "COMMENT",
+              "REPLY"
+            ],
+            "description": "REPLY: someone answered your comment (BR-FD-08). Its commentId is the reply"
           },
           "actor": {
             "$ref": "#/components/schemas/NotificationActor"
@@ -5458,6 +5725,7 @@
               "INVALID_VARIANT_KEY",
               "INVITE_INVALID",
               "INVITE_NOT_FOUND",
+              "MEDIA_KINDS_MIXED",
               "MEDIA_NOT_ATTACHABLE",
               "MEDIA_NOT_FOUND",
               "MEDIA_NOT_UPLOADED",
@@ -5478,9 +5746,11 @@
               "SESSION_EXPIRED",
               "SESSION_INVALID",
               "SESSION_REUSE_DETECTED",
+              "TAG_INVALID",
               "TOKEN_INVALID",
               "UNAUTHORIZED",
               "UNDER_MINIMUM_AGE",
+              "UNSUPPORTED_MEDIA_TYPE",
               "USER_NOT_FOUND",
               "USERNAME_TAKEN",
               "VALIDATION_FAILED"

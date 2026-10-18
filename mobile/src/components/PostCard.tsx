@@ -1,36 +1,36 @@
-// The post card (App Flow §5; Design Brief §6 Content): avatar + username → profile · ⋯ · photo
-// (full-bleed, its aspect ratio reserved, blurhash until loaded; double-tap likes) · ❤️ 💬 ↗ · likes ·
-// caption (2 lines, "more") · "View all N comments" · time. A single tap on the photo opens the post
-// once the double-tap window has passed. Memoised: the feed re-renders a card only when its post
-// changes, and the like state comes from a per-post store entry (src/engagement/likes.ts).
-import { Image } from 'expo-image';
+// The post card (App Flow §5; Design Brief §6 Content): avatar + username → profile · ⋯ · the
+// media (full-bleed, its aspect ratio reserved, blurhash until loaded; double-tap likes) · ❤️ 💬 ↗ ·
+// likes · caption (2 lines, "more", hashtags tappable) · "View all N comments" · time. A single tap
+// opens the post once the double-tap window has passed. Memoised: the feed re-renders a card only
+// when its post changes, and the like state comes from a per-post store entry (src/engagement/likes.ts).
+//
+// The media may be one photo, a carousel of up to ten (BR-CT-09) or a video (BR-CT-07); PostMedia
+// handles all three. Double-tap-to-like is kept for photos only: on a video the second tap would
+// fight the play button, and on a carousel a horizontal swipe must stay a swipe.
 import { useRouter } from 'expo-router';
 import { memo, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import type { Post } from '@/api/posts';
 import { formatCount } from '@/i18n/format';
 import { formatRelative } from '@/i18n/time';
 import { useLikeState, useLikeToggle } from '@/engagement/likes';
 import { sharePost } from '@/engagement/share';
-import { MAX_ASPECT, MIN_ASPECT } from '@/posting/crop';
 import { useIsFollowing } from '@/people/follow';
 import { usePostMenu } from '@/posting/usePostMenu';
 import { useTheme } from '@/theme/ThemeProvider';
 import { touchTarget } from '@/theme/tokens';
 import { Avatar } from './Avatar';
+import { Caption } from './Caption';
 import { Icon } from './Icon';
 import { HeartBurst, type HeartBurstHandle, LikeButton } from './LikeHeart';
+import { PostMedia } from './PostMedia';
 import { Text } from './Text';
 
 /** Two taps on the photo closer than this are a double-tap (like). */
 export const DOUBLE_TAP_MS = 250;
 
-/** Feed images keep their shape within 4:5 … 1.91:1 (Design Brief §10); 1:1 until known. */
-export function feedAspect(width: number | null, height: number | null): number {
-  if (!width || !height) return 1;
-  return Math.min(MAX_ASPECT, Math.max(MIN_ASPECT, width / height));
-}
+export { feedAspect } from './PostMedia';
 
 function PostCardView({ post, onOpen, onDeleted, followsAuthor = true }: {
   post: Post;
@@ -42,6 +42,7 @@ function PostCardView({ post, onOpen, onDeleted, followsAuthor = true }: {
   const { t, i18n } = useTranslation();
   const router = useRouter();
   const { colors, space } = useTheme();
+  const { width: screenWidth } = useWindowDimensions();
   const openMenu = usePostMenu({ onDeleted });
   const [expanded, setExpanded] = useState(false);
   const following = useIsFollowing(post.author.id, followsAuthor);
@@ -51,8 +52,10 @@ function PostCardView({ post, onOpen, onDeleted, followsAuthor = true }: {
   const lastTap = useRef(0);
   const singleTap = useRef<ReturnType<typeof setTimeout>>(undefined);
   useEffect(() => () => clearTimeout(singleTap.current), []);
-  const media = post.media[0];
   const author = post.author;
+  // A carousel swipes and a video has its own play control, so only a single photo takes the
+  // double-tap: elsewhere the heart is the way to like.
+  const doubleTapToLike = post.media.length === 1 && post.media[0]?.kind !== 'VIDEO';
   const published = post.status === 'PUBLISHED';
   const toProfile = () => router.push({ pathname: '/u/[username]', params: { username: author.username } });
   const toComments = () => router.push({ pathname: '/p/[id]/comments', params: { id: post.id } });
@@ -83,19 +86,11 @@ function PostCardView({ post, onOpen, onDeleted, followsAuthor = true }: {
         </Pressable>
       </View>
 
-      <Pressable onPress={onPhotoPress} disabled={!onOpen && !published} accessibilityRole={onOpen ? 'button' : 'image'}
-        accessibilityLabel={t('feed.photoBy', { username: author.username })}>
-        {media?.url ? (
-          <Image source={{ uri: media.url }} placeholder={media.blurhash ? { blurhash: media.blurhash } : undefined}
-            recyclingKey={post.id} transition={150} contentFit="cover" accessibilityIgnoresInvertColors
-            style={{ width: '100%', aspectRatio: feedAspect(media.width, media.height), backgroundColor: colors.surface }} />
-        ) : (
-          <View style={[styles.pending, { backgroundColor: colors.surface }]}>
-            <Text muted>{post.status === 'FAILED' ? t('create.failed') : t('create.processing')}</Text>
-          </View>
-        )}
+      <View>
+        <PostMedia post={post} width={screenWidth} onPress={doubleTapToLike ? onPhotoPress : onOpen && published ? () => onOpen(post) : undefined}
+          disabled={!onOpen && !published} />
         <HeartBurst ref={burst} />
-      </Pressable>
+      </View>
 
       {published && (
         <View style={[styles.actions, { paddingHorizontal: space.xs }]}>
@@ -114,10 +109,8 @@ function PostCardView({ post, onOpen, onDeleted, followsAuthor = true }: {
           <Text variant="bodyStrong">{t('feed.likes', { count: like.count, formatted: formatCount(like.count, i18n.language) })}</Text>
         )}
         {post.caption ? (
-          <Text numberOfLines={expanded ? undefined : 2} onPress={() => setExpanded(true)}>
-            <Text variant="bodyStrong" onPress={toProfile}>{author.username} </Text>
-            {post.caption}
-          </Text>
+          <Caption caption={post.caption} username={author.username} onUsernamePress={toProfile}
+            numberOfLines={expanded ? undefined : 2} onPress={() => setExpanded(true)} />
         ) : null}
         {post.commentCount > 0 && (
           <Text muted onPress={toComments}>
@@ -158,7 +151,6 @@ const styles = StyleSheet.create({
   actions: { flexDirection: 'row', alignItems: 'center' },
   action: { width: touchTarget, height: touchTarget, alignItems: 'center', justifyContent: 'center' },
   more: { width: touchTarget, height: touchTarget, alignItems: 'flex-end', justifyContent: 'center' },
-  pending: { width: '100%', aspectRatio: 1, alignItems: 'center', justifyContent: 'center' },
   skeletonAvatar: { width: 32, height: 32, borderRadius: 16 },
   skeletonLine: { height: 12, borderRadius: 6 },
 });

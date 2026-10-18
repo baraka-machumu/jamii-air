@@ -20,6 +20,7 @@ import PostDetail from '@/app/p/[id]/index';
 import NotificationsStep from '@/app/onboarding/notifications';
 import FindPeople from '@/app/onboarding/people';
 import Settings from '@/app/settings/index';
+import TagScreen from '@/app/t/[tag]';
 import BlockedAccounts from '@/app/settings/blocked';
 import DeleteAccount from '@/app/settings/delete-account';
 import ChangePassword from '@/app/settings/password';
@@ -53,4 +54,5 @@ export const routes = {
   'compose/caption': Caption,
   'p/[id]/index': PostDetail,
   'p/[id]/comments': Comments,
+  't/[tag]': TagScreen,
 };

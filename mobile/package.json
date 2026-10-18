@@ -26,6 +26,7 @@
     "expo-secure-store": "~57.0.4",
     "expo-status-bar": "~57.0.1",
     "expo-updates": "~57.0.26",
+    "expo-video": "~57.0.5",
     "i18next": "^26.4.3",
     "openapi-fetch": "^0.17.0",
     "react": "19.2.3",

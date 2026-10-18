@@ -51,6 +51,18 @@ export const palettes: Record<ColorScheme, Palette> = {
 };
 
 /** 4-pt grid; screen side padding is `md`. */
+/**
+ * Chrome drawn ON TOP of media — the carousel counter, a video's play button and duration
+ * (BR-CT-07/09). Media is a photo or video, not a theme surface, so these do not change with the
+ * colour scheme: the same translucent black and white read correctly over both.
+ */
+export const overlay = {
+  scrim: 'rgba(0, 0, 0, 0.55)',
+  onScrim: '#FFFFFF',
+  /** Behind a playing video, so letterbox bars are black rather than grey. */
+  behindVideo: '#000000',
+} as const;
+
 export const space = { xxs: 4, xs: 8, sm: 12, md: 16, lg: 24, xl: 32 } as const;
 
 /** 8 inputs and small cards · 12 sheets and dialogs · full avatars and pills · photos have none. */

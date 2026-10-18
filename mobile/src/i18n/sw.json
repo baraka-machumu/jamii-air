@@ -127,6 +127,7 @@
     "INVALID_VARIANT_KEY": "Hatukuweza kuchakata picha hii. Jaribu nyingine.",
     "INVITE_INVALID": "Msimbo huu wa mwaliko si halali.",
     "INVITE_NOT_FOUND": "Msimbo huu wa mwaliko si halali.",
+    "MEDIA_KINDS_MIXED": "Chapisho linaweza kuwa na picha au video moja, sio vyote.",
     "MEDIA_NOT_ATTACHABLE": "Picha hii haiwezi kutumika. Ichague tena.",
     "MEDIA_NOT_FOUND": "Picha hii haipatikani tena. Ichague tena.",
     "MEDIA_NOT_UPLOADED": "Picha haikumaliza kupakiwa. Jaribu tena.",
@@ -148,15 +149,17 @@
     "SESSION_EXPIRED": "Muda wa kuingia umeisha. Tafadhali ingia tena.",
     "SESSION_INVALID": "Tafadhali ingia tena.",
     "SESSION_REUSE_DETECTED": "Kwa usalama wako, tafadhali ingia tena.",
+    "TAG_INVALID": "Hiyo si lebo sahihi.",
     "TIMEOUT": "Imechukua muda mrefu. Angalia muunganisho wako na ujaribu tena.",
     "TOKEN_INVALID": "Tafadhali ingia tena.",
     "UNAUTHORIZED": "Tafadhali ingia tena.",
     "UNDER_MINIMUM_AGE": "Lazima uwe na miaka 18 au zaidi kutumia Jamii Air.",
     "UNKNOWN": "Kuna hitilafu. Tafadhali jaribu tena.",
+    "UNSUPPORTED_MEDIA_TYPE": "Aina hiyo ya faili haiwezi kuchapishwa.",
+    "UPLOAD_FAILED": "Picha haikupakiwa. Angalia mtandao wako na ujaribu tena.",
     "USERNAME_TAKEN": "Jina hili la mtumiaji limeshachukuliwa.",
     "USER_NOT_FOUND": "Akaunti hii haipatikani.",
-    "VALIDATION_FAILED": "Tafadhali kagua ulichoandika.",
-    "UPLOAD_FAILED": "Picha haikupakiwa. Angalia mtandao wako na ujaribu tena."
+    "VALIDATION_FAILED": "Tafadhali kagua ulichoandika."
   },
   "profile": {
     "posts": "Machapisho",
@@ -181,7 +184,9 @@
     "avatarFailed": "Picha yako ya wasifu haikuweza kubadilishwa.",
     "cameraDeniedTitle": "Kamera imezimwa",
     "cameraDeniedBody": "Ili kupiga picha, ruhusu Jamii Air kutumia kamera kwenye mipangilio ya simu yako.",
-    "openSettings": "Fungua mipangilio"
+    "openSettings": "Fungua mipangilio",
+    "chooseVideo": "Chagua video",
+    "recordVideo": "Rekodi video"
   },
   "onboarding": {
     "welcome": "Karibu, {{username}}",
@@ -226,7 +231,7 @@
     "noFollowing": "Bado hakuna anayefuatwa"
   },
   "create": {
-    "intro": "Shiriki picha na watu wako.",
+    "intro": "Shiriki picha au video na watu wako.",
     "cantOpen": "Picha hii haikuweza kufunguliwa",
     "discardTitle": "Uachane na chapisho hili?",
     "discard": "Achana nalo",
@@ -240,7 +245,7 @@
     "portrait": "Wima",
     "original": "Asili",
     "captionTitle": "Chapisho jipya",
-    "preview": "Picha yako",
+    "preview": "Unachochapisha",
     "caption": "Maelezo",
     "captionPlaceholder": "Andika maelezo…",
     "share": "Shiriki",
@@ -251,7 +256,18 @@
     "failures": {
       "INTERRUPTED": "Chapisho lako lilikatizwa.",
       "PROCESSING_FAILED": "Hatukuweza kushughulikia picha hii. Jaribu tena, au chagua nyingine."
-    }
+    },
+    "carouselOrder": "Picha {{count}}, kwa mpangilio huu",
+    "carouselCount_one": "Picha 1",
+    "carouselCount_other": "Picha {{position}} kati ya {{count}}",
+    "photoAt": "Picha {{position}} kati ya {{total}}",
+    "removePhoto": "Ondoa picha {{position}}",
+    "tooManyPhotosTitle": "Picha nyingi mno",
+    "tooManyPhotosBody": "Chapisho linaweza kuwa na picha {{count}}. Picha {{count}} za kwanza zimehifadhiwa.",
+    "videoTooLongTitle": "Video ni ndefu mno",
+    "videoTooLongBody": "Video inaweza kuwa hadi sekunde {{seconds}}. Ifupishe na ujaribu tena.",
+    "videoTooBigTitle": "Video ni kubwa mno",
+    "videoTooBigBody": "Video inaweza kuwa hadi MB {{megabytes}}. Rekodi fupi, au chagua faili ndogo."
   },
   "feed": {
     "postBy": "Chapisho la {{username}}",
@@ -279,7 +295,15 @@
     "like": "Penda",
     "unlike": "Acha kupenda",
     "likeFailed": "Imeshindikana kupenda chapisho",
-    "unlikeFailed": "Imeshindikana kuacha kupenda chapisho"
+    "unlikeFailed": "Imeshindikana kuacha kupenda chapisho",
+    "videoBy": "Video ya {{username}}",
+    "carouselPosition": "{{position}}/{{total}}",
+    "playVideo": "Cheza video",
+    "mute": "Zima sauti",
+    "unmute": "Washa sauti",
+    "openVideo": "Fungua chapisho la video",
+    "openCarousel_one": "Fungua chapisho",
+    "openCarousel_other": "Fungua chapisho lenye picha {{count}}"
   },
   "share": {
     "share": "Shiriki",
@@ -302,7 +326,16 @@
     "deleteTitle": "Futa maoni?",
     "deleted": "Maoni yamefutwa",
     "deleteFailed": "Imeshindikana kufuta maoni",
-    "counter": "{{length}}/{{max}}"
+    "counter": "{{length}}/{{max}}",
+    "reply": "Jibu",
+    "replyingTo": "Unamjibu {{username}}",
+    "cancelReply": "Acha kujibu",
+    "replyPlaceholder": "Mjibu {{username}}…",
+    "viewReplies_one": "Tazama jibu 1",
+    "viewReplies_other": "Tazama majibu {{formatted}}",
+    "moreReplies": "Majibu zaidi",
+    "hideReplies": "Ficha majibu",
+    "deleteThreadTitle": "Futa maoni na majibu yake?"
   },
   "activity": {
     "new": "Mpya",
@@ -369,5 +402,12 @@
     "minVersion": "Toleo {{version}} au jipya zaidi linahitajika.",
     "openStore": "Sasisha sasa",
     "noStoreLink": "Tafadhali sakinisha toleo la hivi punde ili kuendelea."
+  },
+  "tags": {
+    "postCount_one": "Chapisho 1",
+    "postCount_other": "Machapisho {{formatted}}",
+    "emptyTitle": "Hakuna kitu bado",
+    "emptyBody": "Hakuna chapisho lenye lebo hii. Iongeze kwenye maelezo uwe wa kwanza.",
+    "loadFailed": "Imeshindikana kupakia lebo hii"
   }
 }

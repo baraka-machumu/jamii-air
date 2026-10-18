@@ -1,8 +1,11 @@
-// Photo uploads (App Flow §6.1), shared by the avatar (task 3.5) and posts (task 3.7):
+// Uploads (App Flow §6.1), shared by the avatar (task 3.5) and posts (task 3.7). Photos:
 //  1. downscale on the phone to ≤ 2048 px long edge, JPEG quality 85 (also turns HEIC into JPEG);
 //  2. POST /media/uploads → a presigned PUT URL (15 min) and the headers it was signed with;
 //  3. PUT the file straight to storage (native upload from disk), never through the API. A network
 //     failure retries ×3 with backoff; an expired or refused URL (403) gets a fresh intent once.
+//
+// A video (BR-CT-07) skips step 1 — the phone sends the recording as it is, and the server
+// transcodes it to one 720p MP4 — and uses the same steps 2 and 3.
 import { File, UploadType } from 'expo-file-system';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import { api, call } from '@/api/client';
@@ -13,6 +16,8 @@ export type UploadPurpose = 'POST' | 'AVATAR';
 export const MAX_EDGE = 2048;
 export const JPEG_QUALITY = 0.85;
 const MAX_BYTES = 15 * 1024 * 1024;
+/** The server's ceiling for one video (MAX_VIDEO_BYTES). */
+const MAX_VIDEO_BYTES = 150 * 1024 * 1024;
 const RETRY_DELAYS_MS = [1_000, 2_000, 4_000];
 
 export interface PreparedImage {
@@ -102,6 +107,24 @@ export async function uploadImage(image: PreparedImage, purpose: UploadPurpose, 
       body: { kind: 'IMAGE', purpose, mimeType: 'image/jpeg', byteSize },
     }));
     if (await put(image.uri, intent.uploadUrl, intent.headers, onProgress)) return intent.mediaId;
+  }
+  throw new ApiError(403, 'UPLOAD_FAILED', 'Storage refused the upload');
+}
+
+/**
+ * Uploads a picked video as it is and returns its mediaId. Nothing is re-encoded on the phone:
+ * that would cost minutes of battery and the server does it anyway (BR-CT-08).
+ */
+export async function uploadVideo(video: { uri: string; mimeType: string }, { onProgress }: { onProgress?: OnProgress } = {}): Promise<string> {
+  const byteSize = new File(video.uri).size;
+  if (!byteSize) throw new ApiError(0, 'UPLOAD_FAILED', 'The video file is missing');
+  if (byteSize > MAX_VIDEO_BYTES) throw new ApiError(413, 'PAYLOAD_TOO_LARGE', 'Video larger than 150 MB');
+
+  for (let intents = 0; intents < 2; intents++) {
+    const intent = await call(api.POST('/api/v1/media/uploads', {
+      body: { kind: 'VIDEO', purpose: 'POST', mimeType: video.mimeType as 'video/mp4', byteSize },
+    }));
+    if (await put(video.uri, intent.uploadUrl, intent.headers, onProgress)) return intent.mediaId;
   }
   throw new ApiError(403, 'UPLOAD_FAILED', 'Storage refused the upload');
 }

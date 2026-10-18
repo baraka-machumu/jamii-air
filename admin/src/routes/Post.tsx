@@ -17,7 +17,7 @@ import { showToast } from '@/lib/toast';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Table, Td, Th } from '@/components/ui/table';
-import { ageSince, count } from '@/lib/format';
+import { ageSince, count, duration } from '@/lib/format';
 import { ModerationList } from '@/components/ModerationList';
 import { when } from '@/lib/moderation-labels';
 
@@ -53,15 +53,27 @@ export default function Post() {
       <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <div className="space-y-4">
           <Card className="p-4">
-            {media.length ? media.map((item) => (
-              <BlurredMedia
-                key={item.id}
-                src={item.feedUrl ?? item.thumbUrl ?? ''}
-                alt="The post’s photo"
-                className="mb-3 max-h-[480px]"
-              />
+            {media.length ? media.map((item, index) => (
+              <div key={item.id} className="mb-3">
+                {media.length > 1 && (
+                  <p className="mb-1 text-muted-foreground">
+                    Photo {index + 1} of {media.length}
+                  </p>
+                )}
+                <BlurredMedia
+                  src={(item.kind === 'VIDEO' ? item.posterUrl : item.feedUrl) ?? item.thumbUrl ?? ''}
+                  videoSrc={item.kind === 'VIDEO' ? item.videoUrl : null}
+                  alt={item.kind === 'VIDEO' ? 'The post’s video' : 'The post’s photo'}
+                  className="max-h-[480px]"
+                />
+                {item.kind === 'VIDEO' && (
+                  <p className="mt-1 text-muted-foreground tabular-nums">
+                    Video · {duration(item.durationMs)}
+                  </p>
+                )}
+              </div>
             )) : (
-              <p className="text-muted-foreground">No photo (it may have failed to process).</p>
+              <p className="text-muted-foreground">No media (it may have failed to process).</p>
             )}
             {data.caption && <p className="whitespace-pre-wrap">{data.caption}</p>}
             <p className="mt-3 text-muted-foreground tabular-nums">

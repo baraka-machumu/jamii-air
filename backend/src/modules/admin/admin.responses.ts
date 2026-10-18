@@ -28,10 +28,14 @@ export class ModerationEntry {
 
 export class AdminPostMedia {
   @ApiProperty() id!: string;
+  @ApiProperty({ enum: ['IMAGE', 'VIDEO'] }) kind!: string;
   @ApiProperty() status!: string;
   @ApiProperty(S) blurhash!: string | null;
-  @ApiProperty(S) feedUrl!: string | null;
+  @ApiProperty({ ...S, description: 'IMAGE only' }) feedUrl!: string | null;
   @ApiProperty(S) thumbUrl!: string | null;
+  @ApiProperty({ ...S, description: 'VIDEO only: the still before playback' }) posterUrl!: string | null;
+  @ApiProperty({ ...S, description: 'VIDEO only: the 720p MP4 a moderator can play' }) videoUrl!: string | null;
+  @ApiProperty({ ...N, description: 'VIDEO only' }) durationMs!: number | null;
   @ApiProperty(N) width!: number | null;
   @ApiProperty(N) height!: number | null;
 }

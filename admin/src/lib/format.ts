@@ -51,3 +51,9 @@ export function ageSince(iso: string, now: number = Date.now()): string {
   if (hours < 48) return `${hours} h`;
   return `${Math.round(hours / 24)} days`;
 }
+
+/** A video's length as m:ss, for the moderator's view of a reported video (BR-CT-07). */
+export function duration(durationMs: number | null | undefined): string {
+  const total = Math.max(0, Math.round((durationMs ?? 0) / 1000));
+  return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
+}

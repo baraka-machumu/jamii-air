@@ -1,5 +1,7 @@
 -- GET /admin/posts/:id: any post including hidden and deleted (AP-08), with its author, media,
--- reports and moderation history.
+-- reports and moderation history. A post's media may be one photo, a carousel of up to ten
+-- (BR-CT-09) or a video (BR-CT-07) — a moderator has to be able to watch a reported video, so the
+-- rendition and its poster are here alongside the image variants.
 CREATE OR REPLACE FUNCTION fn_admin_get_post(p_admin_id uuid, p_post_id uuid)
 RETURNS TABLE (
   post_id uuid, status post_status, caption varchar, like_count int, comment_count int,
@@ -21,13 +23,17 @@ BEGIN
          p.created_at, p.published_at, p.hidden_at, p.deleted_at,
          u.id, u.username, u.status,
          COALESCE((
-           SELECT jsonb_agg(jsonb_build_object('id', ma.id, 'status', ma.status, 'blurhash', ma.blurhash,
-                    'feedKey', fv.object_key, 'thumbKey', tv.object_key, 'width', fv.width, 'height', fv.height)
+           SELECT jsonb_agg(jsonb_build_object('id', ma.id, 'kind', ma.kind, 'status', ma.status,
+                    'blurhash', ma.blurhash, 'feedKey', fv.object_key, 'thumbKey', tv.object_key,
+                    'posterKey', pv.object_key, 'videoKey', vv.object_key, 'durationMs', ma.duration_ms,
+                    'width', COALESCE(fv.width, vv.width), 'height', COALESCE(fv.height, vv.height))
                   ORDER BY pm.position)
            FROM post_media pm
            JOIN media_assets ma ON ma.id = pm.media_id
            LEFT JOIN media_variants fv ON fv.media_id = ma.id AND fv.variant = 'FEED'
            LEFT JOIN media_variants tv ON tv.media_id = ma.id AND tv.variant = 'THUMB'
+           LEFT JOIN media_variants pv ON pv.media_id = ma.id AND pv.variant = 'POSTER'
+           LEFT JOIN media_variants vv ON vv.media_id = ma.id AND vv.variant = 'VIDEO_720'
            WHERE pm.post_id = p.id), '[]'::jsonb),
          COALESCE((
            SELECT jsonb_agg(jsonb_build_object('reportId', r.id, 'status', r.status, 'reason', r.reason,

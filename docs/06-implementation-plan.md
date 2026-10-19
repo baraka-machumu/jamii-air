@@ -317,7 +317,7 @@ S2 carousel, S3 replies, S4 hashtags) and S5 for the defect. Tracker:
 | S.3 | ✅ Mobile: carousels, video pick/record and tap-to-play, replies, tappable hashtags and the tag screen, a shared post on screen at once (229 tests pass) |
 | S.4 | ✅ Admin portal: numbered carousel photos, a player for a reported video behind *Click to show* |
 | S.5 | Device checks on a **new `preview` build** (expo-video is a native module) — list in the tracker |
-| S.6 | UAT deploy: build the image locally (now with ffmpeg, ~80 MB more) and ship it per the runbook — the host's `/` is shared and nearly full — run the 7 migrations over the tunnel, then S.5 against UAT |
+| S.6 | ✅ UAT deploy (2026-10-19): image with ffmpeg shipped, 7 migrations applied, smoke test green, a real transcode run in the UAT worker |
 
 **Exit:** S.5 ticked on the reference Android against UAT; CI green on GitHub; the commits reviewed.
 

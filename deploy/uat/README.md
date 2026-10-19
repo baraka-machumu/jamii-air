@@ -106,7 +106,13 @@ PUT the photo to the presigned URL → create post → worker published it (blur
 variants) → feed → share landing page. The `.webp` variant is readable without auth (200) and the
 original is **not** (403), which is the intended policy.
 
-## Redeploying (done twice, 2026-10-15 and 2026-10-16)
+## Redeploying (done three times: 2026-10-15, 2026-10-16, 2026-10-19)
+
+The 2026-10-19 run shipped the R1 scope change: the image now carries ffmpeg, and 7 migrations ran
+over the tunnel. `/` dropped to 2.2 GB free while both images existed and returned to 3.1 GB once the
+old one was removed — keep doing that removal. To prove video works on the host, the pipeline can be
+run inside the worker on a synthetic clip (`docker exec jamii-uat-worker` → `ffmpeg -f lavfi -i testsrc`
+→ `processVideo`), in `/tmp`, without touching data.
 
 Both halves were redeployed on 2026-10-16: the portal for its design pass, and the API because the
 60-minute admin idle timeout is enforced server-side — shipping only the portal would have had it

@@ -38,8 +38,8 @@ Nothing here costs money or waits for anyone else.
 | A3 | Make **Database, Backend, Mobile, Admin** checks required in `main`'s branch protection | Green CI that cannot block a merge is decoration. GitHub settings, two minutes. | ☐ |
 | A4 | Create the GitHub board and issues | `gh auth refresh -s project`, then `node docs/backlog/create-github-issues.mjs <file>`. Until then the backlog files are the tracker. `gh` is installed. | ☐ |
 | A5 | **Sentry** account (free: 5k errors/month) | Crash reporting for API, worker, app and portal. The DSN is free; the SDK is **not wired yet in any of the four**, so this one does need development after the account exists. Set a spend cap at signup. | ☐ |
-| A7 | **New `preview` build** for the R1 scope change | `expo-video` (video playback) is a native module, so the installed APK cannot get video, carousels, replies or hashtags over EAS Update. `npm run build:preview` in `mobile/`, free on the EAS free tier. Blocks B8. | ☐ |
-| A8 | **Redeploy UAT** with the new image and 7 migrations | The API/worker image now carries ffmpeg (~80 MB more). Build it locally and ship it as the runbook does — never `docker build` on the host, whose `/` is shared and nearly full; the deploy removes the superseded image, and other projects' images are not pruned. Run the migrations over the tunnel before the new API starts (the feed and comment procedures changed shape). Blocks B8. | ☐ |
+| A7 | **New `preview` build** for the R1 scope change | `expo-video` (video playback) is a native module, so the installed APK cannot get video, carousels, replies or hashtags over EAS Update. `npm run build:preview` in `mobile/`, free on the EAS free tier. **Started 2026-10-19** ([build 07e214d8](https://expo.dev/accounts/bmachumu/projects/jamii-air/builds/07e214d8-eaf1-4b47-af1f-420891fe1697)). Blocks B8. | ◐ |
+| A8 | **Redeploy UAT** with the new image and 7 migrations | The API/worker image now carries ffmpeg (~80 MB more). Build it locally and ship it as the runbook does — never `docker build` on the host, whose `/` is shared and nearly full; the deploy removes the superseded image, and other projects' images are not pruned. Run the migrations over the tunnel before the new API starts (the feed and comment procedures changed shape). **Done 2026-10-19:** deployed, migrated, smoke-tested, and a real transcode run in the UAT worker. | ✅ |
 | A6 | **PostHog** account (free: 1M events/month) | All ten TRD PA-01 events are already wired and dormant; they switch on when `EXPO_PUBLIC_POSTHOG_KEY` is set. **Choose the EU region at signup**, or the host has to be set too. Set a billing limit. | ☐ |
 
 ---
@@ -56,7 +56,7 @@ Automation has gone as far as it can. These need a person, a real device and rea
 | B4 | Look at the redesigned portal generally (nobody has seen it but the engineer, in two screenshots) | 4.7 | ☐ |
 | B5 | **Update required** screen: point the app at an API started with `MIN_APP_VERSION=9.9.9` | 3.12.d | ☐ |
 | B6 | Accessibility on the real OS: maximum font and display size, plus a TalkBack pass | 3.12.c | ☐ |
-| B8 | **R1 scope change device checks** — carousels, video, replies, hashtags, a shared post on screen at once, the admin video player | [S.5.a–i](backlog/r1-scope-change.md#device-checks-s5) | 🔒 A7 A8 |
+| B8 | **R1 scope change device checks** — carousels, video, replies, hashtags, a shared post on screen at once, the admin video player | [S.5.a–i](backlog/r1-scope-change.md#device-checks-s5) | 🔒 A7 |
 | B7 | **Run the Maestro core loop once** — it has never been run. Needs `adb` on PATH (`%LOCALAPPDATA%\Android\Sdk\platform-tools`) | 3.12.a | ☐ |
 
 B1–B4 are one browser session. B5–B8 are one phone session (B8 adds S.5.i in the browser).

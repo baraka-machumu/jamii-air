@@ -93,8 +93,9 @@ services:
         # (import replaces the whole lifecycle config, so re-running is safe)
         printf '%s' '{"Rules":[{"ID":"expire-noncurrent","Status":"Enabled","Filter":{"Prefix":""},"NoncurrentVersionExpiration":{"NoncurrentDays":1}}]}' > /tmp/ilm.json
         mc ilm import "local/$$S3_BUCKET" < /tmp/ilm.json
-        # Local stand-in for the nginx media cache (MD-05): variants are public, originals stay private.
-        printf '%s' "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"AWS\":[\"*\"]},\"Action\":[\"s3:GetObject\"],\"Resource\":[\"arn:aws:s3:::$$S3_BUCKET/users/*/media/*/*.webp\"]}]}" > /tmp/variants.json
+        # Local stand-in for the nginx media cache (MD-05): variants (.webp renders and the 720p MP4
+        # a video plays) are public; originals (key `original`, no extension) stay private.
+        printf '%s' "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"AWS\":[\"*\"]},\"Action\":[\"s3:GetObject\"],\"Resource\":[\"arn:aws:s3:::$$S3_BUCKET/users/*/media/*/*.webp\",\"arn:aws:s3:::$$S3_BUCKET/users/*/media/*/video_720.mp4\"]}]}" > /tmp/variants.json
         mc anonymous set-json /tmp/variants.json "local/$$S3_BUCKET"
     restart: "no"
 

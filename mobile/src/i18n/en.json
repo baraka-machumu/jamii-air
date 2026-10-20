@@ -301,6 +301,7 @@
     "playVideo": "Play video",
     "mute": "Mute",
     "unmute": "Unmute",
+    "videoFailed": "This video can't play right now.",
     "openVideo": "Open video post",
     "openCarousel_one": "Open post",
     "openCarousel_other": "Open post with {{count}} photos"

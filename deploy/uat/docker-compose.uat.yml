@@ -115,7 +115,8 @@ services:
       timeout: 5s
       retries: 30
 
-  # One-shot: private bucket, versioning, lifecycle, public read for .webp variants only.
+  # One-shot: private bucket, versioning, lifecycle, public read for the variants only: the .webp
+  # renders and the 720p MP4 a video post plays. Originals (key `original`, no extension) stay private.
   minio-init:
     image: pgsty/mc:RELEASE.2026-09-16T00-00-00Z
     container_name: jamii-uat-minio-init
@@ -137,7 +138,7 @@ services:
         mc version enable "local/$$S3_BUCKET"
         printf '%s' '{"Rules":[{"ID":"expire-noncurrent","Status":"Enabled","Filter":{"Prefix":""},"NoncurrentVersionExpiration":{"NoncurrentDays":1}}]}' > /tmp/ilm.json
         mc ilm import "local/$$S3_BUCKET" < /tmp/ilm.json
-        printf '%s' "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"AWS\":[\"*\"]},\"Action\":[\"s3:GetObject\"],\"Resource\":[\"arn:aws:s3:::$$S3_BUCKET/users/*/media/*/*.webp\"]}]}" > /tmp/variants.json
+        printf '%s' "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"AWS\":[\"*\"]},\"Action\":[\"s3:GetObject\"],\"Resource\":[\"arn:aws:s3:::$$S3_BUCKET/users/*/media/*/*.webp\",\"arn:aws:s3:::$$S3_BUCKET/users/*/media/*/video_720.mp4\"]}]}" > /tmp/variants.json
         mc anonymous set-json /tmp/variants.json "local/$$S3_BUCKET"
     restart: "no"
 

@@ -4,7 +4,7 @@
 // skeleton cards, empty (Find people / Share your first photo), error (Try again), and on a failed
 // refresh the cached feed stays with a "Couldn't refresh" toast. Your post being shared sits on top,
 // and when it goes up the feed returns to the top so the new photo is the one you are looking at.
-import { FlashList, type FlashListRef } from '@shopify/flash-list';
+import { FlashList, type FlashListRef, type ViewToken } from '@shopify/flash-list';
 import { useRouter, useScrollToTop } from 'expo-router';
 import { useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -18,6 +18,7 @@ import { PostingCard } from '@/components/PostingCard';
 import { Screen } from '@/components/Screen';
 import { Text } from '@/components/Text';
 import { showToast } from '@/components/Toast';
+import { useActiveVideo } from '@/media/activeVideo';
 import { usePublished } from '@/posting/published';
 import { useTheme } from '@/theme/ThemeProvider';
 
@@ -77,6 +78,8 @@ export default function HomeTab() {
         data={posts}
         keyExtractor={(post) => post.id}
         renderItem={({ item }) => <PostCard post={item} onOpen={open} />}
+        onViewableItemsChanged={stopVideosScrolledAway}
+        viewabilityConfig={VIEWABILITY}
         ItemSeparatorComponent={Separator}
         ListHeaderComponent={header}
         ListEmptyComponent={
@@ -99,6 +102,14 @@ export default function HomeTab() {
   }
 
   return <Screen padded={false}>{body}</Screen>;
+}
+
+// A video stops once less than this much of its post is on screen: scrolled past, not just nudged.
+// A share of the card, not of the screen, so a card taller than the screen still counts.
+const VIEWABILITY = { itemVisiblePercentThreshold: 30 };
+
+function stopVideosScrolledAway({ viewableItems }: { viewableItems: ViewToken<Post>[] }) {
+  useActiveVideo.getState().keepOnly(new Set(viewableItems.flatMap((token) => (token.item ? [token.item.id] : []))));
 }
 
 function Separator() {

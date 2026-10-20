@@ -1,9 +1,14 @@
 // The R1 scope change of 2026-10-16 (BRS §6.1) in the app: carousels (BR-CT-09), video posts
 // (BR-CT-07/08), replies (BR-FD-08/09), hashtags (BR-FD-10/11) and the post being on screen once
 // it is published (BR-FD-12).
-import { fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { useVideoPlayer } from 'expo-video';
+import { FlashList } from '@shopify/flash-list';
+import { router } from 'expo-router';
 import { renderRouter } from 'expo-router/testing-library';
+import { Dimensions } from 'react-native';
 import { tokenStore } from '@/auth/tokenStore';
+import { useActiveVideo } from '@/media/activeVideo';
 import { useSession } from '@/stores/session';
 import { useSettings } from '@/stores/settings';
 import { emptyPage, json, me, type StubRequest, stubApi } from '@/test/api';
@@ -50,6 +55,7 @@ beforeEach(async () => {
   await tokenStore.set('refresh-0-xxxxxxxxxxxxxxxx');
   useSession.setState({ status: 'signedIn', accessToken: 'access-0', user: { id: 'u1', username: 'amina' }, onboarding: false });
   useSettings.setState({ language: 'en', theme: 'system' });
+  useActiveVideo.setState({ playing: null });
 });
 
 describe('carousels and video on a card (BR-CT-07/09)', () => {
@@ -60,9 +66,27 @@ describe('carousels and video on a card (BR-CT-07/09)', () => {
     renderRouter(routes, { initialUrl: '/' });
 
     expect(await screen.findByText('1/3')).toBeTruthy();
-    // One page per photo, each announced on its own. The list is virtualised, so only the pages
-    // near the viewport are mounted — more than one is what proves it is a pager.
-    expect(screen.getAllByLabelText('Photo by juma').length).toBeGreaterThan(1);
+    // One page per photo, each announced on its own.
+    expect(screen.getAllByLabelText('Photo by juma')).toHaveLength(3);
+  });
+
+  it('loads the photo on screen and the next, and the rest only as the viewer swipes to them', async () => {
+    api((req) => (req.path === '/api/v1/feed'
+      ? json(200, { items: [post({ id: 'p1', media: [image(1), image(2), image(3), image(4)] })], nextCursor: null })
+      : undefined));
+    renderRouter(routes, { initialUrl: '/' });
+    await screen.findByText('1/4');
+
+    // Data bundles (BRS §11): the next photo is ready for the swipe, the ones after it are not fetched.
+    const sources = () => screen.getAllByLabelText('Photo by juma')
+      .map((page) => page.findByProps({ contentFit: 'cover' }).props.source?.uri ?? null);
+    expect(sources()).toEqual(['http://img/1.webp', 'http://img/2.webp', null, null]);
+
+    const { width } = Dimensions.get('window');
+    fireEvent.scroll(screen.getByTestId('carousel'), { nativeEvent: { contentOffset: { x: width, y: 0 } } });
+
+    expect(screen.getByText('2/4')).toBeTruthy();
+    expect(sources()).toEqual(['http://img/1.webp', 'http://img/2.webp', 'http://img/3.webp', null]);
   });
 
   it('shows a single photo without a carousel counter', async () => {
@@ -87,6 +111,120 @@ describe('carousels and video on a card (BR-CT-07/09)', () => {
     // Playing: the poster and its play button are replaced by the player and a mute control.
     expect(await screen.findByRole('button', { name: 'Unmute' })).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Play video' })).toBeNull();
+  });
+
+  it('says so when a video cannot be played, and tries again on request', async () => {
+    api((req) => (req.path === '/api/v1/feed'
+      ? json(200, { items: [post({ type: 'VIDEO', media: [video] })], nextCursor: null })
+      : undefined));
+    renderRouter(routes, { initialUrl: '/' });
+
+    fireEvent.press(await screen.findByRole('button', { name: 'Play video' }));
+    await screen.findByRole('button', { name: 'Unmute' });
+    const players = jest.mocked(useVideoPlayer).mock.results;
+    const first = players.at(-1)!.value as { mockEmit: (name: string, payload: unknown) => void };
+
+    // E.g. the media server refuses the file: a black box would look like it is still loading.
+    act(() => first.mockEmit('statusChange', { status: 'error' }));
+    expect(screen.getByText("This video can't play right now.")).toBeTruthy();
+
+    const before = players.length;
+    fireEvent.press(screen.getByRole('button', { name: 'Try again' }));
+    expect(await screen.findByRole('button', { name: 'Unmute' })).toBeTruthy();
+    expect(players.length).toBeGreaterThan(before);
+    expect(players.at(-1)!.value).not.toBe(first);
+  });
+});
+
+describe('one video at a time (BR-CT-07, BRS §11)', () => {
+  const video2 = { ...video, id: 'v2', url: 'http://media/2/video_720.mp4', posterUrl: 'http://media/2/poster.webp' };
+  const twoVideos = () => api((req) => (req.path === '/api/v1/feed'
+    ? json(200, { items: [post({ id: 'p1', type: 'VIDEO', media: [video] }), post({ id: 'p2', type: 'VIDEO', media: [video2] })], nextCursor: null })
+    : undefined));
+
+  it('stops the playing video when another one is played', async () => {
+    twoVideos();
+    renderRouter(routes, { initialUrl: '/' });
+
+    const first = (await screen.findAllByRole('button', { name: 'Play video' }))[0]!;
+    fireEvent.press(first);
+    await screen.findByRole('button', { name: 'Unmute' });
+    expect(screen.getAllByRole('button', { name: 'Play video' })).toHaveLength(1);
+
+    fireEvent.press(screen.getByRole('button', { name: 'Play video' }));
+    // Still exactly one player: the first went back to its poster.
+    expect(await screen.findAllByRole('button', { name: 'Unmute' })).toHaveLength(1);
+    expect(screen.getAllByRole('button', { name: 'Play video' })).toHaveLength(1);
+  });
+
+  it('stops a video once its post is scrolled away', async () => {
+    twoVideos();
+    renderRouter(routes, { initialUrl: '/' });
+
+    const first = (await screen.findAllByRole('button', { name: 'Play video' }))[0]!;
+    fireEvent.press(first);
+    await screen.findByRole('button', { name: 'Unmute' });
+
+    const feed = screen.UNSAFE_getByType(FlashList);
+    // Still on screen: keeps playing.
+    act(() => feed.props.onViewableItemsChanged({ viewableItems: [{ item: { id: 'p1' } }, { item: { id: 'p2' } }], changed: [] }));
+    expect(screen.getByRole('button', { name: 'Unmute' })).toBeTruthy();
+    // Scrolled on to the next post: stops.
+    act(() => feed.props.onViewableItemsChanged({ viewableItems: [{ item: { id: 'p2' } }], changed: [] }));
+    expect(screen.queryByRole('button', { name: 'Unmute' })).toBeNull();
+    expect(screen.getAllByRole('button', { name: 'Play video' })).toHaveLength(2);
+  });
+
+  const oneVideo = () => api((req) => {
+    if (req.path === '/api/v1/feed') return json(200, { items: [post({ type: 'VIDEO', media: [video] })], nextCursor: null });
+    if (req.path === '/api/v1/posts/p1') return json(200, post({ type: 'VIDEO', media: [video] }));
+    if (req.path === '/api/v1/posts/p1/like') return json(200, { liked: true, likeCount: 1 });
+    return undefined;
+  });
+
+  it('opens the post on a tap of the video and likes it on a double-tap, as for a photo', async () => {
+    oneVideo();
+    renderRouter(routes, { initialUrl: '/' });
+
+    const area = await screen.findByRole('button', { name: 'Video by juma' });
+    fireEvent.press(area);
+    fireEvent.press(area);
+    await waitFor(() => expect(requests.some((r) => r.method === 'PUT' && r.path === '/api/v1/posts/p1/like')).toBe(true));
+
+    fireEvent.press(screen.getByRole('button', { name: 'Video by juma' }));
+    expect(await screen.findByText('Post')).toBeTruthy();
+  });
+
+  it('carries a playing video on into its post, from the same moment and with the same sound', async () => {
+    oneVideo();
+    renderRouter(routes, { initialUrl: '/' });
+
+    fireEvent.press(await screen.findByRole('button', { name: 'Play video' }));
+    fireEvent.press(await screen.findByRole('button', { name: 'Unmute' }));
+    const feedPlayer = jest.mocked(useVideoPlayer).mock.results.at(-1)!.value as { currentTime: number };
+    feedPlayer.currentTime = 12;
+
+    fireEvent.press(screen.getByRole('button', { name: 'Video by juma' }));
+    await screen.findByText('Post');
+
+    // One player, on the post screen, picking up where the feed left off; the feed's is gone.
+    expect(await screen.findAllByRole('button', { name: 'Mute' })).toHaveLength(1);
+    const postPlayer = jest.mocked(useVideoPlayer).mock.results.at(-1)!.value as { currentTime: number; muted: boolean };
+    expect(postPlayer).not.toBe(feedPlayer);
+    expect(postPlayer.currentTime).toBe(12);
+    expect(postPlayer.muted).toBe(false);
+  });
+
+  it('stops a video when the viewer leaves the screen', async () => {
+    twoVideos();
+    renderRouter(routes, { initialUrl: '/' });
+
+    const first = (await screen.findAllByRole('button', { name: 'Play video' }))[0]!;
+    fireEvent.press(first);
+    await screen.findByRole('button', { name: 'Unmute' });
+
+    act(() => router.push('/search'));
+    expect(useActiveVideo.getState().playing).toBeNull();
   });
 });
 

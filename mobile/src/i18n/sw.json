@@ -301,6 +301,7 @@
     "playVideo": "Cheza video",
     "mute": "Zima sauti",
     "unmute": "Washa sauti",
+    "videoFailed": "Video hii haiwezi kucheza sasa hivi.",
     "openVideo": "Fungua chapisho la video",
     "openCarousel_one": "Fungua chapisho",
     "openCarousel_other": "Fungua chapisho lenye picha {{count}}"

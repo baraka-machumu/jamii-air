@@ -12,13 +12,27 @@ jest.mock('@shopify/flash-list/dist/recyclerview/utils/measureLayout', () => ({
 
 // expo-video (native): a player object that records what was asked of it, and a view that renders
 // nothing. Enough for the tests to assert that a video post shows its poster first and only
-// creates a player once it is tapped (BR-CT-07).
+// creates a player once it is tapped (BR-CT-07). One player per mount, as the real hook keeps;
+// `mockEmit` lets a test play the native side, e.g. a status of 'error'.
 jest.mock('expo-video', () => {
   const { View } = jest.requireActual('react-native');
+  const { useState } = jest.requireActual('react');
   return {
     useVideoPlayer: jest.fn((_source: unknown, setup?: (player: unknown) => void) => {
-      const player = { loop: false, muted: true, playing: false, play: jest.fn(), pause: jest.fn() };
-      setup?.(player);
+      const [player] = useState(() => {
+        const listeners = new Map<string, Set<(payload: unknown) => void>>();
+        const instance = {
+          loop: false, muted: true, playing: false, play: jest.fn(), pause: jest.fn(),
+          addListener: (name: string, listener: (payload: unknown) => void) => {
+            if (!listeners.has(name)) listeners.set(name, new Set());
+            listeners.get(name)!.add(listener);
+            return { remove: () => listeners.get(name)!.delete(listener) };
+          },
+          mockEmit: (name: string, payload: unknown) => listeners.get(name)?.forEach((listener) => listener(payload)),
+        };
+        setup?.(instance);
+        return instance;
+      });
       return player;
     }),
     VideoView: View,

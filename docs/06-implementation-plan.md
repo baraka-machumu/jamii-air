@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Document** | 06 — Implementation Plan |
-| **Version** | 1.19 (R1 scope change 2026-10-16: video posts, carousels, replies, hashtags and the shared-post defect, built through every layer — §4 "R1 scope change") · 1.18 (Phase 3: 3.1–3.8 built and checked on the reference Android; 3.9 engagement, 3.10 notifications and 3.11 safety built) |
+| **Version** | 1.20 (R1 scope change: two defects from the first device run — videos would not play, carousel swipes were slow — S.7) · 1.19 (R1 scope change 2026-10-16: video posts, carousels, replies, hashtags and the shared-post defect, built through every layer — §4 "R1 scope change") · 1.18 (Phase 3: 3.1–3.8 built and checked on the reference Android; 3.9 engagement, 3.10 notifications and 3.11 safety built) |
 | **Status** | **Approved** — 2026-10-11 |
 | **Date** | 2026-10-10 |
 | **Team** | 1 engineer building with Claude Code; Product (stakeholder) as product owner |
@@ -318,6 +318,7 @@ S2 carousel, S3 replies, S4 hashtags) and S5 for the defect. Tracker:
 | S.4 | ✅ Admin portal: numbered carousel photos, a player for a reported video behind *Click to show* |
 | S.5 | Device checks on a **new `preview` build** (expo-video is a native module) — list in the tracker |
 | S.6 | ✅ UAT deploy (2026-10-19): image with ffmpeg shipped, 7 migrations applied, smoke test green, a real transcode run in the UAT worker |
+| S.7 | Defects from the first device run (2026-10-20): videos never played (the media bucket only made `.webp` public), carousel swipes were slow (a nested virtualised list). Fixed in the bucket policy and `PostMedia`; ships as a bucket-policy re-run on UAT plus an EAS Update, no new build |
 
 **Exit:** S.5 ticked on the reference Android against UAT; CI green on GitHub; the commits reviewed.
 
@@ -429,4 +430,4 @@ If priorities change, these stories are dropped first, in this order: 0) from th
 14. ✅ 3.10 Notifications built: Activity tab (New / Earlier, Follow back, marks read after 1 s), unread badge, onboarding step 3 and a Settings row to turn pushes on, pushes in every app state (foreground toast, tap opens the post or profile), log-out removes this phone's push token. Phone checks 3.9.e and 3.10.e go together on one new dev build. Tracker: [`docs/backlog/phase-3-mobile.md`](backlog/phase-3-mobile.md).
 15. ✅ 3.11 Safety built: the ⋯ menus became a bottom sheet (Report, Copy link, Unfollow, Block); block / unblock from posts, profiles and Settings → Blocked accounts; the Report sheet for posts, comments and accounts, then the offer to block; Delete account (password, 30-day grace, Welcome says when); a suspension noticed mid-session signs out and Welcome explains. Checked against the local API; the phone check 3.11.e joins 3.9.e and 3.10.e (no new native module). **Next:** 3.12 (Quality).
 
-16. ✅ **R1 scope change built (2026-10-18):** video posts, carousels, replies, hashtags, and the fix for a shared post not appearing — every layer, every suite green locally ([tracker](backlog/r1-scope-change.md)). **Next:** push and let CI run; a new `preview` build (`npm run build:preview`, expo-video is native); rebuild and redeploy the UAT image with ffmpeg and run the 7 migrations; then the device checks S.5.
+16. ✅ **R1 scope change built (2026-10-18):** video posts, carousels, replies, hashtags, and the fix for a shared post not appearing — every layer, every suite green locally ([tracker](backlog/r1-scope-change.md)). **Next:** push and let CI run; a new `preview` build (`npm run build:preview`, expo-video is native); rebuild and redeploy the UAT image with ffmpeg and run the 7 migrations; then the device checks S.5. The first device run found two defects, fixed as S.7 (2026-10-20); both shipped to UAT the same day (bucket policy + EAS Update). **Next:** S.5.a and S.5.d again on the phone.

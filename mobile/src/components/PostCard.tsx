@@ -53,9 +53,9 @@ function PostCardView({ post, onOpen, onDeleted, followsAuthor = true }: {
   const singleTap = useRef<ReturnType<typeof setTimeout>>(undefined);
   useEffect(() => () => clearTimeout(singleTap.current), []);
   const author = post.author;
-  // A carousel swipes and a video has its own play control, so only a single photo takes the
-  // double-tap: elsewhere the heart is the way to like.
-  const doubleTapToLike = post.media.length === 1 && post.media[0]?.kind !== 'VIDEO';
+  // A single photo or video takes the double-tap (a video's own ▶ and mute buttons sit above it).
+  // A carousel does not: its pages are swiped, and the heart is the way to like.
+  const doubleTapToLike = post.media.length === 1;
   const published = post.status === 'PUBLISHED';
   const toProfile = () => router.push({ pathname: '/u/[username]', params: { username: author.username } });
   const toComments = () => router.push({ pathname: '/p/[id]/comments', params: { id: post.id } });

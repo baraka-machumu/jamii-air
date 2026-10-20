@@ -7,7 +7,7 @@ alongside four unrelated projects. First deployed 2026-10-15.
 |---|---|---|
 | API + share landing pages | `http://41.59.227.223:4011` | plain HTTP; OpenAPI at `/api/docs` (`NODE_ENV=uat`, so Swagger is on) |
 | Admin portal | `https://41.59.227.223:4012` | **HTTPS, self-signed** — the browser warns once per session |
-| Media (MinIO) | `http://41.59.227.223:4013` | public: phones PUT here and load `.webp` variants |
+| Media (MinIO) | `http://41.59.227.223:4013` | public: phones PUT here and load the `.webp` variants and `video_720.mp4` |
 | Postgres | `127.0.0.1:5433` on the host | localhost only; reach it with an SSH tunnel |
 | MinIO console | `127.0.0.1:4014` on the host | tunnel |
 | Mailpit (password-reset codes) | `127.0.0.1:8026` on the host | tunnel; no real email provider yet (Plan 5.0) |

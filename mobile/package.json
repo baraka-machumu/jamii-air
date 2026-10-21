@@ -62,8 +62,8 @@
     "api:sync": "node scripts/sync-api.mjs",
     "build:dev": "npx eas-cli@latest build --platform android --profile development",
     "build:preview": "npx eas-cli@latest build --platform android --profile preview",
-    "update:preview": "npx eas-cli@latest update --channel preview",
-    "update:production": "npx eas-cli@latest update --channel production",
+    "update:preview": "node scripts/update.mjs preview",
+    "update:production": "node scripts/update.mjs production",
     "e2e": "maestro test maestro/flows"
   },
   "private": true

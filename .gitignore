@@ -19,6 +19,10 @@ web-build/
 *.key
 *.mobileprovision
 
+# Editor and IDE settings
+.idea/
+.vscode/
+
 # Logs and OS files
 *.log
 .DS_Store

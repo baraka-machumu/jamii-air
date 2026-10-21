@@ -31,7 +31,7 @@ npx expo start --lan --port 8081
 
 Check from the phone's browser: `http://<laptop Wi-Fi IP>:3000/api/v1/health/live` → `{"status":"ok"}`. If that fails, the Wi-Fi isolates devices (common on office/guest networks): use a phone hotspot. `--tunnel` loads the app but cannot reach the API.
 
-`npm run build:preview` makes a standalone APK for demos. It has no dev server to find the API, so `eas.json` bakes in `EXPO_PUBLIC_API_URL=http://192.168.0.65:3000` (the dev machine on Wi-Fi). If that address changes, edit it in `eas.json` and rebuild. The phone must be on the same Wi-Fi, and Windows Firewall must allow inbound TCP 3000 to the API.
+`npm run build:preview` makes a standalone APK for testers. It has no dev server to find the API, so `eas.json` bakes in `EXPO_PUBLIC_API_URL=http://41.59.227.223:4011` — the UAT API (`deploy/uat/`), reachable from any network. If that address changes, edit it in `eas.json` and rebuild.
 
 Plain HTTP is allowed in `development` and `preview` builds only: `app.config.ts` reads `APP_VARIANT` (set per profile in `eas.json`) and turns Android cleartext traffic off for `production`.
 
@@ -50,6 +50,20 @@ node dist/worker.js                                                        # aft
 ```
 
 The storage addresses are baked into the API at start: after changing Wi-Fi, restart the API and worker with the new address.
+
+**Shipping a JavaScript-only fix** to installed `preview` APKs needs no new build — an EAS Update:
+
+```bash
+npm run update:preview -- --message "What changed"    # without --message: the last commit's subject
+```
+
+Always through this script (`scripts/update.mjs`), never a bare `eas update`: `EXPO_PUBLIC_API_URL`
+is inlined when the bundle is exported and lives only in `eas.json`'s build profile, which `eas update`
+does not read, so a bare update would ship a bundle that cannot find the API. The script copies the
+profile's `env` in and then checks the exported bundle contains the URL. The update reaches APKs with
+the same runtime version (`runtimeVersion.policy: appVersion`, so the same `version` in `app.json`);
+on the phone, close the app fully and reopen it, twice on a slow connection. A change that adds a
+native module or bumps `version` needs a new APK instead.
 
 **New native modules need a new dev build** (`npm run build:dev`): task 3.5 added `expo-image-picker`, `expo-image-manipulator` and AsyncStorage. The R1 scope change (2026-10-16) added **`expo-video`** for video posts, so a dev or `preview` build made before it cannot play video and must be rebuilt (`npm run build:dev` / `npm run build:preview`) — an EAS Update will not do.
 

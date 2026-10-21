@@ -4,6 +4,7 @@
 // SR-02: the API and worker connect with DATABASE_URL as the runtime role (jamii_app). The owner
 // role (MIGRATION_DATABASE_URL) is for `prisma migrate deploy` only and is never read here; a
 // DATABASE_URL that logs in as the owner or a superuser is rejected.
+import { isIP } from 'node:net';
 
 export const NODE_ENVS = ['development', 'test', 'uat', 'production'] as const;
 export type NodeEnv = (typeof NODE_ENVS)[number];
@@ -44,6 +45,13 @@ export class AppConfig {
   readonly admin: AdminConfig;
   /** Oldest mobile app version the API serves (API-07); null = no gate. */
   readonly minAppVersion: string | null;
+  /**
+   * Which proxies' X-Forwarded-For to believe (Express `trust proxy`), so per-IP rate limits key on
+   * the client, not on nginx (Plan 5.4). `false`: trust none, the client is whoever connected. A
+   * hop count, or a list of addresses / CIDRs / `loopback`, `linklocal`, `uniquelocal`. Never "all":
+   * a client could then claim any IP and step around every limit.
+   */
+  readonly trustProxy: false | number | string[];
 
   constructor(values: Omit<AppConfig, 'isProduction' | 'swaggerEnabled'>) {
     this.nodeEnv = values.nodeEnv;
@@ -61,6 +69,7 @@ export class AppConfig {
     this.push = values.push;
     this.admin = values.admin;
     this.minAppVersion = values.minAppVersion;
+    this.trustProxy = values.trustProxy;
   }
 
   get isProduction(): boolean {
@@ -212,10 +221,40 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
   const minAppVersion = env.MIN_APP_VERSION?.trim() || null;
   if (minAppVersion && !/^\d{1,4}\.\d{1,4}\.\d{1,4}$/.test(minAppVersion)) problems.push('MIN_APP_VERSION must look like 1.2.0');
 
+  const trustProxy = parseTrustProxy(env.TRUST_PROXY, problems);
+
   if (problems.length > 0) throw new ConfigError(problems);
   return new AppConfig({
     nodeEnv, port, databaseUrl, logLevel, requireInvite: requireInvite!, jwtAccessSecret, authCodeSecret, smtp, mediaBaseUrl, redisUrl, s3, links, push, admin, minAppVersion,
+    trustProxy,
   });
+}
+
+const PROXY_NAMES = new Set(['loopback', 'linklocal', 'uniquelocal']);
+
+/** TRUST_PROXY: unset → false; "1"…"5" → hops; else a comma list of names, IPs and CIDRs. */
+function parseTrustProxy(raw: string | undefined, problems: string[]): AppConfig['trustProxy'] {
+  const value = raw?.trim();
+  if (!value || value === 'false') return false;
+  if (/^\d+$/.test(value)) {
+    const hops = Number(value);
+    if (hops >= 1 && hops <= 5) return hops;
+    problems.push('TRUST_PROXY as a hop count must be 1–5');
+    return false;
+  }
+  const entries = value.split(',').map((entry) => entry.trim()).filter(Boolean);
+  const bad = entries.filter((entry) => {
+    if (PROXY_NAMES.has(entry)) return false;
+    const [address, prefix, extra] = entry.split('/');
+    const version = isIP(address ?? '');
+    if (!version || extra !== undefined) return true;
+    return prefix !== undefined && !(/^\d+$/.test(prefix) && Number(prefix) <= (version === 4 ? 32 : 128));
+  });
+  if (bad.length > 0 || entries.length === 0) {
+    problems.push(`TRUST_PROXY must be a hop count, or IPs / CIDRs / loopback, linklocal, uniquelocal (not: ${bad.join(', ') || value})`);
+    return false;
+  }
+  return entries;
 }
 
 function checkDatabaseUrl(value: string, migrationUrl: string | undefined): string[] {

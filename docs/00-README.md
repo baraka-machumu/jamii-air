@@ -24,6 +24,7 @@ Read in this order. Every later document builds on the decisions in the earlier 
 | 06 | [Implementation Plan](06-implementation-plan.md) | In what order do we build it, and how do we know each step is done? | Whole team |
 | 07 | [API Review](07-api-review.md) | Does every screen have the endpoints it needs? (Plan task 2.14 record) | Engineering |
 | 08 | [Release Readiness Tracker](08-release-readiness-tracker.md) | What is left that is **not** writing code: accounts, costs, manual checks, decisions, ops | Owner |
+| 09 | [Security Review](09-security-review.md) | What was checked for security, what it found, what was fixed and what is accepted (Plan task 5.4 record) | Engineering, owner |
 
 ## 2. Release numbering
 

@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Document** | 02 — Technical Requirements Document |
-| **Version** | 1.8 (R1 scope change 2026-10-16, BRS §6.1: video posts §9.1, carousels, replies and hashtags in §5.1, MD-01 per kind, FD-05 now server-side) · 1.7 (Phase 3: mobile stack as built, §3: Expo Router, on-device storage, native photo upload, animations with React Native `Animated`, clipboard, push registration; Phase 2: admin sign-in §8.2 and API review endpoints, see [07](07-api-review.md)) |
+| **Version** | 1.9 (Plan 5.4 security review, [09](09-security-review.md): SE-07 at any depth and inside strings, SE-09 enforced in CI, new SE-11 trusted proxy) · 1.8 (R1 scope change 2026-10-16, BRS §6.1: video posts §9.1, carousels, replies and hashtags in §5.1, MD-01 per kind, FD-05 now server-side) · 1.7 (Phase 3: mobile stack as built, §3: Expo Router, on-device storage, native photo upload, animations with React Native `Animated`, clipboard, push registration; Phase 2: admin sign-in §8.2 and API review endpoints, see [07](07-api-review.md)) |
 | **Status** | **Approved** — 2026-10-11 |
 | **Date** | 2026-10-10 |
 | **Scope** | Release 1 (MVP) in detail; R1.1–R4 as forward-compatibility requirements |
@@ -454,10 +454,11 @@ The phone uploads the recording **as it is** (no on-device re-encode: minutes of
 | SE-04 | DB least privilege: `jamii_app` cannot write tables directly (SP-05); migrations run as `jamii_owner`; no superuser at runtime. |
 | SE-05 | Global `ValidationPipe`; max JSON body 100 KB; `ParseUUIDPipe` on IDs. |
 | SE-06 | Secrets only in env/secret manager; config validated at boot. Admin TOTP secrets encrypted at rest (AES-256-GCM, key from secret manager). |
-| SE-07 | Logs redact `password`, `token`, `refreshToken`, `authorization`, `cookie`, `email`, `dateOfBirth`, `totp`. |
+| SE-07 | Logs redact `password`, `token`, `refreshToken`, `authorization`, `cookie`, `email`, `dateOfBirth`, `totp` **at any depth**, and email addresses, push tokens and JWTs **inside any string**, error messages and stacks included (`scrub.ts`, review 09 F1). |
 | SE-08 | Storage bucket private; only variant prefixes exposed via CDN; presigned URLs ≤ 15 min. |
-| SE-09 | Dependency scanning in CI; no known critical CVEs at release. |
+| SE-09 | Dependency scanning in CI (`npm audit --omit=dev --audit-level=critical` in every app's workflow); no known critical CVEs at release; lower severities triaged in [09](09-security-review.md) §4. |
 | SE-10 | Admin portal: §8 (separate accounts, 2FA, IP allowlist, audited actions, session limits). |
+| SE-11 | Behind a reverse proxy, the API believes `X-Forwarded-For` from that proxy only (`TRUST_PROXY`), so per-IP rate limits count clients, not the proxy; trusting every hop is refused at boot (review 09 F2). |
 
 ### 13.1 Security responsibilities: backend vs stored procedures
 

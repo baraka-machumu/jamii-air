@@ -40,6 +40,11 @@ jobs:
       - name: Install
         run: npm ci
 
+      # SE-09: no known critical vulnerability in what ships (runtime dependencies). Lower
+      # severities and dev tooling are triaged by hand in docs/09-security-review.md (Plan 5.4).
+      - name: Dependency audit
+        run: npm audit --omit=dev --audit-level=critical
+
       # The e2e tests use the whole local stack (PostgreSQL, Redis, MinIO, Mailpit); TypedSQL types
       # are generated against the migrated database.
       - name: Start local infrastructure and apply migrations

@@ -137,6 +137,14 @@ It answers from the image that is actually running, so it catches a build that d
 
 ## Still open
 
+- **Next image deploy carries the security review (Plan 5.4, [doc 09](../../docs/09-security-review.md)):**
+  log scrubbing, Prisma 7.10.1 and the `TRUST_PROXY` setting. Until `TRUST_PROXY` is set, every
+  admin request reaches the API from the portal's nginx, so five wrong portal passwords from anyone
+  lock every admin out for 15 minutes. At that deploy, first check that Docker keeps the client's
+  address for `:4011` — `iptables -t nat -L DOCKER -n` on the host must show a `DNAT` rule for it —
+  and only then add `TRUST_PROXY: uniquelocal` to `x-app-env` (it trusts the portal's nginx on the
+  Docker network and no one else). Without that DNAT rule, leave it unset: any client could then
+  claim any address.
 - **No IP allowlist** on the portal or `/api/v1/admin/*` (spec'd in task 4.7); it waits for the
   office IPs in Plan 5.0. Mandatory 2FA is the only gate meanwhile.
 - **Self-signed TLS** on the portal, and the API and media are **plain HTTP** — fine for the

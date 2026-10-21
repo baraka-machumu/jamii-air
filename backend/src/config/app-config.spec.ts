@@ -1,3 +1,5 @@
+import express from 'express';
+import request from 'supertest';
 import { ConfigError, loadConfig } from './app-config.js';
 
 const valid = {
@@ -100,5 +102,36 @@ describe('loadConfig', () => {
       .toMatchObject({ webBaseUrl: 'https://jamii.example', androidCertSha256: [fingerprint.toUpperCase()] });
     expect(problems({ ...valid, PUBLIC_WEB_URL: 'jamii.example', ANDROID_PACKAGE: 'app', ANDROID_CERT_SHA256: 'AB:CD', IOS_APP_ID: 'tz.app', IOS_STORE_URL: 'http://x' }))
       .toHaveLength(5);
+  });
+
+  describe('TRUST_PROXY (Plan 5.4: rate limits key on the client behind nginx)', () => {
+    it('trusts no proxy unless told to', () => {
+      expect(loadConfig({ ...valid }).trustProxy).toBe(false);
+      expect(loadConfig({ ...valid, TRUST_PROXY: 'false' }).trustProxy).toBe(false);
+    });
+
+    it('takes a hop count, or names, addresses and CIDRs', () => {
+      expect(loadConfig({ ...valid, TRUST_PROXY: '1' }).trustProxy).toBe(1);
+      expect(loadConfig({ ...valid, TRUST_PROXY: 'loopback, 172.18.0.0/16 ,10.0.0.5,fd00::/8' }).trustProxy)
+        .toEqual(['loopback', '172.18.0.0/16', '10.0.0.5', 'fd00::/8']);
+    });
+
+    it('refuses "trust everyone" and anything it cannot read', () => {
+      for (const value of ['true', '*', '0', '9', 'nginx', '10.0.0.0/33', '10.0.0.0/8/1', ',']) {
+        expect(problems({ ...valid, TRUST_PROXY: value }), value).toHaveLength(1);
+      }
+    });
+
+    it('makes a forwarded address the client only when it comes through a trusted proxy', async () => {
+      const ipSeen = async (trustProxy: false | number | string[]) => {
+        const app = express().set('trust proxy', trustProxy).get('/', (req, res) => { res.send(req.ip); });
+        return (await request(app).get('/').set('X-Forwarded-For', '203.0.113.7')).text;
+      };
+      // The test connects over loopback, so loopback plays nginx here.
+      expect(await ipSeen(loadConfig({ ...valid, TRUST_PROXY: 'loopback' }).trustProxy)).toBe('203.0.113.7');
+      // Untrusted: the header is ignored, so a client cannot claim another IP.
+      expect(await ipSeen(loadConfig({ ...valid }).trustProxy)).not.toBe('203.0.113.7');
+      expect(await ipSeen(loadConfig({ ...valid, TRUST_PROXY: '10.0.0.0/8' }).trustProxy)).not.toBe('203.0.113.7');
+    });
   });
 });

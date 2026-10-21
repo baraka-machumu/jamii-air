@@ -93,6 +93,7 @@ Every variable is documented in [.env.example](.env.example), and `src/config/ap
 | `ANDROID_PACKAGE`, `ANDROID_CERT_SHA256`, `IOS_APP_ID`, `IOS_STORE_URL` | App Links / Universal Links and store links; the app-link files stay empty until set |
 | `EXPO_PUSH_API_URL`, `EXPO_ACCESS_TOKEN` | Expo Push API (the default URL is Expo's) |
 | `MIN_APP_VERSION` | Oldest app version served; older apps get `426` (empty = off) |
+| `TRUST_PROXY` | Which proxies' `X-Forwarded-For` to believe, so rate limits count the client and not nginx: a hop count (`1`) or addresses / CIDRs / `loopback`, `linklocal`, `uniquelocal`. Empty = trust none. "Everyone" is refused ([09 §3 F2](../docs/09-security-review.md)) |
 
 ### First admin
 

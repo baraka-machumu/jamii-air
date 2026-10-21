@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Document** | 06 — Implementation Plan |
-| **Version** | 1.20 (R1 scope change: two defects from the first device run — videos would not play, carousel swipes were slow — S.7) · 1.19 (R1 scope change 2026-10-16: video posts, carousels, replies, hashtags and the shared-post defect, built through every layer — §4 "R1 scope change") · 1.18 (Phase 3: 3.1–3.8 built and checked on the reference Android; 3.9 engagement, 3.10 notifications and 3.11 safety built) |
+| **Version** | 1.21 (Plan 5.4 security review done: [09](09-security-review.md)) · 1.20 (R1 scope change: two defects from the first device run — videos would not play, carousel swipes were slow — S.7) · 1.19 (R1 scope change 2026-10-16: video posts, carousels, replies, hashtags and the shared-post defect, built through every layer — §4 "R1 scope change") · 1.18 (Phase 3: 3.1–3.8 built and checked on the reference Android; 3.9 engagement, 3.10 notifications and 3.11 safety built) |
 | **Status** | **Approved** — 2026-10-11 |
 | **Date** | 2026-10-10 |
 | **Team** | 1 engineer building with Claude Code; Product (stakeholder) as product owner |
@@ -332,7 +332,7 @@ S2 carousel, S3 replies, S4 hashtags) and S5 for the defect. Tracker:
 | 5.1 | Production on our servers (Docker Compose: API, worker, PG 18, Redis, MinIO, nginx with TLS + media cache, admin portal + IP allowlist); secrets; firewall; disk and container-health alerts |
 | 5.2 | Backups: pgBackRest (daily + WAL archiving for PITR) with an off-server copy; MinIO mirror; **restore drill** with runbook |
 | 5.3 | k6 load test (10× pilot, 10k-DAU model); fix regressions |
-| 5.4 | Security review: OWASP API Top 10 checklist, `SECURITY DEFINER` review (search_path set on every function, no dynamic SQL), dependency audit, log redaction check |
+| 5.4 | ✅ Security review: OWASP API Top 10 checklist, `SECURITY DEFINER` review (search_path set on every function, no dynamic SQL), dependency audit, log redaction check — **done 2026-10-21** as a code review ([doc 09](09-security-review.md)): 3 findings fixed (logs scrubbed at any depth, `TRUST_PROXY` for rate limits behind nginx, Prisma 7.10.1), CI now audits dependencies, 4 risks accepted. No penetration test |
 | 5.5 | PostHog dashboard numbers cross-checked against `daily_metrics` |
 | 5.6 | Swahili copy review |
 | 5.7 | App store assets; **18+ age rating**; privacy labels / Data Safety; TestFlight and Play internal testing |
@@ -431,3 +431,4 @@ If priorities change, these stories are dropped first, in this order: 0) from th
 15. ✅ 3.11 Safety built: the ⋯ menus became a bottom sheet (Report, Copy link, Unfollow, Block); block / unblock from posts, profiles and Settings → Blocked accounts; the Report sheet for posts, comments and accounts, then the offer to block; Delete account (password, 30-day grace, Welcome says when); a suspension noticed mid-session signs out and Welcome explains. Checked against the local API; the phone check 3.11.e joins 3.9.e and 3.10.e (no new native module). **Next:** 3.12 (Quality).
 
 16. ✅ **R1 scope change built (2026-10-18):** video posts, carousels, replies, hashtags, and the fix for a shared post not appearing — every layer, every suite green locally ([tracker](backlog/r1-scope-change.md)). **Next:** push and let CI run; a new `preview` build (`npm run build:preview`, expo-video is native); rebuild and redeploy the UAT image with ffmpeg and run the 7 migrations; then the device checks S.5. The first device run found two defects, fixed as S.7 (2026-10-20); both shipped to UAT the same day (bucket policy + EAS Update). **Next:** S.5.a and S.5.d again on the phone.
+17. ✅ **5.4 Security review (2026-10-21)** — [doc 09](09-security-review.md). The database sweep found nothing (all 97 procedures pin `search_path`, no dynamic SQL, least privilege held by tests). Three fixes: secrets and addresses could reach the logs (now scrubbed at any depth and inside strings); behind a proxy every client would share one rate limit (now `TRUST_PROXY`); 4 high advisories in the `prisma` CLI (7.10.1). CI now fails on a critical vulnerability in shipped dependencies. **Next:** at the next UAT deploy, ship the new image and set `TRUST_PROXY` after the DNAT check ([deploy README](../deploy/uat/README.md#still-open)); at the next APK, take the held-back Expo patch ([mobile README](../mobile/README.md)).

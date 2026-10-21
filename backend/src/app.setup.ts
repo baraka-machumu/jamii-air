@@ -44,6 +44,8 @@ export function configureApp(app: INestApplication): void {
   app.use(adminCors(config.admin.origin)); // TRD §8.2
   express.useBodyParser('json', { limit: '100kb' }); // SE-05
   express.disable('x-powered-by');
+  // Rate limits key on req.ip: behind nginx it must be the client's, not nginx's (Plan 5.4).
+  express.set('trust proxy', config.trustProxy);
   app.setGlobalPrefix(API_PREFIX, { exclude: LINK_EXCLUDE }); // API-01; share-link targets at the root (SH-01)
   app.useGlobalPipes(
     new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }), // SE-05

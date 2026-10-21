@@ -65,6 +65,14 @@ the same runtime version (`runtimeVersion.policy: appVersion`, so the same `vers
 on the phone, close the app fully and reopen it, twice on a slow connection. A change that adds a
 native module or bumps `version` needs a new APK instead.
 
+**Held back until the next APK (2026-10-21).** Expo's SDK 57 patch (`expo` 57.0.31, `expo-router`
+57.0.29) also moves native code — `react-native-gesture-handler` 3.3 → 3.4, `expo-modules-core`,
+`expo-modules-jsi`, `@expo/ui`. Because the runtime version follows `version`, an EAS Update built on
+it would still be sent to the installed 1.0.0 APKs, whose native code would not match. So
+`package.json` lists both under `expo.install.exclude` (which is what keeps `expo-doctor` in CI
+green). **At the next `preview` build, together:** remove that `exclude`, run `npx expo install --fix`,
+bump `version` in `app.json` (1.0.0 → 1.0.1) so old APKs stop receiving updates, then build.
+
 **New native modules need a new dev build** (`npm run build:dev`): task 3.5 added `expo-image-picker`, `expo-image-manipulator` and AsyncStorage. The R1 scope change (2026-10-16) added **`expo-video`** for video posts, so a dev or `preview` build made before it cannot play video and must be rebuilt (`npm run build:dev` / `npm run build:preview`) — an EAS Update will not do.
 
 ## Check

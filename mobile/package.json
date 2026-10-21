@@ -66,5 +66,13 @@
     "update:production": "node scripts/update.mjs production",
     "e2e": "maestro test maestro/flows"
   },
-  "private": true
+  "private": true,
+  "expo": {
+    "install": {
+      "exclude": [
+        "expo",
+        "expo-router"
+      ]
+    }
+  }
 }

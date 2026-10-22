@@ -77,12 +77,11 @@ audit. Every app's workflow now runs `npm audit --omit=dev --audit-level=critica
 
 ## 5. Not covered, and what is left
 
-- **`TRUST_PROXY` on UAT.** Set it at the next UAT deploy, after checking on the host that Docker
-  keeps the client's address for traffic to `:4011` (`iptables -t nat -L DOCKER -n` shows a DNAT
-  rule for it). If it does, `TRUST_PROXY=uniquelocal` trusts only the portal's nginx on the Docker
-  network. If it does not, setting it would let any client claim any address — leave it unset. See
-  [deploy/uat/README.md](../deploy/uat/README.md).
-- **UAT runs none of these fixes yet.** F1–F3 reach it with the next image deploy.
+- **On UAT since 2026-10-22.** F1–F3 deployed. `TRUST_PROXY` is the stack's Docker network only
+  (`192.168.112.0/20`), set after confirming the API is published by DNAT, and checked from
+  outside: direct and portal requests now share one counter per client, and a forged
+  `X-Forwarded-For` is ignored ([deploy/uat/README.md](../deploy/uat/README.md)). Production (Plan
+  5.1) needs its own value: nginx's address there.
 - **Transport** (SE-01): API and media are plain HTTP on UAT. Known gap until the domain (Plan 5.0).
 - **The admin portal and the app** were not reviewed here beyond their dependencies; the portal's
   session, 2FA and audit were reviewed and tested in Phase 4.

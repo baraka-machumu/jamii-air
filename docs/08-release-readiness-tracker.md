@@ -95,7 +95,7 @@ Everything here was deferred by decision D-12 and is now the gate for most of Ph
 | E1 | Production deploy: API, worker, PG 18, Redis, MinIO, nginx with TLS + media cache, portal behind the allowlist; secrets, firewall, disk and container-health alerts | 5.1 | 🔒 D1, D2 |
 | E2 | Backups: pgBackRest (daily + WAL for PITR), off-server copy, MinIO mirror, **restore drill** with runbook | 5.2 | 🔒 D1 |
 | E3 | k6 load test at 10× pilot (10k-DAU model); fix what it finds | 5.3 | 🔒 D1 |
-| E4 | Security review: OWASP API Top 10, `SECURITY DEFINER` sweep, dependency audit, log redaction check — **done 2026-10-21** as a code review ([09](09-security-review.md)): 3 fixes, CI audit added. Left: ship it to UAT and set `TRUST_PROXY` there after the DNAT check | 5.4 | ✅ (UAT deploy pending) |
+| E4 | Security review: OWASP API Top 10, `SECURITY DEFINER` sweep, dependency audit, log redaction check — **done 2026-10-21** as a code review ([09](09-security-review.md)): 3 fixes, CI audit added. Deployed to UAT 2026-10-22 with `TRUST_PROXY` set and checked from outside | 5.4 | ✅ |
 | E5 | Cross-check PostHog's numbers against `daily_metrics` | 5.5 | 🔒 A6 |
 | E6 | **No backups of UAT data** (`/home/jamii-air/data`) | deploy README | ☐ |
 | E7 | Watch `/` on the shared UAT host — 94% full, four other projects on it; if it fills they go down with us | [deploy README](../deploy/uat/README.md) | ☐ ongoing |

@@ -46,6 +46,11 @@ x-app-env: &app-env
   SMTP_SECURE: ${SMTP_SECURE:-false}
   MAIL_FROM: ${MAIL_FROM:-Jamii Air (UAT) <no-reply@jamii-air.uat>}
   MIN_APP_VERSION: ${MIN_APP_VERSION:-}
+  # Rate limits count the client, not the portal's nginx (Plan 5.4, docs/09 F2). Only this stack's
+  # Docker network is trusted: the API is published by DNAT (checked 2026-10-22), so a client on
+  # :4011 arrives with its own public address and cannot claim another. If the network is ever
+  # recreated with another range, this simply stops matching and nothing is trusted.
+  TRUST_PROXY: 192.168.112.0/20
   EXPO_ACCESS_TOKEN: ${EXPO_ACCESS_TOKEN:-}
 
 services:

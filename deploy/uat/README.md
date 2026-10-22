@@ -106,7 +106,18 @@ PUT the photo to the presigned URL → create post → worker published it (blur
 variants) → feed → share landing page. The `.webp` variant is readable without auth (200) and the
 original is **not** (403), which is the intended policy.
 
-## Redeploying (done three times: 2026-10-15, 2026-10-16, 2026-10-19)
+## Redeploying (done four times: 2026-10-15, 2026-10-16, 2026-10-19, 2026-10-22)
+
+The 2026-10-22 run shipped the security review (Plan 5.4, [doc 09](../../docs/09-security-review.md)):
+log scrubbing, Prisma 7.10.1 and `TRUST_PROXY`. API image only — no migrations, portal unchanged.
+Before setting `TRUST_PROXY`, the host was checked: `iptables -t nat -L DOCKER -n` shows a `DNAT`
+rule for `:4011`, so clients reach the API with their own address. It is set to this stack's Docker
+network only (`192.168.112.0/20`, from `docker network inspect jamii-air-uat_default`), which is
+where the portal's nginx lives. Checked from outside: a failed log-in sent directly and one sent
+through the portal used **one** rate-limit counter (`X-RateLimit-Remaining` 9 → 8), so the portal no
+longer makes all admins share nginx's limit; and a direct request claiming another address in
+`X-Forwarded-For` still counted against the real one (→ 7). If the network is ever recreated, re-read
+its subnet and update `TRUST_PROXY` — a stale value fails safe (nothing trusted).
 
 The 2026-10-19 run shipped the R1 scope change: the image now carries ffmpeg, and 7 migrations ran
 over the tunnel. `/` dropped to 2.2 GB free while both images existed and returned to 3.1 GB once the
@@ -137,14 +148,6 @@ It answers from the image that is actually running, so it catches a build that d
 
 ## Still open
 
-- **Next image deploy carries the security review (Plan 5.4, [doc 09](../../docs/09-security-review.md)):**
-  log scrubbing, Prisma 7.10.1 and the `TRUST_PROXY` setting. Until `TRUST_PROXY` is set, every
-  admin request reaches the API from the portal's nginx, so five wrong portal passwords from anyone
-  lock every admin out for 15 minutes. At that deploy, first check that Docker keeps the client's
-  address for `:4011` — `iptables -t nat -L DOCKER -n` on the host must show a `DNAT` rule for it —
-  and only then add `TRUST_PROXY: uniquelocal` to `x-app-env` (it trusts the portal's nginx on the
-  Docker network and no one else). Without that DNAT rule, leave it unset: any client could then
-  claim any address.
 - **No IP allowlist** on the portal or `/api/v1/admin/*` (spec'd in task 4.7); it waits for the
   office IPs in Plan 5.0. Mandatory 2FA is the only gate meanwhile.
 - **Self-signed TLS** on the portal, and the API and media are **plain HTTP** — fine for the

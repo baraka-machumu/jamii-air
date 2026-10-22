@@ -9,7 +9,7 @@
     "@react-native-community/datetimepicker": "9.1.0",
     "@shopify/flash-list": "2.0.2",
     "@tanstack/react-query": "^5.104.1",
-    "expo": "~57.0.30",
+    "expo": "~57.0.31",
     "expo-build-properties": "~57.0.22",
     "expo-clipboard": "~57.0.2",
     "expo-constants": "~57.0.21",
@@ -22,7 +22,7 @@
     "expo-linking": "~57.0.13",
     "expo-localization": "~57.0.2",
     "expo-notifications": "~57.0.23",
-    "expo-router": "~57.0.28",
+    "expo-router": "~57.0.29",
     "expo-secure-store": "~57.0.4",
     "expo-status-bar": "~57.0.1",
     "expo-updates": "~57.0.26",
@@ -66,13 +66,5 @@
     "update:production": "node scripts/update.mjs production",
     "e2e": "maestro test maestro/flows"
   },
-  "private": true,
-  "expo": {
-    "install": {
-      "exclude": [
-        "expo",
-        "expo-router"
-      ]
-    }
-  }
+  "private": true
 }

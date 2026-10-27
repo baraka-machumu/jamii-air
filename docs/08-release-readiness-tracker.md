@@ -10,6 +10,9 @@
 
 ---
 
+> **On hold since 2026-10-27** (D-13): the owner is building more features on UAT first. Nothing
+> here is being worked until they say go to production.
+
 ## Why this document exists
 
 The code is effectively finished: Phases 1–4 are built, every check is green on GitHub, and the

@@ -1,0 +1,90 @@
+# Backlog — Increment A (private accounts, sign in with Google)
+
+Tracker for the increment the owner added on 2026-10-27 ([BRS §6.2](../01-business-requirements-specification.md),
+[Plan §1.0a and §4 "Increment A"](../06-implementation-plan.md)). Production is on hold the same
+day (D-13), so this is built and tested on UAT. It cuts across every layer and is built in the
+plan's layer order — docs → database → backend → mobile → admin — one epic at a time, private
+accounts first because they need nothing from outside.
+
+| Epic | Feature | Requirements |
+|---|---|---|
+| P | Private accounts, follow requests, remove a follower | BR-PR-04, BR-PR-06…09, BR-NT-01 |
+| G | Sign in with Google (no invite code, D-13) | BR-AC-09…11 |
+
+## Status
+
+Columns as in Plan §2.3. **Review** = built, every check green locally, committed to `main`.
+**Done** also needs a green CI run on GitHub, the commits reviewed, and the device checks below.
+
+| Task | Epic | Column | Commit | Notes |
+|---|---|---|---|---|
+| A.0 Scope and docs | P, G | Review | this commit | BRS §6.2, BR-AC-09…11, BR-PR-04 and 06…09, BR-NT-01; D-13 in 00 §3a; App Flow §4.6, §8.2a, §8.5, §9, §10.4, §11; Plan §1.0a and §4. TRD and Schema change with A.1/A.6 |
+| A.1 Database | P | To do | — | See "Design — private accounts" |
+| A.2 Backend | P | To do | — | |
+| A.3 Mobile | P | To do | — | JavaScript only: ships over EAS Update |
+| A.4 Admin portal | P | To do | — | |
+| A.5 Google Cloud OAuth client | G | To do (owner) | — | Free. See "What the owner sets up for Google" |
+| A.6 Database and backend | G | To do | — | |
+| A.7 Mobile | G | To do | — | Native module: **new `preview` APK** |
+| A.8 UAT deploy and device checks | P, G | To do | — | |
+
+## Design — private accounts
+
+- **One rule, in one place.** `fn__can_see_content(viewer, author)`: the viewer is the author, or
+  the author is public, or the viewer follows the author. `fn__assert_post_visible` applies it,
+  which covers post detail, likes, comments, replies, reports, caption edit and delete in one go.
+  The profile grid, followers and following lists return nothing to someone who cannot see; a
+  hashtag page leaves those posts out. The home feed already shows only the people one follows.
+- **A follow request is its own table**, `follow_requests (requester_id, target_id, created_at)`,
+  not a status column on `follows`: every existing read of `follows` stays correct as it is.
+- **Following a private account** inserts a request and a `FOLLOW_REQUEST` notification and
+  answers `REQUESTED`. Accepting moves the row into `follows`, deletes the request's
+  notification, notifies the requester (`FOLLOW_ACCEPTED`) and records the owner's ordinary
+  `FOLLOW` ("started following you"). Declining or cancelling deletes the request and its
+  notification; nobody is told.
+- **Switching to public accepts every pending request**, silently. Switching to private keeps
+  current followers.
+- **Blocking** removes requests both ways, as it removes follows.
+- **Remove follower** deletes the follow and adjusts both counts; no notification.
+- **Not changed:** search still finds private accounts (the header is public); the share-link
+  landing page shows no content, only opens the app, so it needs no rule; admins see everything.
+- **Accepted risk:** media objects are served by unguessable key without a signature, as today.
+  Someone who already has a photo's URL keeps it after the account goes private.
+
+## What the owner sets up for Google (A.5)
+
+All free, in [Google Cloud console](https://console.cloud.google.com/):
+
+1. A project (for example *Jamii Air*), then **OAuth consent screen**: External, app name, support
+   email; scopes `openid`, `email`, `profile` only (no Google review needed for these).
+2. **Credentials → OAuth client ID → Web application.** Its client ID is the audience the API
+   checks and the app's `webClientId`.
+3. **Credentials → OAuth client ID → Android**, package name of the `preview` build, and the
+   SHA-1 of the EAS signing key (`eas credentials` in `mobile/` → Android → preview shows it).
+
+Send the Web client ID; it is not a secret. No client secret is needed by either the app or the API.
+
+## Device checks (A.8)
+
+To be ticked on the reference Android against UAT.
+
+- [ ] A.8.a Turn Private account on; from a second account the profile shows the header and the private notice, no grid, counts not tappable
+- [ ] A.8.b Follow → Requested; the owner gets a push and an Activity row; Confirm → the requester sees the grid and gets "accepted"
+- [ ] A.8.c Cancel a request; Delete a request; neither tells the other side
+- [ ] A.8.d A private account's post on a hashtag page is visible to a follower and missing for a non-follower; an old share link to it says "This post isn't available"
+- [ ] A.8.e Turn Private off with a request pending: the requester becomes a follower
+- [ ] A.8.f Remove a follower: they lose the grid of a private account and are not told
+- [ ] A.8.g Continue with Google, new person: username, date of birth, Terms, no invite code; under 18 refused
+- [ ] A.8.h Continue with Google again after logging out: straight in
+- [ ] A.8.i Google email already used by a password account: told to log in and connect; connect from Settings, then Google signs in
+- [ ] A.8.j Google-only account: delete account confirms with Google
+- [ ] A.8.k Swahili: every new string reads correctly
+
+## Decisions taken while building
+
+- **Google sign-up needs no invite code** (owner, 2026-10-27, D-13).
+- **A private account's non-followers see the header, not the posts** (owner, 2026-10-27), as Instagram does.
+- **Private accounts first, Google second** (owner, 2026-10-27): P needs nothing from outside.
+- **No automatic linking by email** (2026-10-27): sign-up has never verified email addresses, so an
+  account could carry someone else's Gmail address; auto-linking would hand it to whoever owns
+  that address. Linking happens only from inside a signed-in account.

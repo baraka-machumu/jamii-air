@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Document** | 03 — App Flow |
-| **Version** | 1.3 (R1 scope change 2026-10-16, BRS §6.1: carousels and video in §5–§6, replies §7.2, hashtags §7.5, a post on screen the moment it is shared §5) · 1.2 (Phase 2 API review: change password, removed-post badge, admin onboarding by temporary password) |
+| **Version** | 1.4 (2026-10-27, BRS §6.2: Sign in with Google §4.6, private accounts §8.2a, follow requests §8.5, Activity §9, Settings §11, delete account for a Google-only account §10.4) · 1.3 (R1 scope change 2026-10-16, BRS §6.1: carousels and video in §5–§6, replies §7.2, hashtags §7.5, a post on screen the moment it is shared §5) · 1.2 (Phase 2 API review: change password, removed-post badge, admin onboarding by temporary password) |
 | **Status** | **Approved** — 2026-10-11 |
 | **Date** | 2026-10-09 |
 | **Scope** | Release 1 mobile app (Android & iOS) and admin portal (web, §15). R2 Reels flow sketched in §14. |
@@ -127,6 +127,19 @@ Enter email → `POST /auth/password/forgot` → always shows "If an account exi
 
 Settings → **Log out** → confirm → `DELETE /me/devices/:installationId` (best effort) → `POST /auth/logout` → clear secure storage, clear TanStack Query cache → **Welcome**. Works offline: local data is always cleared; if the server call fails, the refresh token simply expires unused (it is no longer on the device).
 
+### 4.6 Continue with Google (BR-AC-09…11)
+
+Welcome and Log in both show **Continue with Google**. Tapping it opens Google's own account
+chooser (the native one, not a browser page) → the app sends the ID token to `POST /auth/google`.
+
+| Result | App |
+|---|---|
+| A Jamii Air account is connected to this Google account | Signed in → **Home** (suspended, pending deletion: as §4.3) |
+| No account, and the Google email is not in use | **Finish signing up**: username (suggested from the Google name, editable), date of birth, Terms checkbox — **no invite code** (D-13) → `POST /auth/google` again with those → **Onboarding 1** (photo pre-filled from Google is *not* used; the user picks one, as §4.2) |
+| No connected account, but the email belongs to an account | "An account with {email} already exists. Log in with your password, then connect Google in Settings → Account." → **Log in** with the email filled in. Google never takes over an account silently (BR-AC-10) |
+| The user closes the chooser | Nothing happens; no error |
+| No Google Play services, no network | "Google sign-in isn't available right now. Use your email and password." |
+
 ## 5. Home feed (BR-FD-01, 02, 07)
 
 **Entry:** Home tab, app launch, tapping Home tab again scrolls to top (double tap: scroll to top + refresh).
@@ -244,6 +257,23 @@ Followers/Following counts → list screens with follow buttons.
 Empty grid → "No posts yet".
 Blocked/not found → "This account isn't available" (same message for both).
 
+### 8.2a A private account (BR-PR-06…09)
+
+Seen by someone who is not an approved follower: the header as above (avatar, names, bio, counts),
+then a lock and "This account is private · Follow to see their photos and videos" in place of the
+grid. The follower and following counts are not tappable. The button reads:
+
+| State | Button | Tap |
+|---|---|---|
+| Not following | **Follow** | `PUT /users/:id/follow` → `REQUESTED` → button becomes **Requested** |
+| Request pending | **Requested** | Sheet "Cancel follow request?" → `DELETE /users/:id/follow` → **Follow** |
+| Approved follower | **Following** | as §8.2; unfollowing a private account means asking again to come back |
+
+The same applies wherever a Follow button is shown (search results, follower lists, onboarding
+Find people, Activity Follow back). A post from a private account that the viewer cannot see —
+an old share link, a stale notification — opens as "This post isn't available", the same
+message as a deleted one. Its posts never appear on hashtag pages for non-followers.
+
 ### 8.3 My profile
 
 Same layout; button **Edit profile**; ⚙ → Settings. Own `PROCESSING` posts show with a small "processing" overlay.
@@ -252,10 +282,22 @@ Same layout; button **Edit profile**; ⚙ → Settings. Own `PROCESSING` posts s
 
 Fields: photo (change/remove), display name (≤ 50), username (3–30, availability checked on save), bio (≤ 160). **Save** → `PATCH /me` → back. Unsaved changes + back → "Discard changes?".
 
+### 8.5 Follow requests (BR-PR-07)
+
+My profile of a private account, and the top of Activity, show **Follow requests · {n}** when
+there are any → list of requesters, newest first: avatar, username, display name, **Confirm**
+and **Delete**. Confirm → `POST /me/follow-requests/:userId/accept` → the row becomes "now
+follows you" with **Follow back**. Delete → `DELETE /me/follow-requests/:userId` → row goes; the
+requester is not told. Empty → "No follow requests".
+
+My followers list (own profile only) has ⋯ → **Remove follower** → confirm "Remove @x? They
+won't be told." → `DELETE /me/followers/:userId` (BR-PR-09).
+
 ## 9. Activity / notifications (BR-NT-01 – 04)
 
 - Tab badge = unread count (`GET /notifications/unread-count` on app foreground, on push receipt, and after visiting Activity).
-- Activity list grouped **New** / **Earlier**: "amina liked your post" (+ thumb), "baraka commented: 'nice!'" (+ thumb), "juma replied to your comment" (+ thumb), "neema started following you" (+ Follow back button).
+- Activity list grouped **New** / **Earlier**: "amina liked your post" (+ thumb), "baraka commented: 'nice!'" (+ thumb), "juma replied to your comment" (+ thumb), "neema started following you" (+ Follow back button), "neema asked to follow you" (tap → Follow requests), "neema accepted your follow request" (tap → their profile).
+- A private account with pending requests sees a **Follow requests · {n}** row above the list (§8.5). Accepting or declining a request removes its "asked to follow you" row.
 - Opening the tab marks visible items read (`POST /notifications/read { all: true }`) after 1 s.
 - Tap row → Post detail (like/comment) or Profile (follow). Target deleted/hidden → toast "This post is no longer available".
 
@@ -283,11 +325,11 @@ Reports are handled by admins in the **separate admin portal** (§15). The mobil
 
 ### 10.4 Delete account (BR-AC-08)
 
-Settings → **Delete account** → explanation (what is deleted, 30-day grace, how to cancel) → re-enter password → **Delete my account** → `DELETE /me` → logged out → Welcome with "Your account is scheduled for deletion". Logging in within 30 days offers to cancel (§4.3).
+Settings → **Delete account** → explanation (what is deleted, 30-day grace, how to cancel) → re-enter password (an account with no password confirms with Google instead, BR-AC-11) → **Delete my account** → `DELETE /me` → logged out → Welcome with "Your account is scheduled for deletion". Logging in within 30 days offers to cancel (§4.3).
 
 ## 11. Settings
 
-Account: Edit profile · Change password *(S)* · Notifications (system permission status + link) · Language (System / English / Kiswahili) · Theme (System / Light / Dark) · Blocked accounts · Terms · Privacy Policy · Contact support · App version · **Log out** · **Delete account**.
+Account: Edit profile · **Private account** (switch; turning it on: "Only people you approve will see your photos and videos. Your current followers won't be affected." Turning it off: "Anyone will be able to see your posts, and your {n} pending requests will be accepted.") · **Follow requests** (when private) · Change password *(S)* (Set a password, for a Google-only account, goes through Forgot password) · **Google** (Connected as {email} / Connect, BR-AC-10) · Notifications (system permission status + link) · Language (System / English / Kiswahili) · Theme (System / Light / Dark) · Blocked accounts · Terms · Privacy Policy · Contact support · App version · **Log out** · **Delete account**.
 
 ## 12. Deep links
 

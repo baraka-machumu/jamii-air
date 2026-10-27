@@ -3,9 +3,9 @@
 | | |
 |---|---|
 | **Document** | 01 — Business Requirements Specification |
-| **Version** | 1.2 (R1 scope widened by the owner on 2026-10-16: video posts, comment replies, hashtags, multi-photo carousel — see §6.1) |
+| **Version** | 1.3 (R1 scope widened again by the owner on 2026-10-27: private accounts and Google sign-in — see §6.2) · 1.2 (R1 scope widened by the owner on 2026-10-16: video posts, comment replies, hashtags, multi-photo carousel — see §6.1) |
 | **Date** | 2026-10-09 |
-| **Status** | **Signed off** — 2026-10-10; §6.1 scope change signed off 2026-10-16 |
+| **Status** | **Signed off** — 2026-10-10; §6.1 scope change signed off 2026-10-16; §6.2 requested by the owner 2026-10-27 |
 | **Related** | [00 Index & Review](00-README.md) · [02 TRD](02-technical-requirements-document.md) · [06 Implementation Plan](06-implementation-plan.md) |
 
 ---
@@ -95,15 +95,32 @@ publishing (BR-FD-12).
 that runs the worker. The pilot is ten users, so the pilot-scale cost is accepted; a public launch needs
 the figure re-checked against NFR-07 before R1.1.
 
+### 6.2 Scope change — 2026-10-27
+
+With UAT working well, the owner chose to keep building product on UAT and leave production
+(Plan Phase 5) until they decide to go. Two features came in that day:
+
+| Moved into R1 | Was | Requirements | What it takes |
+|---|---|---|---|
+| Private accounts | R4 / out of scope | BR-PR-04 (revised), BR-PR-06…09, BR-NT-01 (revised) | A per-account switch. A private account's posts, followers and following are seen only by its approved followers; others see the profile header and ask to follow. One new table (follow requests) and the visibility rule in the procedures that read posts and lists. |
+| Sign in with Google | not planned | BR-AC-09…11 | Google's ID token is checked on the server; the account is found by its Google identity. A native Google sign-in module, so a new APK. A Google Cloud OAuth client, which is free. |
+
+**Decision D-13 (2026-10-27, owner): signing up with Google needs no invite code.** That makes Google
+a door around BR-AC-02 during the pilot: anyone with a Google account who is 18 or over can join. It
+was chosen knowingly. The other checks stay: date of birth (18+), the Terms, and a username.
+
+**What this costs.** Nothing to run: Google sign-in is free, and private accounts are rows and
+checks in the database. The one cost is a new `preview` APK for the native Google module.
+
 ## 7. Scope — Release 1 (MVP)
 
 ### 7.1 In scope
 
-Accounts & sessions · profiles · user search · follow/unfollow · post create/delete — **one photo, up to 10 photos as a carousel, or one video (≤ 60 s)** · chronological home feed · profile grid · post detail · like/unlike · comments (create, list, delete) with **one level of replies** · **hashtags in captions, and a chronological list of posts per tag** · share post link · in-app activity + push notifications · block/unblock · report · admin portal — a separate website for moderation (reports, hide content, suspend users), invite codes and audit log · account deletion · English & Swahili UI.
+Accounts & sessions · profiles · user search · follow/unfollow · post create/delete — **one photo, up to 10 photos as a carousel, or one video (≤ 60 s)** · chronological home feed · profile grid · post detail · like/unlike · comments (create, list, delete) with **one level of replies** · **hashtags in captions, and a chronological list of posts per tag** · **private accounts with follow requests** · **sign in with Google** · share post link · in-app activity + push notifications · block/unblock · report · admin portal — a separate website for moderation (reports, hide content, suspend users), invite codes and audit log · account deletion · English & Swahili UI.
 
 ### 7.2 Out of scope (R1)
 
-The **Reels surface** (a dedicated tab, vertical swipe feed, autoplay, view counts, adaptive/HLS streaming) · Stories · live streaming · direct messages · Explore/recommendations · **any AI/ML feature** (ranking, recommendations, ML moderation) · **@mentions** · **trending or ranked hashtags** · **replies to replies** (one level only) · private accounts · ads, payments, shopping · creator analytics · web app for end users · microservices, Kubernetes, Kafka, Elasticsearch, multi-region.
+The **Reels surface** (a dedicated tab, vertical swipe feed, autoplay, view counts, adaptive/HLS streaming) · Stories · live streaming · direct messages · Explore/recommendations · **any AI/ML feature** (ranking, recommendations, ML moderation) · **@mentions** · **trending or ranked hashtags** · **replies to replies** (one level only) · ads, payments, shopping · creator analytics · web app for end users · microservices, Kubernetes, Kafka, Elasticsearch, multi-region.
 
 ## 8. Business requirements
 
@@ -121,6 +138,9 @@ Priority: **M** = Must (release blocked without it) · **S** = Should (strongly 
 | BR-AC-06 | A user must accept the Terms of Service and give their date of birth at sign-up. **Anyone under 18 cannot register**; the check is enforced on the server. Date of birth is never shown publicly. | M |
 | BR-AC-07 | A user can reset a forgotten password via email. | S |
 | BR-AC-08 | A user can delete their account from inside the app (App Store requirement). Content disappears immediately; data is permanently erased after a 30-day grace period. | M |
+| BR-AC-09 | A person can sign in with their Google account. The first time, they choose a username, give their date of birth (18+, checked on the server) and accept the Terms; **no invite code is needed** (D-13, §6.2). | M |
+| BR-AC-10 | Google never silently takes over an existing account: when the Google email already belongs to a Jamii Air account, the person signs in with that account's password and then connects Google from Settings. | M |
+| BR-AC-11 | An account made with Google has no password until its owner sets one (by Forgot password). Steps that ask for a password — delete account, change password — ask such an account to confirm with Google instead. | M |
 
 ### 8.2 Profiles & social graph
 
@@ -129,8 +149,12 @@ Priority: **M** = Must (release blocked without it) · **S** = Should (strongly 
 | BR-PR-01 | A profile shows avatar, display name, username, bio, post count, follower count, following count and a grid of posts. | M |
 | BR-PR-02 | A user can edit their avatar, display name, bio and username. | M |
 | BR-PR-03 | A user can search for other users by username or display name. | M |
-| BR-PR-04 | A user can follow and unfollow another user. All accounts are public in R1. | M |
+| BR-PR-04 | A user can follow and unfollow another user. Following a **private** account sends a follow request instead (BR-PR-07). | M |
 | BR-PR-05 | A user can view follower and following lists of a profile. | S |
+| BR-PR-06 | A user can make their account **private** or **public** from Settings. Accounts are public until changed. | M |
+| BR-PR-07 | Following a private account sends a **follow request**. The account's owner sees their requests and can accept or decline each; the requester can cancel. Switching the account to public accepts every pending request. | M |
+| BR-PR-08 | Anyone who is not an approved follower of a private account sees only its header — avatar, display name, username, bio and counts — with "This account is private". Its posts, its followers and following lists, and its posts on hashtag pages and shared links stay hidden from them. Followers who were approved before the switch stay followers. | M |
+| BR-PR-09 | A user can remove a follower, who is not told. | M |
 
 ### 8.3 Content
 
@@ -168,7 +192,7 @@ Priority: **M** = Must (release blocked without it) · **S** = Should (strongly 
 
 | ID | Requirement | Priority |
 |---|---|---|
-| BR-NT-01 | A user is notified when someone follows them, likes their post, comments on their post, or **replies to their comment**. | M |
+| BR-NT-01 | A user is notified when someone follows them, likes their post, comments on their post, or **replies to their comment** — and, for private accounts, when someone **asks to follow** them and when their own request is **accepted**. | M |
 | BR-NT-02 | Notifications appear in an in-app Activity screen with unread indicator. | M |
 | BR-NT-03 | Notifications are also delivered as push notifications when the user has granted permission. | M |
 | BR-NT-04 | Users are never notified about their own actions, and repeated like/unlike does not produce repeated notifications. | M |

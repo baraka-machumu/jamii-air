@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Document** | 06 — Implementation Plan |
-| **Version** | 1.22 (R1 scope change: a video froze after the screen turned off — S.8) · 1.21 (Plan 5.4 security review done: [09](09-security-review.md)) · 1.20 (R1 scope change: two defects from the first device run — videos would not play, carousel swipes were slow — S.7) · 1.19 (R1 scope change 2026-10-16: video posts, carousels, replies, hashtags and the shared-post defect, built through every layer — §4 "R1 scope change") · 1.18 (Phase 3: 3.1–3.8 built and checked on the reference Android; 3.9 engagement, 3.10 notifications and 3.11 safety built) |
+| **Version** | 1.23 (2026-10-27: production on hold; private accounts and Google sign-in added as increment A — §1.0a, §4) · 1.22 (R1 scope change: a video froze after the screen turned off — S.8) · 1.21 (Plan 5.4 security review done: [09](09-security-review.md)) · 1.20 (R1 scope change: two defects from the first device run — videos would not play, carousel swipes were slow — S.7) · 1.19 (R1 scope change 2026-10-16: video posts, carousels, replies, hashtags and the shared-post defect, built through every layer — §4 "R1 scope change") · 1.18 (Phase 3: 3.1–3.8 built and checked on the reference Android; 3.9 engagement, 3.10 notifications and 3.11 safety built) |
 | **Status** | **Approved** — 2026-10-11 |
 | **Date** | 2026-10-10 |
 | **Team** | 1 engineer building with Claude Code; Product (stakeholder) as product owner |
@@ -51,7 +51,8 @@ Visual design (Design Brief, doc 04) is produced by the engineer with Claude Cod
 | 3 Mobile | ✅ **Done.** Built end to end and running against UAT. Designs approved; 3.1–3.12 all built. 3.1–3.11 were checked on the reference Android on the dev build (2026-10-14). On 2026-10-16 the owner installed the **`preview` APK against the UAT API** and completed the core loop on their own Android — registration with an invite code, posting, likes and notifications — which is the `preview` demo Phase 3's exit asked for. Two faults came out of that session and were fixed and shipped over EAS Update: the keyboard covering form fields, and the near-invisible Profile tab. Mobile CI is green. **✅ Done (2026-10-16)**: the commits are reviewed. Still open on the device, none of it part of the phase gate: 3.12.a (Maestro has never been run, needs `adb`), 3.12.c (accessibility at maximum font with TalkBack), 3.12.d (the Update required screen), and 3.9.f (https share links, which waits for the domain) | [Phase 3 backlog](backlog/phase-3-mobile.md#status) |
 | 4 Admin portal | ✅ **Done, bar 4.7 hosting.** 4.1–4.6 and 4.8 built: Vite + React + TS, Tailwind 4 + shadcn/ui, sign-in with mandatory 2FA, dashboard, reports queue and detail, users, invites, audit log, admins, and a Playwright run of the exit path. 4.7 (hosting) is **part done** — the portal is served on UAT with self-signed TLS; the IP allowlist and real certificates wait for Plan 5.0. Given a design pass on 2026-10-16: a grouped icon sidebar, a top bar with an account menu, one page-header shape, dark mode, and a recharts headline chart beside the twelve tiles. Sessions now idle out after 60 minutes, not 30. **Admin and Admin E2E are both green on GitHub**, so the Playwright exit path runs in CI (4.8.j). **✅ Done (2026-10-16)** bar 4.7 hosting: the commits are reviewed. Still worth doing: one session looking at the portal by hand (4.2.h, 4.3.f, 4.6.l) | [Phase 4 backlog](backlog/phase-4-admin.md#status) |
 | **R1 scope change** | **Review** (2026-10-18): video posts, multi-photo carousels, comment replies and hashtags moved into R1 by the owner on 2026-10-16 (BRS §6.1), plus the fix for a shared post not appearing. Built through every layer and committed; every suite green locally. The `preview` build with `expo-video` (2026-10-19) and the UAT deploy with ffmpeg are done; the first device run found three defects (videos would not play, slow carousel swipes, several videos at once), fixed and shipped over EAS Update on 2026-10-20 (S.7) and confirmed on the phone. A video frozen after the screen turned off (found on UAT 2026-10-27) is fixed as S.8. **Open:** the device checks S.5 | [R1 scope change backlog](backlog/r1-scope-change.md#status) |
-| 5–6 Release, pilot | Not started | §4 Phases 5–6 |
+| **Increment A** — private accounts, Google sign-in | **In progress** (2026-10-27): docs written (A.0); private accounts being built layer by layer | [Increment A backlog](backlog/r1-accounts-privacy.md#status) |
+| 5–6 Release, pilot | **On hold** (owner, 2026-10-27, D-13) — 5.4 done | §4 Phases 5–6 |
 
 - **Database:** 11 migrations and 94 functions. The drift check passes, and the 123 procedure tests pass, including the authorization matrix and the SR-01/03/04 security checks. Every measured P95 is under 50 ms at 10k users / 1M posts (task 1.13).
 - **Backend:** 56 API paths, all in the OpenAPI spec. 48 unit and 77 e2e tests pass, including a spec-driven authorization sweep and the upload-security tests. Every endpoint has an e2e call. The API was reviewed against every App Flow screen ([07-api-review.md](07-api-review.md)).
@@ -79,6 +80,18 @@ change"), tracked in [backlog/r1-scope-change.md](backlog/r1-scope-change.md).
 
 This lands **before** the pilot decision below and does not change it — but it adds two steps in
 front of any pilot: a new `preview` build, and a UAT deploy of the image that now carries ffmpeg.
+
+### 1.0a Production on hold; private accounts and Google sign-in (2026-10-27)
+
+The owner decided to **keep building on UAT and leave production aside** until they say otherwise
+(D-13). That settles the fork in §1.1 for now: Phase 5's paid steps (5.0 servers, domain, store
+accounts; 5.1–5.3) wait, and new work is product.
+
+Two features came in the same day (BRS §6.2): **private accounts** with follow requests, and
+**sign in with Google**, which needs no invite code (D-13). They are built as increment **A**
+in the usual layer order (§4 "Increment A"), private accounts first because they need nothing
+from outside; Google sign-in needs a free Google Cloud OAuth client, which the owner creates.
+Tracker: [backlog/r1-accounts-privacy.md](backlog/r1-accounts-privacy.md).
 
 ### 1.1 Where the project stands (2026-10-16)
 
@@ -322,6 +335,26 @@ S2 carousel, S3 replies, S4 hashtags) and S5 for the defect. Tracker:
 
 **Exit:** S.5 ticked on the reference Android against UAT; CI green on GitHub; the commits reviewed.
 
+### Increment A — private accounts and Google sign-in (added 2026-10-27)
+
+Built in the same layer order. Epic **P** is private accounts (BR-PR-04…09, BR-NT-01), epic **G**
+is Google sign-in (BR-AC-09…11). P comes first. Tracker:
+[`docs/backlog/r1-accounts-privacy.md`](backlog/r1-accounts-privacy.md).
+
+| # | Task |
+|---|---|
+| A.0 | ✅ Docs: BRS §6.2 and the new requirements, D-13, App Flow, this plan, the tracker. TRD and Schema change with the layer that changes them |
+| A.1 | P · Database: `users.is_private`, `follow_requests`, the visibility rule in every procedure that reads posts or lists, follow requests and their notifications |
+| A.2 | P · Backend: follow returns `REQUESTED` for a private account; request list, accept, decline, cancel; remove follower; `isPrivate` on profile and `PATCH /me`; push text |
+| A.3 | P · Mobile: Settings → Private account; the private profile; Requested button; Follow requests screen; remove follower; Activity rows |
+| A.4 | P · Admin portal: Private shown on the user detail |
+| A.5 | G · Google Cloud OAuth client (owner, free): a Web client, and an Android client with the package and the EAS signing SHA-1 |
+| A.6 | G · Database and backend: `user_identities`, nullable password, `POST /auth/google`, connect Google from Settings, Google re-auth for delete account |
+| A.7 | G · Mobile: native Google sign-in on Welcome, the first-time form (username, date of birth, Terms), connect from Settings; **a new `preview` APK** |
+| A.8 | UAT deploy, then device checks on the new APK |
+
+**Exit:** the device checks in the tracker ticked on the reference Android against UAT; CI green; the commits reviewed.
+
 ### Phase 5 — Release readiness
 
 | # | Task |
@@ -408,6 +441,8 @@ If priorities change, these stories are dropped first, in this order: 0) from th
 **Never cut:** 18+ enforcement, auth security, stored-procedure authorization tests, EXIF stripping, block/report, admin portal core (login + 2FA, reports, hide, suspend, audit log), account deletion, backups + restore test.
 
 ## 9. Immediate next steps
+
+> **Since 2026-10-27:** production is on hold (D-13) and increment A is the current work — see §1.0a.
 
 1. ✅ Phase 0 complete: BRS signed off, documents approved, decisions D-7…D-12 recorded, repo on GitHub.
 2. ✅ **Phase 1 · Database** built and tested locally (tasks 1.1–1.14).

@@ -290,8 +290,8 @@ and **Delete**. Confirm → `POST /me/follow-requests/:userId/accept` → the ro
 follows you" with **Follow back**. Delete → `DELETE /me/follow-requests/:userId` → row goes; the
 requester is not told. Empty → "No follow requests".
 
-My followers list (own profile only) has ⋯ → **Remove follower** → confirm "Remove @x? They
-won't be told." → `DELETE /me/followers/:userId` (BR-PR-09).
+My own followers list has **Remove** on each row in place of the Follow button → confirm
+"Remove @x? They won't be told that you removed them." → `DELETE /me/followers/:userId` (BR-PR-09).
 
 ## 9. Activity / notifications (BR-NT-01 – 04)
 

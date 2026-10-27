@@ -14,6 +14,7 @@ import RootLayout from '@/app/_layout';
 import Caption from '@/app/compose/caption';
 import Crop from '@/app/compose/crop';
 import EditProfile from '@/app/edit-profile';
+import FollowRequests from '@/app/follow-requests';
 import Onboarding from '@/app/onboarding/index';
 import Comments from '@/app/p/[id]/comments';
 import PostDetail from '@/app/p/[id]/index';
@@ -41,6 +42,7 @@ export const routes = {
   '(tabs)/activity': Activity,
   '(tabs)/profile': Profile,
   'edit-profile': EditProfile,
+  'follow-requests': FollowRequests,
   'settings/index': Settings,
   'settings/password': ChangePassword,
   'settings/blocked': BlockedAccounts,

@@ -3,6 +3,8 @@
 // Below, the posts grid. ⋯ (a bottom sheet) → Report, Block or Unblock, Copy profile link, Share
 // profile (§10). A blocked account shows "You blocked this account." with Unblock and no posts.
 // The route is /u/:username, the same path as the share link (App Flow §12).
+// A private account the user does not follow (§8.2a) shows its header, a lock and "This account is
+// private" instead of the grid, its counts do not open the lists, and Follow becomes Requested.
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -57,6 +59,7 @@ export default function UserProfile() {
 
   const user = profile.data;
   const blocked = user.isBlockedByMe;
+  const canSee = !blocked && user.canSeeContent;
   const doUnblock = async () => {
     setUnblocking(true);
     await unblock(user);
@@ -88,13 +91,13 @@ export default function UserProfile() {
           <Icon name="more" color={colors.text} />
         </Pressable>
       } /></View>
-      <ProfilePosts username={user.username} postCount={blocked ? 0 : user.postCount}
+      <ProfilePosts username={user.username} postCount={canSee ? user.postCount : 0}
         refreshing={profile.isRefetching} onRefresh={() => void profile.refetch()}
         header={
           <>
             <ProfileHeader user={user} followerCount={adjustedFollowerCount(user.followerCount, user.isFollowing, chosen)}
-              onFollowers={blocked ? undefined : () => list('followers')}
-              onFollowing={blocked ? undefined : () => list('following')} />
+              onFollowers={canSee ? () => list('followers') : undefined}
+              onFollowing={canSee ? () => list('following') : undefined} />
             <View style={{ marginTop: space.md }}>
               {user.isMe ? (
                 <Button kind="secondary" label={t('profile.edit')} onPress={() => router.push('/edit-profile')} style={styles.action} />
@@ -104,7 +107,7 @@ export default function UserProfile() {
                   <Button kind="secondary" label={t('safety.unblock')} onPress={() => void doUnblock()} loading={unblocking} style={styles.action} />
                 </View>
               ) : (
-                <FollowButton user={user} following={user.isFollowing} followsMe={user.followsMe} />
+                <FollowButton user={user} following={user.isFollowing} requested={user.followRequested} followsMe={user.followsMe} />
               )}
               {!user.isMe && user.followsMe && !blocked && (
                 <Text variant="caption" muted style={[styles.textCenter, { marginTop: space.xs }]}>{t('people.followsYou')}</Text>
@@ -112,8 +115,22 @@ export default function UserProfile() {
             </View>
           </>
         }
-        empty={<Text variant="bodyStrong">{t('profile.noPostsTitle')}</Text>} />
+        empty={!blocked && !canSee ? <PrivateNotice /> : <Text variant="bodyStrong">{t('profile.noPostsTitle')}</Text>} />
     </Screen>
+  );
+}
+
+/** In place of a private account's grid (BR-PR-08). */
+function PrivateNotice() {
+  const { t } = useTranslation();
+  const { colors, space } = useTheme();
+  return (
+    <View style={{ alignItems: 'center', gap: space.xs, paddingHorizontal: space.lg }} accessible
+      accessibilityLabel={`${t('privacy.privateTitle')}. ${t('privacy.privateBody')}`}>
+      <Icon name="lock" size={32} color={colors.textMuted} />
+      <Text variant="bodyStrong">{t('privacy.privateTitle')}</Text>
+      <Text muted style={styles.textCenter}>{t('privacy.privateBody')}</Text>
+    </View>
   );
 }
 

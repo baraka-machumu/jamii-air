@@ -58,7 +58,8 @@ function api(overrides: (req: StubRequest) => Response | undefined = () => undef
     if (req.path === '/api/v1/posts/p1') return json(200, post(1));
     if (req.path === '/api/v1/users/juma') {
       return json(200, { ...author('juma'), bio: null, avatarLargeUrl: null, postCount: 0, followerCount: 1, followingCount: 1, isMe: false,
-        isFollowing: true, followsMe: false, isBlockedByMe: false, shareUrl: 'https://jamii.test/u/juma', createdAt: '' });
+        isFollowing: true, followsMe: false, isBlockedByMe: false, isPrivate: false, canSeeContent: true, followRequested: false, followRequestCount: 0,
+        shareUrl: 'https://jamii.test/u/juma', createdAt: '' });
     }
     return json(200, emptyPage);
   });

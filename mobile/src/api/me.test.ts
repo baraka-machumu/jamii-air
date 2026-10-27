@@ -3,6 +3,7 @@ import { changesOf, type Me, profileFormOf } from './me';
 const me: Me = {
   id: 'u1', username: 'amina', email: 'a@b.co', displayName: 'Amina', bio: null, avatarMediaId: null,
   avatarUrl: null, avatarLargeUrl: null, locale: 'en', postCount: 0, followerCount: 0, followingCount: 0,
+  isPrivate: false, followRequestCount: 0,
 };
 
 describe('Edit profile changes (PATCH /me sends only what changed)', () => {

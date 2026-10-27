@@ -19,9 +19,14 @@ describe('recent searches (§8.1)', () => {
 describe('adjustedFollowerCount', () => {
   it('moves the count only while the choice differs from what the server said', () => {
     expect(adjustedFollowerCount(41, false, undefined)).toBe(41);
-    expect(adjustedFollowerCount(41, false, true)).toBe(42);
-    expect(adjustedFollowerCount(42, true, false)).toBe(41);
-    expect(adjustedFollowerCount(42, true, true)).toBe(42);
-    expect(adjustedFollowerCount(0, true, false)).toBe(0);
+    expect(adjustedFollowerCount(41, false, 'following')).toBe(42);
+    expect(adjustedFollowerCount(42, true, 'none')).toBe(41);
+    expect(adjustedFollowerCount(42, true, 'following')).toBe(42);
+    expect(adjustedFollowerCount(0, true, 'none')).toBe(0);
+  });
+
+  it('does not count a request: a private account has not accepted it yet', () => {
+    expect(adjustedFollowerCount(41, false, 'requested')).toBe(41);
+    expect(adjustedFollowerCount(42, true, 'requested')).toBe(41);
   });
 });

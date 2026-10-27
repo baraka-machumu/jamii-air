@@ -3,7 +3,7 @@
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
 export type IconName = 'home' | 'search' | 'create' | 'heart' | 'comment' | 'share' | 'more' | 'back'
-  | 'close' | 'camera' | 'check' | 'settings' | 'play' | 'video' | 'sound' | 'muted' | 'carousel' | 'reply';
+  | 'close' | 'camera' | 'check' | 'settings' | 'play' | 'video' | 'sound' | 'muted' | 'carousel' | 'reply' | 'lock';
 
 export function Icon({ name, size = 24, color, filled = false, strokeWidth = 2 }: {
   name: IconName;
@@ -32,6 +32,7 @@ export function Icon({ name, size = 24, color, filled = false, strokeWidth = 2 }
       {name === 'sound' && (<><Path d="M4 9h3l4-3.5v13L7 15H4z" {...common} /><Path d="M16 8.5a5 5 0 0 1 0 7" {...common} /></>)}
       {name === 'muted' && (<><Path d="M4 9h3l4-3.5v13L7 15H4z" {...common} /><Path d="m16 9.5 5 5m0-5-5 5" {...common} /></>)}
       {name === 'carousel' && (<><Rect x={7} y={3} width={14} height={14} rx={3} {...common} /><Path d="M17 21H6a3 3 0 0 1-3-3V7" {...common} /></>)}
+      {name === 'lock' && (<><Rect x={4} y={10} width={16} height={11} rx={3} {...common} /><Path d="M8 10V7a4 4 0 0 1 8 0v3" {...common} /></>)}
       {name === 'reply' && <Path d="M10 9V5l-7 7 7 7v-4c4.5 0 7.5 1.5 10 5-1-5-4-10-10-10z" {...common} />}
       {name === 'settings' && (<><Path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" {...common} /><Circle cx={12} cy={12} r={3} {...common} /></>)}
     </Svg>

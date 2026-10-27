@@ -27,7 +27,7 @@ export default function FindPeople() {
   const [text, setText] = useState('');
   const query = useDebounced(text.trim());
   const people = useUserSearch(query);
-  const followed = useFollowStore((s) => Object.values(s.chosen).filter(Boolean).length);
+  const followed = useFollowStore((s) => Object.values(s.chosen).filter((status) => status !== 'none').length);
 
   return (
     <Screen edges={['top', 'bottom']}>
@@ -51,7 +51,7 @@ export default function FindPeople() {
           contentContainerStyle={{ paddingVertical: space.xs }} style={styles.flex}
           ListEmptyComponent={<Text muted style={[styles.textCenter, { marginTop: space.lg }]}>
             {query ? t('search.noResults', { query }) : t('onboarding.peopleNone')}</Text>}
-          renderItem={({ item }) => <UserRow user={item} right={<FollowButton user={item} following={item.isFollowing} compact />} />} />
+          renderItem={({ item }) => <UserRow user={item} right={<FollowButton user={item} following={item.isFollowing} requested={item.followRequested} compact />} />} />
       )}
       <Button label={t('onboarding.continue')} onPress={() => router.push('/onboarding/notifications')} style={{ marginVertical: space.md }} />
     </Screen>

@@ -159,7 +159,8 @@
     "UPLOAD_FAILED": "The photo didn't upload. Check your connection and try again.",
     "USERNAME_TAKEN": "This username is taken.",
     "USER_NOT_FOUND": "This account isn't available.",
-    "VALIDATION_FAILED": "Please check what you entered."
+    "VALIDATION_FAILED": "Please check what you entered.",
+    "FOLLOW_REQUEST_NOT_FOUND": "That follow request is no longer there."
   },
   "profile": {
     "posts": "Posts",
@@ -228,7 +229,12 @@
     "youBlocked": "You blocked this account.",
     "followsYou": "Follows you",
     "noFollowers": "No followers yet",
-    "noFollowing": "Not following anyone yet"
+    "noFollowing": "Not following anyone yet",
+    "requested": "Requested",
+    "requestedUser": "Asked to follow {{username}}. Tap to cancel",
+    "cancelRequest": "Cancel request",
+    "cancelRequestConfirm": "Cancel your request to follow @{{username}}?",
+    "unfollowPrivateBody": "Their account is private: you'll need to ask again to see their posts."
   },
   "create": {
     "intro": "Share photos or a video with your people.",
@@ -345,7 +351,10 @@
     "commented": "commented: “{{excerpt}}”",
     "followed": "started following you.",
     "emptyTitle": "No activity yet",
-    "emptyBody": "When people like or comment on your posts, or follow you, you'll see it here."
+    "emptyBody": "When people like or comment on your posts, or follow you, you'll see it here.",
+    "replied": "replied: “{{excerpt}}”",
+    "requested": "asked to follow you.",
+    "accepted": "accepted your follow request."
   },
   "notifications": {
     "channelName": "Likes, comments and follows",
@@ -410,5 +419,33 @@
     "emptyTitle": "Nothing here yet",
     "emptyBody": "No posts carry this hashtag. Add it to a caption to be the first.",
     "loadFailed": "Couldn't load this hashtag"
+  },
+  "privacy": {
+    "privateAccount": "Private account",
+    "followRequests": "Follow requests",
+    "followRequestsCount": "Follow requests · {{count}}",
+    "privateTitle": "This account is private",
+    "privateBody": "Follow to see their photos and videos.",
+    "noRequestsTitle": "No follow requests",
+    "noRequestsBody": "When someone asks to follow you, they will appear here.",
+    "confirm": "Confirm",
+    "confirmUser": "Let {{username}} follow you",
+    "delete": "Delete",
+    "deleteUser": "Delete the request from {{username}}",
+    "nowFollows": "Now follows you",
+    "answerFailed": "Couldn't answer the request",
+    "remove": "Remove",
+    "removeUser": "Remove {{username}} from your followers",
+    "removeConfirm": "Remove @{{username}}?",
+    "removeBody": "They won't be told that you removed them.",
+    "removeFailed": "Couldn't remove the follower",
+    "makePrivateTitle": "Make your account private?",
+    "makePrivateBody": "Only people you approve will see your photos and videos. Your current followers won't be affected.",
+    "makePrivate": "Make private",
+    "makePublicTitle": "Make your account public?",
+    "makePublicBody": "Anyone will be able to see your photos and videos.",
+    "makePublicBodyWaiting": "Anyone will be able to see your photos and videos, and the {{count}} people waiting will be accepted.",
+    "makePublic": "Make public",
+    "switchFailed": "Couldn't change your account"
   }
 }

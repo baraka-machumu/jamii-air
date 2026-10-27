@@ -3,12 +3,15 @@
 // Language and Theme (saved on the phone; the language also goes to the account and this phone's
 // push registration, so pushes and emails use it), Blocked accounts, app version, Log out and
 // Delete account (§10). Terms, Privacy Policy and Contact support once their pages exist (Plan 5).
+// Private account (BR-PR-06) is a switch that says what changes before it changes it; while it is
+// on, Follow requests sits under it.
 import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, AppState, Linking, ScrollView, View } from 'react-native';
-import { useUpdateMe } from '@/api/me';
+import { Alert, AppState, Linking, ScrollView, Switch, View } from 'react-native';
+import { errorMessage } from '@/api/errors';
+import { useMe, useUpdateMe } from '@/api/me';
 import { signOut } from '@/auth/session';
 import { Header } from '@/components/Header';
 import { ListRow, ListSection } from '@/components/ListRow';
@@ -22,9 +25,11 @@ import { useTheme } from '@/theme/ThemeProvider';
 export default function Settings() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { space } = useTheme();
+  const { colors, space } = useTheme();
   const { language, theme, setLanguage, setTheme } = useSettings();
   const updateMe = useUpdateMe();
+  const me = useMe();
+  const isPrivate = me.data?.isPrivate ?? false;
   const [push, setPush] = useState<PushPermission | null>(null);
 
   // Read again when the user comes back from the phone's settings.
@@ -46,6 +51,17 @@ export default function Settings() {
     void registerDevice(); // this phone's pushes in the new language
   };
 
+  const setPrivate = (next: boolean) => {
+    const waiting = me.data?.followRequestCount ?? 0;
+    Alert.alert(next ? t('privacy.makePrivateTitle') : t('privacy.makePublicTitle'),
+      next ? t('privacy.makePrivateBody') : waiting > 0 ? t('privacy.makePublicBodyWaiting', { count: waiting }) : t('privacy.makePublicBody'), [
+        { text: t('common.cancel'), style: 'cancel' },
+        { text: next ? t('privacy.makePrivate') : t('privacy.makePublic'), onPress: () => updateMe.mutate({ isPrivate: next }, {
+          onError: (error) => Alert.alert(t('privacy.switchFailed'), errorMessage(error, t)),
+        }) },
+      ]);
+  };
+
   const logOut = () => Alert.alert(t('settings.logOutConfirm'), undefined, [
     { text: t('common.cancel'), style: 'cancel' },
     { text: t('settings.logOut'), style: 'destructive', onPress: () => void signOut() },
@@ -58,6 +74,17 @@ export default function Settings() {
         <ListSection title={t('settings.account')} />
         <ListRow label={t('profile.edit')} onPress={() => router.push('/edit-profile')} />
         <ListRow label={t('settings.changePassword')} onPress={() => router.push('/settings/password')} />
+        {me.data ? (
+          <ListRow label={t('privacy.privateAccount')}>
+            <Switch value={updateMe.isPending && updateMe.variables?.isPrivate !== undefined ? updateMe.variables.isPrivate : isPrivate}
+              onValueChange={setPrivate} disabled={updateMe.isPending} accessibilityLabel={t('privacy.privateAccount')}
+              trackColor={{ true: colors.primary, false: colors.border }} />
+          </ListRow>
+        ) : null}
+        {isPrivate ? (
+          <ListRow label={t('privacy.followRequests')} value={String(me.data?.followRequestCount ?? 0)}
+            onPress={() => router.push('/follow-requests')} />
+        ) : null}
         {push && push !== 'unavailable' && (
           <ListRow label={t('settings.notifications')} onPress={onNotifications}
             value={push === 'granted' ? t('settings.notificationsOn') : push === 'denied' ? t('settings.notificationsOff') : t('onboarding.turnOn')} />

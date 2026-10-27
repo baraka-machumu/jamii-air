@@ -35,5 +35,5 @@ export const emptyPage = { items: [], nextCursor: null };
 export const me = {
   id: 'u1', username: 'amina', email: 'amina@example.com', displayName: 'Amina', bio: 'Mama Lishe, Arusha',
   avatarMediaId: null, avatarUrl: null, avatarLargeUrl: null, locale: 'en' as const,
-  postCount: 12, followerCount: 1250, followingCount: 80,
+  postCount: 12, followerCount: 1250, followingCount: 80, isPrivate: false, followRequestCount: 0,
 };

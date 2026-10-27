@@ -119,6 +119,7 @@ function RootStack() {
           <Stack.Screen name="settings/password" />
           <Stack.Screen name="settings/blocked" />
           <Stack.Screen name="settings/delete-account" />
+          <Stack.Screen name="follow-requests" />
           <Stack.Screen name="u/[username]/index" />
           <Stack.Screen name="u/[username]/[list]" />
           <Stack.Screen name="compose/crop" />

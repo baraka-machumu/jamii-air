@@ -1,10 +1,15 @@
 // Followers / Following (App Flow §8.2): newest first, more on scroll, a Follow button on every row
-// except your own.
+// except your own. On the user's own followers list each row has Remove instead (§8.5, BR-PR-09):
+// after "Remove @x?" they stop following, and are not told.
+import { useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, FlatList, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, StyleSheet, View } from 'react-native';
 import { ApiError, errorMessage } from '@/api/errors';
-import { type FollowList, useFollowList } from '@/api/people';
+import { meKey } from '@/api/me';
+import { type FollowList, removeFollower, useFollowList } from '@/api/people';
+import { useSession } from '@/stores/session';
 import { Button } from '@/components/Button';
 import { FollowButton } from '@/components/FollowButton';
 import { Header } from '@/components/Header';
@@ -21,7 +26,10 @@ export default function FollowListScreen() {
   const router = useRouter();
   const { colors, space } = useTheme();
   const query = useFollowList(params.username, list);
-  const items = query.data?.pages.flatMap((page) => page.items) ?? [];
+  const myUsername = useSession((s) => s.user?.username);
+  const mine = list === 'followers' && !!myUsername && myUsername.toLowerCase() === params.username.toLowerCase();
+  const [removed, setRemoved] = useState<Record<string, true>>({});
+  const items = (query.data?.pages.flatMap((page) => page.items) ?? []).filter((u) => !removed[u.id]);
   const title = list === 'followers' ? t('profile.followers') : t('profile.following');
 
   let body;
@@ -45,7 +53,9 @@ export default function FollowListScreen() {
         ListFooterComponent={query.isFetchingNextPage ? <ActivityIndicator color={colors.textMuted} style={{ margin: space.md }} /> : null}
         renderItem={({ item }) => (
           <UserRow user={item} onPress={() => router.push({ pathname: '/u/[username]', params: { username: item.username } })}
-            right={item.isMe ? null : <FollowButton user={item} following={item.isFollowing} compact />} />
+            right={item.isMe ? null : mine
+              ? <RemoveFollower user={item} onRemoved={() => setRemoved((r) => ({ ...r, [item.id]: true }))} />
+              : <FollowButton user={item} following={item.isFollowing} requested={item.followRequested} compact />} />
         )} />
     );
   }
@@ -55,6 +65,32 @@ export default function FollowListScreen() {
       <Header title={title} />
       {body}
     </Screen>
+  );
+}
+
+function RemoveFollower({ user, onRemoved }: { user: { id: string; username: string }; onRemoved: () => void }) {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const [busy, setBusy] = useState(false);
+  const remove = async () => {
+    setBusy(true);
+    try {
+      await removeFollower(user.id);
+      onRemoved();
+      void queryClient.invalidateQueries({ queryKey: meKey });
+    } catch (error) {
+      Alert.alert(t('privacy.removeFailed'), errorMessage(error, t));
+    } finally {
+      setBusy(false);
+    }
+  };
+  const confirm = () => Alert.alert(t('privacy.removeConfirm', { username: user.username }), t('privacy.removeBody'), [
+    { text: t('common.cancel'), style: 'cancel' },
+    { text: t('privacy.remove'), style: 'destructive', onPress: () => void remove() },
+  ]);
+  return (
+    <Button kind="secondary" label={t('privacy.remove')} accessibilityLabel={t('privacy.removeUser', { username: user.username })}
+      loading={busy} onPress={confirm} style={{ minHeight: 36, paddingHorizontal: 16 }} />
   );
 }
 

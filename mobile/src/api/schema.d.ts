@@ -172,7 +172,7 @@ export interface paths {
         delete: operations["SafetyController_deleteAccount"];
         options?: never;
         head?: never;
-        /** Edit display name, bio, username, avatar or language; only the fields sent change */
+        /** Edit display name, bio, username, avatar, language or private account; only the fields sent change */
         patch: operations["UsersController_updateMe"];
         trace?: never;
     };
@@ -252,11 +252,79 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** Follow (idempotent) */
+        /** Follow (idempotent); a private account is asked instead (requested: true) */
         put: operations["UsersController_follow"];
         post?: never;
-        /** Unfollow (idempotent) */
+        /** Unfollow, or cancel a follow request (idempotent) */
         delete: operations["UsersController_unfollow"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/follow-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** People asking to follow your private account, newest first (BR-PR-07) */
+        get: operations["UsersController_followRequests"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/follow-requests/{userId}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Accept a follow request (idempotent); the requester is told */
+        post: operations["UsersController_acceptFollowRequest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/follow-requests/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Decline a follow request (idempotent); the requester is not told */
+        delete: operations["UsersController_declineFollowRequest"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/followers/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove a follower (idempotent); they are not told (BR-PR-09) */
+        delete: operations["UsersController_removeFollower"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1093,6 +1161,10 @@ export interface components {
             postCount: number;
             followerCount: number;
             followingCount: number;
+            /** @description A private account (BR-PR-06) */
+            isPrivate: boolean;
+            /** @description People waiting for you to accept (BR-PR-07) */
+            followRequestCount: number;
         };
         UpdateMeDto: {
             displayName?: string | null;
@@ -1102,6 +1174,8 @@ export interface components {
             avatarMediaId?: string | null;
             /** @enum {string} */
             locale?: "en" | "sw";
+            /** @description Private account (BR-PR-06). Going public accepts every pending follow request */
+            isPrivate?: boolean;
         };
         UserSummary: {
             id: string;
@@ -1109,6 +1183,8 @@ export interface components {
             displayName: string | null;
             avatarUrl: string | null;
             isFollowing: boolean;
+            /** @description You asked to follow this private account: the button reads Requested */
+            followRequested: boolean;
         };
         UserSearchResult: {
             items: components["schemas"]["UserSummary"][];
@@ -1130,6 +1206,14 @@ export interface components {
             followsMe: boolean;
             /** @description You blocked this user: show Unblock; posts and lists stay empty */
             isBlockedByMe: boolean;
+            /** @description A private account (BR-PR-06) */
+            isPrivate: boolean;
+            /** @description false: show "This account is private"; posts and lists come back empty (BR-PR-08) */
+            canSeeContent: boolean;
+            /** @description You asked to follow and are waiting: the button reads Requested */
+            followRequested: boolean;
+            /** @description People waiting for you to accept; only ever non-zero on your own profile */
+            followRequestCount: number;
             /** @description "Copy profile link": opens the profile in the app, else a landing page */
             shareUrl: string;
             createdAt: string;
@@ -1140,6 +1224,8 @@ export interface components {
             displayName: string | null;
             avatarUrl: string | null;
             isFollowing: boolean;
+            /** @description You asked to follow this private account: the button reads Requested */
+            followRequested: boolean;
             isMe: boolean;
             followedAt: string;
         };
@@ -1149,6 +1235,24 @@ export interface components {
         };
         FollowState: {
             following: boolean;
+            /** @description A private account was asked rather than followed (BR-PR-07): the button reads Requested */
+            requested: boolean;
+            followerCount: number;
+        };
+        FollowRequest: {
+            id: string;
+            username: string;
+            displayName: string | null;
+            avatarUrl: string | null;
+            /** @description You already follow them: hide "Follow back" once accepted */
+            isFollowing: boolean;
+            requestedAt: string;
+        };
+        FollowRequestPage: {
+            items: components["schemas"]["FollowRequest"][];
+            nextCursor: string | null;
+        };
+        FollowerCount: {
             followerCount: number;
         };
         CreateUploadDto: {
@@ -1353,14 +1457,16 @@ export interface components {
             avatarUrl: string | null;
             /** @description Hide "Follow back" when true */
             isFollowing: boolean;
+            /** @description You asked to follow them (private account): "Follow back" reads Requested */
+            followRequested: boolean;
         };
         Notification: {
             id: string;
             /**
-             * @description REPLY: someone answered your comment (BR-FD-08). Its commentId is the reply
+             * @description REPLY: someone answered your comment (BR-FD-08), its commentId is the reply. FOLLOW_REQUEST: someone asked to follow your private account (open Follow requests); FOLLOW_ACCEPTED: your request was accepted (BR-PR-07)
              * @enum {string}
              */
-            type: "FOLLOW" | "LIKE" | "COMMENT" | "REPLY";
+            type: "FOLLOW" | "LIKE" | "COMMENT" | "REPLY" | "FOLLOW_REQUEST" | "FOLLOW_ACCEPTED";
             actor: components["schemas"]["NotificationActor"];
             postId: string | null;
             /** @description 320 × 320; null when the post is gone */
@@ -1631,6 +1737,8 @@ export interface components {
             recentPosts: components["schemas"]["AdminRecentPost"][] | null;
             reportsAgainst: components["schemas"]["ReportRef"][] | null;
             moderationHistory: components["schemas"]["ModerationEntry"][] | null;
+            /** @description A private account (BR-PR-06); moderators still see all of it */
+            isPrivate: boolean;
         };
         ModerationDto: {
             /** @description Why (audit log) */
@@ -1652,10 +1760,19 @@ export interface components {
         };
         AdminPostMedia: {
             id: string;
+            /** @enum {string} */
+            kind: "IMAGE" | "VIDEO";
             status: string;
             blurhash: string | null;
+            /** @description IMAGE only */
             feedUrl: string | null;
             thumbUrl: string | null;
+            /** @description VIDEO only: the still before playback */
+            posterUrl: string | null;
+            /** @description VIDEO only: the 720p MP4 a moderator can play */
+            videoUrl: string | null;
+            /** @description VIDEO only */
+            durationMs: number | null;
             width: number | null;
             height: number | null;
         };
@@ -1805,7 +1922,7 @@ export interface components {
              * @description Stable: translate this, not `message`
              * @enum {string}
              */
-            code: "ACCOUNT_NOT_ACTIVE" | "ACCOUNT_PENDING_DELETION" | "ACCOUNT_SUSPENDED" | "ADMIN_FORBIDDEN" | "ADMIN_LOCKED" | "ADMIN_NOT_FOUND" | "APP_VERSION_UNSUPPORTED" | "BLOCKED" | "CANNOT_BLOCK_SELF" | "CANNOT_FOLLOW_SELF" | "CANNOT_REPORT_SELF" | "CAPTION_TOO_LONG" | "CHALLENGE_EXPIRED" | "COMMENT_NOT_FOUND" | "CSRF_CHECK_FAILED" | "EMAIL_TAKEN" | "FORBIDDEN" | "IDEMPOTENCY_KEY_REUSED" | "INTERNAL_ERROR" | "INVALID_CREDENTIALS" | "INVALID_CURSOR" | "INVALID_IDEMPOTENCY_KEY" | "INVALID_PASSWORD" | "INVALID_STATE" | "INVALID_TOTP" | "INVALID_VARIANT_KEY" | "INVITE_INVALID" | "INVITE_NOT_FOUND" | "MEDIA_KINDS_MIXED" | "MEDIA_NOT_ATTACHABLE" | "MEDIA_NOT_FOUND" | "MEDIA_NOT_UPLOADED" | "NOT_FOUND" | "NOT_OWNER" | "NOTE_REQUIRED" | "PASSWORD_TOO_COMMON" | "PASSWORD_TOO_SHORT" | "PAYLOAD_TOO_LARGE" | "POST_NOT_FOUND" | "RATE_LIMITED" | "REPORT_ALREADY_HANDLED" | "REPORT_NOT_FOUND" | "RESET_CODE_EXPIRED" | "RESET_CODE_INVALID" | "RESET_CODE_LOCKED" | "SERVICE_UNAVAILABLE" | "SESSION_EXPIRED" | "SESSION_INVALID" | "SESSION_REUSE_DETECTED" | "TAG_INVALID" | "TOKEN_INVALID" | "UNAUTHORIZED" | "UNDER_MINIMUM_AGE" | "UNSUPPORTED_MEDIA_TYPE" | "USER_NOT_FOUND" | "USERNAME_TAKEN" | "VALIDATION_FAILED";
+            code: "ACCOUNT_NOT_ACTIVE" | "ACCOUNT_PENDING_DELETION" | "ACCOUNT_SUSPENDED" | "ADMIN_FORBIDDEN" | "ADMIN_LOCKED" | "ADMIN_NOT_FOUND" | "APP_VERSION_UNSUPPORTED" | "BLOCKED" | "CANNOT_BLOCK_SELF" | "CANNOT_FOLLOW_SELF" | "CANNOT_REPORT_SELF" | "CAPTION_TOO_LONG" | "CHALLENGE_EXPIRED" | "COMMENT_NOT_FOUND" | "CSRF_CHECK_FAILED" | "EMAIL_TAKEN" | "FOLLOW_REQUEST_NOT_FOUND" | "FORBIDDEN" | "IDEMPOTENCY_KEY_REUSED" | "INTERNAL_ERROR" | "INVALID_CREDENTIALS" | "INVALID_CURSOR" | "INVALID_IDEMPOTENCY_KEY" | "INVALID_PASSWORD" | "INVALID_STATE" | "INVALID_TOTP" | "INVALID_VARIANT_KEY" | "INVITE_INVALID" | "INVITE_NOT_FOUND" | "MEDIA_KINDS_MIXED" | "MEDIA_NOT_ATTACHABLE" | "MEDIA_NOT_FOUND" | "MEDIA_NOT_UPLOADED" | "NOT_FOUND" | "NOT_OWNER" | "NOTE_REQUIRED" | "PASSWORD_TOO_COMMON" | "PASSWORD_TOO_SHORT" | "PAYLOAD_TOO_LARGE" | "POST_NOT_FOUND" | "RATE_LIMITED" | "REPORT_ALREADY_HANDLED" | "REPORT_NOT_FOUND" | "RESET_CODE_EXPIRED" | "RESET_CODE_INVALID" | "RESET_CODE_LOCKED" | "SERVICE_UNAVAILABLE" | "SESSION_EXPIRED" | "SESSION_INVALID" | "SESSION_REUSE_DETECTED" | "TAG_INVALID" | "TOKEN_INVALID" | "UNAUTHORIZED" | "UNDER_MINIMUM_AGE" | "UNSUPPORTED_MEDIA_TYPE" | "USER_NOT_FOUND" | "USERNAME_TAKEN" | "VALIDATION_FAILED";
             /** @description English, for developers */
             message: string;
             /** @description e.g. { fields: [...] } for VALIDATION_FAILED, { minVersion } for APP_VERSION_UNSUPPORTED */
@@ -2227,6 +2344,97 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["FollowState"];
+                };
+            };
+        };
+    };
+    UsersController_followRequests: {
+        parameters: {
+            query?: {
+                /** @description nextCursor of the previous page */
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FollowRequestPage"];
+                };
+            };
+        };
+    };
+    UsersController_acceptFollowRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FollowerCount"];
+                };
+            };
+            /** @description FOLLOW_REQUEST_NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    UsersController_declineFollowRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    UsersController_removeFollower: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FollowerCount"];
                 };
             };
         };

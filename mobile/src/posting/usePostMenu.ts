@@ -36,7 +36,7 @@ export function usePostMenu({ onDeleted }: { onDeleted?: () => void } = {}) {
       : [
         { label: t('safety.report'), destructive: true, onPress: () => openReport({ type: 'POST', id: post.id, user: post.author }) },
         copy,
-        ...(following ? [{ label: t('people.unfollow'), onPress: () => toggleFollow(post.author, true) }] : []),
+        ...(following ? [{ label: t('people.unfollow'), onPress: () => toggleFollow(post.author, 'following') }] : []),
         { label: t('safety.blockUser', { username: post.author.username }), destructive: true, onPress: () => confirmBlock(post.author) },
       ];
     showActions(actions, { cancel: t('common.cancel') });

@@ -25,7 +25,8 @@ const post = (n: number, by = author('juma')) => ({
 });
 const profile = (blocked: boolean) => ({
   ...author('juma'), bio: 'Fundi wa simu', avatarLargeUrl: null, postCount: 3, followerCount: 41, followingCount: 9,
-  isMe: false, isFollowing: !blocked, followsMe: !blocked, isBlockedByMe: blocked, shareUrl: 'https://jamii.test/u/juma', createdAt: '',
+  isMe: false, isFollowing: !blocked, followsMe: !blocked, isBlockedByMe: blocked, isPrivate: false, canSeeContent: !blocked,
+  followRequested: false, followRequestCount: 0, shareUrl: 'https://jamii.test/u/juma', createdAt: '',
 });
 const blockedUser = (username: string) => ({ ...author(username), blockedAt: new Date().toISOString() });
 

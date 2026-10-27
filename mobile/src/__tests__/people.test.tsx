@@ -18,7 +18,8 @@ const juma = { id: 'u2', username: 'juma', displayName: 'Juma K', avatarUrl: nul
 const neema = { id: 'u3', username: 'neema', displayName: null, avatarUrl: null, isFollowing: true };
 const profileOf = (user: typeof juma, extra = {}) => ({
   ...user, bio: 'Fundi wa simu', avatarLargeUrl: null, postCount: 0, followerCount: 41, followingCount: 9,
-  isMe: false, followsMe: true, isBlockedByMe: false, shareUrl: 'http://x/u/juma', createdAt: '', ...extra,
+  isMe: false, followsMe: true, isBlockedByMe: false, isPrivate: false, canSeeContent: true, followRequested: false,
+  followRequestCount: 0, shareUrl: 'http://x/u/juma', createdAt: '', ...extra,
 });
 
 let requests: StubRequest[];
@@ -42,7 +43,7 @@ function api(overrides: (req: StubRequest) => Response | undefined = () => undef
     if (req.path === '/api/v1/users/juma/followers') {
       return json(200, { items: [{ ...neema, isMe: false, followedAt: '' }, { ...me, avatarUrl: null, isFollowing: false, isMe: true, followedAt: '' }], nextCursor: null });
     }
-    if (req.path === '/api/v1/users/u2/follow') return json(200, { following: req.method === 'PUT', followerCount: 42 });
+    if (req.path === '/api/v1/users/u2/follow') return json(200, { following: req.method === 'PUT', requested: false, followerCount: 42 });
     return json(404, { error: { code: 'USER_NOT_FOUND', message: 'x' } });
   });
 }

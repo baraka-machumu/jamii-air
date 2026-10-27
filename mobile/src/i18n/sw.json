@@ -159,7 +159,8 @@
     "UPLOAD_FAILED": "Picha haikupakiwa. Angalia mtandao wako na ujaribu tena.",
     "USERNAME_TAKEN": "Jina hili la mtumiaji limeshachukuliwa.",
     "USER_NOT_FOUND": "Akaunti hii haipatikani.",
-    "VALIDATION_FAILED": "Tafadhali kagua ulichoandika."
+    "VALIDATION_FAILED": "Tafadhali kagua ulichoandika.",
+    "FOLLOW_REQUEST_NOT_FOUND": "Ombi hilo la kufuata halipo tena."
   },
   "profile": {
     "posts": "Machapisho",
@@ -228,7 +229,12 @@
     "youBlocked": "Umeizuia akaunti hii.",
     "followsYou": "Anakufuata",
     "noFollowers": "Bado hakuna wafuasi",
-    "noFollowing": "Bado hakuna anayefuatwa"
+    "noFollowing": "Bado hakuna anayefuatwa",
+    "requested": "Umeomba",
+    "requestedUser": "Umeomba kumfuata {{username}}. Gusa kughairi",
+    "cancelRequest": "Ghairi ombi",
+    "cancelRequestConfirm": "Ghairi ombi lako la kumfuata @{{username}}?",
+    "unfollowPrivateBody": "Akaunti yake ni ya faragha: utahitaji kuomba tena ili kuona machapisho yake."
   },
   "create": {
     "intro": "Shiriki picha au video na watu wako.",
@@ -345,7 +351,10 @@
     "commented": "ametoa maoni: “{{excerpt}}”",
     "followed": "ameanza kukufuata.",
     "emptyTitle": "Bado hakuna shughuli",
-    "emptyBody": "Watu wakipenda au kutoa maoni kwenye machapisho yako, au wakikufuata, utaona hapa."
+    "emptyBody": "Watu wakipenda au kutoa maoni kwenye machapisho yako, au wakikufuata, utaona hapa.",
+    "replied": "amejibu: “{{excerpt}}”",
+    "requested": "ameomba kukufuata.",
+    "accepted": "amekubali ombi lako la kumfuata."
   },
   "notifications": {
     "channelName": "Kupendwa, maoni na wafuasi",
@@ -410,5 +419,33 @@
     "emptyTitle": "Hakuna kitu bado",
     "emptyBody": "Hakuna chapisho lenye lebo hii. Iongeze kwenye maelezo uwe wa kwanza.",
     "loadFailed": "Imeshindikana kupakia lebo hii"
+  },
+  "privacy": {
+    "privateAccount": "Akaunti ya faragha",
+    "followRequests": "Maombi ya kufuata",
+    "followRequestsCount": "Maombi ya kufuata · {{count}}",
+    "privateTitle": "Akaunti hii ni ya faragha",
+    "privateBody": "Mfuate ili uone picha na video zake.",
+    "noRequestsTitle": "Hakuna maombi ya kufuata",
+    "noRequestsBody": "Mtu akiomba kukufuata, ataonekana hapa.",
+    "confirm": "Kubali",
+    "confirmUser": "Mruhusu {{username}} akufuate",
+    "delete": "Futa",
+    "deleteUser": "Futa ombi la {{username}}",
+    "nowFollows": "Sasa anakufuata",
+    "answerFailed": "Imeshindikana kujibu ombi",
+    "remove": "Ondoa",
+    "removeUser": "Mwondoe {{username}} kwenye wafuasi wako",
+    "removeConfirm": "Mwondoe @{{username}}?",
+    "removeBody": "Hataambiwa kwamba umemwondoa.",
+    "removeFailed": "Imeshindikana kumwondoa mfuasi",
+    "makePrivateTitle": "Fanya akaunti yako iwe ya faragha?",
+    "makePrivateBody": "Ni watu unaowakubali tu watakaoona picha na video zako. Wafuasi wako wa sasa hawataathirika.",
+    "makePrivate": "Fanya ya faragha",
+    "makePublicTitle": "Fanya akaunti yako iwe ya wazi?",
+    "makePublicBody": "Kila mtu ataweza kuona picha na video zako.",
+    "makePublicBodyWaiting": "Kila mtu ataweza kuona picha na video zako, na watu {{count}} wanaosubiri watakubaliwa.",
+    "makePublic": "Fanya ya wazi",
+    "switchFailed": "Imeshindikana kubadilisha akaunti yako"
   }
 }

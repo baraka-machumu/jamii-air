@@ -3,14 +3,19 @@
 // "neema started following you" (+ Follow back). Each visit reads the list again, and after 1 s
 // marks everything read (the badge goes to 0); the grouping stays until the next visit or refresh.
 // A row opens the post (like, comment) or the profile (follow); a post that is gone says so.
+// A private account (§8.5) also gets "neema asked to follow you" (→ Follow requests), a
+// "Follow requests · n" row above the list while anyone is waiting, and "accepted your follow
+// request" when its own request goes through.
 import { useQueryClient } from '@tanstack/react-query';
+import type { TFunction } from 'i18next';
 import { Image } from 'expo-image';
 import { type Href, useFocusEffect, useRouter } from 'expo-router';
 import { memo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 import { errorMessage } from '@/api/errors';
-import { markAllRead, type Notification, notificationPath, useNotifications } from '@/api/notifications';
+import { useMe } from '@/api/me';
+import { markAllRead, type Notification, notificationPath, PERSON_TYPES, useNotifications } from '@/api/notifications';
 import { Avatar } from '@/components/Avatar';
 import { Button } from '@/components/Button';
 import { FollowButton } from '@/components/FollowButton';
@@ -32,9 +37,12 @@ export default function ActivityTab() {
   const queryClient = useQueryClient();
   const { colors, space } = useTheme();
   const list = useNotifications();
+  const me = useMe();
+  const waiting = me.data?.followRequestCount ?? 0;
 
   useFocusEffect(useCallback(() => {
     void list.refetch();
+    void me.refetch();
     const timer = setTimeout(() => { void markAllRead(queryClient).catch(() => undefined); }, MARK_READ_AFTER_MS);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- once per visit
@@ -42,7 +50,7 @@ export default function ActivityTab() {
 
   const open = useCallback((item: Notification) => {
     const path = notificationPath({ type: item.type, postId: item.postId, username: item.actor.username });
-    if (item.type !== 'FOLLOW' && !item.targetAvailable) { showToast(t('errors.POST_NOT_FOUND')); return; }
+    if (!PERSON_TYPES.has(item.type) && !item.targetAvailable) { showToast(t('errors.POST_NOT_FOUND')); return; }
     if (path) router.push(path as Href);
   }, [router, t]);
   const openProfile = useCallback((username: string) => router.push({ pathname: '/u/[username]', params: { username } }), [router]);
@@ -73,7 +81,15 @@ export default function ActivityTab() {
         renderItem={({ item: row }) => (row.kind === 'header'
           ? <Text variant="bodyStrong" accessibilityRole="header" style={{ paddingHorizontal: space.md, paddingTop: space.md, paddingBottom: space.xs }}>{row.title}</Text>
           : <ActivityRow item={row.item} onOpen={open} onProfile={openProfile} />)}
-        ListEmptyComponent={
+        ListHeaderComponent={waiting > 0 ? (
+          <Pressable onPress={() => router.push('/follow-requests')} accessibilityRole="button"
+            accessibilityLabel={t('privacy.followRequestsCount', { count: waiting })}
+            style={({ pressed }) => [styles.requests, { paddingHorizontal: space.md, borderBottomColor: colors.border, opacity: pressed ? 0.7 : 1 }]}>
+            <Text variant="bodyStrong" style={styles.text}>{t('privacy.followRequests')}</Text>
+            <Text muted>{waiting}</Text>
+          </Pressable>
+        ) : null}
+        ListEmptyComponent={waiting > 0 ? null : 
           <View style={[styles.center, { padding: space.lg, gap: space.sm, marginTop: space.xl }]}>
             <Text variant="bodyStrong" style={styles.textCenter}>{t('activity.emptyTitle')}</Text>
             <Text muted style={styles.textCenter}>{t('activity.emptyBody')}</Text>
@@ -104,9 +120,7 @@ const ActivityRow = memo(function ActivityRow({ item, onOpen, onProfile }: {
   const { t, i18n } = useTranslation();
   const { colors, space, radius } = useTheme();
   const { actor } = item;
-  const action = item.type === 'LIKE' ? t('activity.liked')
-    : item.type === 'COMMENT' ? t('activity.commented', { excerpt: item.commentExcerpt ?? '' })
-      : t('activity.followed');
+  const action = activityText(item, t);
 
   const thumb = { borderRadius: radius.sm, backgroundColor: colors.surface };
   const time = formatRelative(item.createdAt, i18n.language);
@@ -124,8 +138,8 @@ const ActivityRow = memo(function ActivityRow({ item, onOpen, onProfile }: {
         </Text>
       </Pressable>
       {item.type === 'FOLLOW' ? (
-        actor.isFollowing ? null : <FollowButton user={actor} following={false} followsMe compact />
-      ) : (
+        actor.isFollowing ? null : <FollowButton user={actor} following={false} requested={actor.followRequested} followsMe compact />
+      ) : PERSON_TYPES.has(item.type) ? null : (
         <Pressable onPress={() => onOpen(item)} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
           {item.postThumbUrl ? (
             <Image source={{ uri: item.postThumbUrl }} style={[styles.thumb, thumb]} contentFit="cover" accessibilityIgnoresInvertColors />
@@ -136,7 +150,20 @@ const ActivityRow = memo(function ActivityRow({ item, onOpen, onProfile }: {
   );
 });
 
+/** "liked your post.", "replied: …", "asked to follow you." — what the actor did. */
+export function activityText(item: Pick<Notification, 'type' | 'commentExcerpt'>, t: TFunction): string {
+  switch (item.type) {
+    case 'LIKE': return t('activity.liked');
+    case 'COMMENT': return t('activity.commented', { excerpt: item.commentExcerpt ?? '' });
+    case 'REPLY': return t('activity.replied', { excerpt: item.commentExcerpt ?? '' });
+    case 'FOLLOW_REQUEST': return t('activity.requested');
+    case 'FOLLOW_ACCEPTED': return t('activity.accepted');
+    default: return t('activity.followed');
+  }
+}
+
 const styles = StyleSheet.create({
+  requests: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 52, borderBottomWidth: StyleSheet.hairlineWidth },
   title: { fontSize: 22, paddingVertical: 12 },
   center: { flex: 1, justifyContent: 'center', gap: 12 },
   textCenter: { textAlign: 'center' },

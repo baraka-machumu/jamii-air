@@ -36,8 +36,15 @@ export async function markAllRead(queryClient: QueryClient): Promise<void> {
   queryClient.setQueryData(unreadKey, { count: 0 });
 }
 
-/** Where a notification leads: the post (like, comment) or the person (follow). */
+/** Notifications about a person rather than a post: they never become "no longer available". */
+export const PERSON_TYPES: ReadonlySet<string> = new Set(['FOLLOW', 'FOLLOW_REQUEST', 'FOLLOW_ACCEPTED']);
+
+/**
+ * Where a notification leads: the post (like, comment, reply), the person (follow, an accepted
+ * request) or the list of follow requests (someone asked to follow, BR-PR-07).
+ */
 export function notificationPath(n: { type: string; postId?: string | null; username?: string | null }): string | null {
-  if (n.type === 'FOLLOW') return n.username ? `/u/${encodeURIComponent(n.username)}` : null;
+  if (n.type === 'FOLLOW_REQUEST') return '/follow-requests';
+  if (PERSON_TYPES.has(n.type)) return n.username ? `/u/${encodeURIComponent(n.username)}` : null;
   return n.postId ? `/p/${encodeURIComponent(n.postId)}` : null;
 }

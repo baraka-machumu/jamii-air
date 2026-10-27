@@ -1,5 +1,6 @@
 // My profile (App Flow §8.3): photo, counts, name, @username, bio; Edit profile and ⚙ Settings.
 // The counts open the follower lists; below, the posts grid (with processing / failed posts).
+// A private account with people waiting shows "Follow requests · n" under Edit profile (§8.5).
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
@@ -61,6 +62,10 @@ export default function MyProfile() {
             <ProfileHeader user={user} onFollowers={() => list('followers')} onFollowing={() => list('following')} />
             <Button kind="secondary" label={t('profile.edit')} onPress={() => router.push('/edit-profile')}
               style={{ marginTop: space.md, minHeight: 40 }} />
+            {user.followRequestCount > 0 ? (
+              <Button kind="tertiary" label={t('privacy.followRequestsCount', { count: user.followRequestCount })}
+                onPress={() => router.push('/follow-requests')} style={{ marginTop: space.xs, minHeight: 40 }} />
+            ) : null}
           </>
         }
         empty={

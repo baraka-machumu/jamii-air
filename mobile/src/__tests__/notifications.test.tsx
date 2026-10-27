@@ -36,7 +36,8 @@ const post = {
   shareUrl: 'https://jamii.test/p/p1', createdAt: minutesAgo(30),
 };
 const profile = { ...actor('neema'), bio: null, avatarLargeUrl: null, postCount: 0, followerCount: 0, followingCount: 1, isMe: false,
-  isFollowing: false, followsMe: true, isBlockedByMe: false, shareUrl: 'https://jamii.test/u/neema', createdAt: '' };
+  isFollowing: false, followsMe: true, isBlockedByMe: false, isPrivate: false, canSeeContent: true,
+  followRequested: false, followRequestCount: 0, shareUrl: 'https://jamii.test/u/neema', createdAt: '' };
 
 let requests: StubRequest[];
 let unread = 2;
@@ -53,7 +54,7 @@ function api(overrides: (req: StubRequest) => Response | undefined = () => undef
     if (req.path.startsWith('/api/v1/me/devices/')) return new Response(null, { status: 204 });
     if (req.path === '/api/v1/posts/p1') return json(200, post);
     if (req.path === '/api/v1/users/neema') return json(200, profile);
-    if (req.path === '/api/v1/users/id-neema/follow') return json(200, { following: true, followerCount: 1 });
+    if (req.path === '/api/v1/users/id-neema/follow') return json(200, { following: true, requested: false, followerCount: 1 });
     if (req.path.startsWith('/api/v1/posts/')) return apiError(404, 'POST_NOT_FOUND');
     return json(200, emptyPage);
   });

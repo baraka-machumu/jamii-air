@@ -53,14 +53,17 @@ Columns as in Plan §2.3. **Review** = built, every check green locally, committ
 
 ## What the owner sets up for Google (A.5)
 
-All free, in [Google Cloud console](https://console.cloud.google.com/):
+All free, in [Google Cloud console](https://console.cloud.google.com/), in **the project that
+already backs the app's Firebase push** (`mobile/google-services.json`), so there is one project:
 
-1. A project (for example *Jamii Air*), then **OAuth consent screen**: External, app name, support
-   email; scopes `openid`, `email`, `profile` only (no Google review needed for these).
-2. **Credentials → OAuth client ID → Web application.** Its client ID is the audience the API
-   checks and the app's `webClientId`.
-3. **Credentials → OAuth client ID → Android**, package name of the `preview` build, and the
-   SHA-1 of the EAS signing key (`eas credentials` in `mobile/` → Android → preview shows it).
+1. **OAuth consent screen** (Google Auth Platform → Branding / Audience): External, app name
+   *Jamii Air*, support email; scopes `openid`, `email`, `profile` only (no Google review needed).
+   While it is in *Testing*, add each tester's Gmail under Audience → Test users, or publish it.
+2. **Clients → Create client → Web application**, name *Jamii Air API*. Its client ID is the
+   audience the API checks and the app's `webClientId`.
+3. **Clients → Create client → Android**, package **`tz.jamiiair.app`** (every build variant uses
+   it), and the **SHA-1** of the EAS signing key: in `mobile/`, `npx eas-cli credentials -p android`
+   → profile `preview` → the keystore's SHA-1 fingerprint.
 
 Send the Web client ID; it is not a secret. No client secret is needed by either the app or the API.
 

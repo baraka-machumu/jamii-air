@@ -84,6 +84,8 @@ enum NotificationType {
   LIKE
   COMMENT
   REPLY // someone answered your comment (BR-NT-01)
+  FOLLOW_REQUEST // someone asked to follow your private account (BR-PR-07)
+  FOLLOW_ACCEPTED // a private account accepted your request (BR-PR-07)
 
   @@map("notification_type")
 }
@@ -166,6 +168,7 @@ model User {
   status              UserStatus @default(ACTIVE)
   locale              String     @default("en") @db.VarChar(10)
   inviteCodeId        String?    @map("invite_code_id") @db.Uuid
+  isPrivate           Boolean    @default(false) @map("is_private") // BR-PR-06; posts and lists for approved followers only
   postCount           Int        @default(0) @map("post_count")
   followerCount       Int        @default(0) @map("follower_count")
   followingCount      Int        @default(0) @map("following_count")
@@ -188,6 +191,8 @@ model User {
   devices        DevicePushToken[]
   following      Follow[]            @relation("Follower")
   followers      Follow[]            @relation("Following")
+  requestsSent   FollowRequest[]     @relation("Requester")
+  requestsGot    FollowRequest[]     @relation("RequestTarget")
   blocking       Block[]             @relation("Blocker")
   blockedBy      Block[]             @relation("Blocked")
   notifications  Notification[]      @relation("NotificationRecipient")
@@ -286,6 +291,21 @@ model Follow {
   @@index([followingId, createdAt(sort: Desc)]) // followers list
   @@index([followerId, createdAt(sort: Desc)]) // following list
   @@map("follows")
+}
+
+// A request to follow a private account (BR-PR-07). Its own table rather than a status on follows,
+// so every existing read of follows stays correct. Accepting moves the row into follows.
+model FollowRequest {
+  requesterId String   @map("requester_id") @db.Uuid
+  targetId    String   @map("target_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  requester User @relation("Requester", fields: [requesterId], references: [id], onDelete: Cascade)
+  target    User @relation("RequestTarget", fields: [targetId], references: [id], onDelete: Cascade)
+
+  @@id([requesterId, targetId])
+  @@index([targetId, createdAt(sort: Desc)]) // the owner's list of requests
+  @@map("follow_requests")
 }
 
 model Block {

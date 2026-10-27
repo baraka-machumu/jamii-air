@@ -1,6 +1,8 @@
 -- DELETE /users/:id/follow (BR-PR-04). Idempotent: unfollowing someone you don't follow is fine.
+-- Also cancels a pending follow request (BR-PR-07), whose notification goes with it.
+-- Also cancels a pending follow request (BR-PR-07), whose notification goes with it.
 CREATE OR REPLACE FUNCTION fn_unfollow_user(p_viewer_id uuid, p_target_id uuid)
-RETURNS TABLE (following boolean, follower_count int)
+RETURNS TABLE (following boolean, requested boolean, follower_count int)
 LANGUAGE plpgsql VOLATILE SECURITY DEFINER
 SET search_path = public, pg_temp
 AS $$
@@ -17,6 +19,14 @@ BEGIN
 
   PERFORM 1 FROM users u WHERE u.id IN (p_viewer_id, p_target_id) ORDER BY u.id FOR UPDATE;
 
+  DELETE FROM follow_requests r WHERE r.requester_id = p_viewer_id AND r.target_id = p_target_id;
+  DELETE FROM notifications n
+  WHERE n.recipient_id = p_target_id AND n.actor_id = p_viewer_id AND n.type = 'FOLLOW_REQUEST';
+
+  DELETE FROM follow_requests r WHERE r.requester_id = p_viewer_id AND r.target_id = p_target_id;
+  DELETE FROM notifications n
+  WHERE n.recipient_id = p_target_id AND n.actor_id = p_viewer_id AND n.type = 'FOLLOW_REQUEST';
+
   DELETE FROM follows f WHERE f.follower_id = p_viewer_id AND f.following_id = p_target_id;
   GET DIAGNOSTICS v_rows = ROW_COUNT;
 
@@ -28,5 +38,5 @@ BEGIN
     SELECT u.follower_count INTO v_count FROM users u WHERE u.id = p_target_id;
   END IF;
 
-  RETURN QUERY SELECT false, v_count;
+  RETURN QUERY SELECT false, false, v_count;
 END $$;

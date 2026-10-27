@@ -1,5 +1,5 @@
--- PUT /users/:id/block (BR-SF-01). Idempotent. Removes follows in both directions and fixes
--- the counters. From then on every read hides the two users from each other and follow / like /
+-- PUT /users/:id/block (BR-SF-01). Idempotent. Removes follows and follow requests in both
+-- directions and fixes the counters. From then on every read hides the two users from each other and follow / like /
 -- comment between them is rejected.
 CREATE OR REPLACE FUNCTION fn_block_user(p_viewer_id uuid, p_target_id uuid)
 RETURNS TABLE (blocked boolean)
@@ -20,6 +20,14 @@ BEGIN
   PERFORM 1 FROM users u WHERE u.id IN (p_viewer_id, p_target_id) ORDER BY u.id FOR UPDATE;
 
   INSERT INTO blocks (blocker_id, blocked_id) VALUES (p_viewer_id, p_target_id) ON CONFLICT DO NOTHING;
+
+  DELETE FROM follow_requests r
+  WHERE (r.requester_id = p_viewer_id AND r.target_id = p_target_id)
+     OR (r.requester_id = p_target_id AND r.target_id = p_viewer_id);
+
+  DELETE FROM follow_requests r
+  WHERE (r.requester_id = p_viewer_id AND r.target_id = p_target_id)
+     OR (r.requester_id = p_target_id AND r.target_id = p_viewer_id);
 
   WITH removed AS (
     DELETE FROM follows f

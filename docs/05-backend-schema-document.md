@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Document** | 05 — Backend Schema |
-| **Version** | 1.4 (R1 scope change 2026-10-16: video, carousels, replies, hashtags, own processing posts in the feed; see §18) · 1.3 (Phase 2 API review: `fn_change_password` and five changed procedures; see §17) |
+| **Version** | 1.5 (increment A 2026-10-27, BRS §6.2: private accounts — `users.is_private`, `follow_requests`, the visibility rule; see §19) · 1.4 (R1 scope change 2026-10-16: video, carousels, replies, hashtags, own processing posts in the feed; see §18) · 1.3 (Phase 2 API review: `fn_change_password` and five changed procedures; see §17) |
 | **Status** | **Approved** — 2026-10-11 |
 | **Date** | 2026-10-09 |
 | **Scope** | PostgreSQL schema (Prisma), stored procedures, grants, object storage layout, Redis, retention |
@@ -66,6 +66,7 @@ erDiagram
 | `password_reset_codes` | Reset OTPs | auth procedures |
 | `device_push_tokens` | Expo push tokens per installation | notification procedures |
 | `follows` · `blocks` | Social graph | social procedures |
+| `follow_requests` | Pending requests to follow a private account (BR-PR-07); accepting moves the row into `follows` | `fn_follow_user`, `fn_accept_follow_request`, `fn_decline_follow_request`, `fn_unfollow_user`, `fn_update_profile`, `fn_block_user` |
 | `media_assets` · `media_variants` | Uploads and sized derivatives | media procedures |
 | `posts` · `post_media` | Posts (1–10 photos, or one video; reel in R2) and their ordered media | post procedures |
 | `likes` · `comments` | Engagement; a comment with `parent_id` is a reply (one level) | engagement procedures |
@@ -687,7 +688,7 @@ Full rules are in [TRD §6](02-technical-requirements-document.md). In short:
 | `JA400` | `INVITE_INVALID`, `INVALID_CURSOR`, `MEDIA_NOT_ATTACHABLE`, `CAPTION_TOO_LONG`, `INVALID_VARIANT_KEY` (worker) |
 | `JA401` | `ACCOUNT_NOT_ACTIVE` |
 | `JA403` | `ACCOUNT_SUSPENDED`, `NOT_OWNER`, `BLOCKED`, `ADMIN_FORBIDDEN` |
-| `JA404` | `USER_NOT_FOUND`, `POST_NOT_FOUND`, `COMMENT_NOT_FOUND`, `MEDIA_NOT_FOUND`, `REPORT_NOT_FOUND`, `INVITE_NOT_FOUND`, `ADMIN_NOT_FOUND` |
+| `JA404` | `USER_NOT_FOUND`, `FOLLOW_REQUEST_NOT_FOUND`, `POST_NOT_FOUND`, `COMMENT_NOT_FOUND`, `MEDIA_NOT_FOUND`, `REPORT_NOT_FOUND`, `INVITE_NOT_FOUND`, `ADMIN_NOT_FOUND` |
 | `JA409` | `USERNAME_TAKEN`, `EMAIL_TAKEN` (users and admins), `IDEMPOTENCY_KEY_REUSED`, `REPORT_ALREADY_HANDLED`, `INVALID_STATE` |
 | `JA422` | `UNDER_MINIMUM_AGE`, `NOTE_REQUIRED`, `CANNOT_FOLLOW_SELF`, `CANNOT_BLOCK_SELF`, `CANNOT_REPORT_SELF` |
 
@@ -729,12 +730,16 @@ Full rules are in [TRD §6](02-technical-requirements-document.md). In short:
 
 | Function | R/W | Returns |
 |---|---|---|
-| `fn_get_profile(viewer, username)` | R | profile + `is_following`, `is_blocked_by_me`, avatar keys (404 if blocked either way or not ACTIVE) |
-| `fn_search_users(viewer, q, limit)` | R | id, username, display_name, avatar key |
-| `fn_get_followers(viewer, username, cursor)` · `fn_get_following(…)` | R | user rows + `is_following` |
-| `fn_follow_user(viewer, target_id)` | W | `following, follower_count, notification_id` |
-| `fn_unfollow_user(viewer, target_id)` | W | `following, follower_count` |
-| `fn_block_user(viewer, target_id)` | W | `blocked` — removes follows both ways + counters |
+| `fn_get_profile(viewer, username)` | R | profile + `is_following`, `is_blocked_by_me`, avatar keys (404 if blocked either way or not ACTIVE); `is_private`, `can_see_content`, `follow_requested`, `follow_request_count` (own only) |
+| `fn_search_users(viewer, q, limit)` | R | id, username, display_name, avatar key, `is_following`, `follow_requested` |
+| `fn_get_followers(viewer, username, cursor)` · `fn_get_following(…)` | R | user rows + `is_following`, `follow_requested`; empty for a private account the viewer does not follow |
+| `fn_follow_user(viewer, target_id)` | W | `following, requested, follower_count, notification_id` — a private target gets a request (`requested`) and a FOLLOW_REQUEST notification |
+| `fn_unfollow_user(viewer, target_id)` | W | `following, requested, follower_count` — also cancels a pending request |
+| `fn_get_follow_requests(viewer, cursor)` | R | requesters, newest first, + `is_following` |
+| `fn_accept_follow_request(viewer, requester_id)` | W | `follower_count, notification_id` (FOLLOW_ACCEPTED for the requester) |
+| `fn_decline_follow_request(viewer, requester_id)` | W | `declined` |
+| `fn_remove_follower(viewer, follower_id)` | W | `follower_count` |
+| `fn_block_user(viewer, target_id)` | W | `blocked` — removes follows and follow requests both ways + counters |
 | `fn_unblock_user(viewer, target_id)` | W | `blocked` |
 | `fn_get_blocked_users(viewer, cursor)` | R | user rows |
 
@@ -1193,3 +1198,33 @@ Six migrations; the procedure tests are in `test/db/r1-scope.db-spec.ts` (22 tes
 **Counter rule for replies.** `posts.comment_count` counts replies, and a reply counts only while **both** it and its parent are visible. Deleting a top-level comment soft-deletes its thread; an admin hiding one leaves the replies' own `hidden_at` alone and adjusts the count by `1 + visible replies` each way, so unhiding restores exactly what is still visible in its own right. `fn_maint_reconcile_counters` recomputes this rule and `reply_count`; the tests assert zero drift after every delete and hide.
 
 **Known limits, kept on purpose.** `reply_count` is a stored counter that does not know the viewer's blocks, so a thread can open shorter than its count (the app then shows the loaded number). Tag rows are never deleted. A run of more than 64 tag characters keeps its first 64.
+
+## 19. Changes in version 1.5 (increment A of 2026-10-27, BRS §6.2)
+
+Private accounts (BR-PR-06…09). Two migrations; the procedure tests are in
+`test/db/private-accounts.db-spec.ts` (13 tests).
+
+| Migration | What it does |
+|---|---|
+| `a_private_enums` | `notification_type` FOLLOW_REQUEST and FOLLOW_ACCEPTED, on their own for the same reason as `r1_scope_enums`. |
+| `a_private_accounts` | `users.is_private` (default false, readable by `jamii_app` for `GET /me`); `follow_requests` (PK requester + target, `follow_requests_not_self`, index by target and time; no grant: procedures only). `notifications_target` admits the two new types (no post, no comment), each de-duplicated per pair like FOLLOW. The procedures in §7.3 marked above; nine changed their result type and are dropped first. |
+
+**One rule, in one place.** `fn__can_see_content(viewer, author)` — own, public, or followed —
+is the private-account rule. `fn__assert_post_visible` applies it, so post detail, likes,
+comments, replies, reports, caption edit and delete all follow it with no change of their own;
+a private post is the same `POST_NOT_FOUND` as a deleted one. `fn_get_profile_posts`,
+`fn_get_followers` and `fn_get_following` return nothing to a viewer who may not see, and
+`fn_get_hashtag_posts` leaves those posts out of the page and the count. The home feed needed no
+change: it only ever showed people the viewer follows.
+
+**Why a table and not a status on `follows`.** Every existing read of `follows` (feed, counters,
+lists, reconcile) stays correct with no `WHERE status = …` added to it.
+
+**Notifications.** A request writes FOLLOW_REQUEST for the owner; cancelling, declining and
+accepting delete it. Accepting also writes the owner's FOLLOW ("started following you") as
+already read — their own action, so never pushed — and FOLLOW_ACCEPTED for the requester, once
+per pair. Going public accepts every pending request in one statement, without notifications.
+
+**Known limits, kept on purpose.** Media objects are served by unguessable key with no signature,
+so a URL someone already has keeps working after the account goes private. A request cancelled
+and made again notifies again; the follow route's rate limit (200 a day) bounds it.

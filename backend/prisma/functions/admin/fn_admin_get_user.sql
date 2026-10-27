@@ -1,12 +1,13 @@
 -- GET /admin/users/:id (App Flow §15.5): account, status history fields, recent posts (any status),
 -- reports against the user and moderation history. Never the date of birth or hashes.
+-- is_private (BR-PR-06) is shown, not enforced: moderators see every account's content.
 CREATE OR REPLACE FUNCTION fn_admin_get_user(p_admin_id uuid, p_user_id uuid)
 RETURNS TABLE (
   user_id uuid, username citext, display_name varchar, bio varchar, email citext, status user_status,
   avatar_m_key text, locale varchar, post_count int, follower_count int, following_count int,
   invite_code varchar, suspended_at timestamptz, deletion_requested_at timestamptz,
   last_active_at timestamptz, created_at timestamptz, reports_filed int, active_sessions int,
-  recent_posts jsonb, reports_against jsonb, moderation_history jsonb)
+  recent_posts jsonb, reports_against jsonb, moderation_history jsonb, is_private boolean)
 LANGUAGE plpgsql STABLE SECURITY DEFINER
 SET search_path = public, pg_temp
 AS $$
@@ -46,7 +47,8 @@ BEGIN
                       'postId', m.target_post_id, 'commentId', m.target_comment_id, 'createdAt', m.created_at) AS item
              FROM moderation_actions m JOIN admin_users a ON a.id = m.admin_id
              WHERE m.target_user_id = u.id
-             ORDER BY m.created_at DESC LIMIT 30) x), '[]'::jsonb)
+             ORDER BY m.created_at DESC LIMIT 30) x), '[]'::jsonb),
+         u.is_private
   FROM users u
   LEFT JOIN invite_codes i ON i.id = u.invite_code_id
   LEFT JOIN media_variants av ON av.media_id = u.avatar_media_id AND av.variant = 'AVATAR_M'

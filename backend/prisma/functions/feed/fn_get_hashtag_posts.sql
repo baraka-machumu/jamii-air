@@ -1,6 +1,7 @@
 -- GET /tags/:tag/posts (BR-FD-11). The posts carrying one tag, newest first, as grid tiles.
 -- Visibility matches the feed and the profile grid: PUBLISHED posts only, author ACTIVE, and
--- nothing either way across a block — so a tag never becomes a way around a block.
+-- nothing either way across a block — so a tag never becomes a way around a block — and nothing
+-- from a private account the viewer does not follow (BR-PR-08), counted the same way.
 -- Unlike the home feed this is NOT limited to people the viewer follows: a tag is how the pilot
 -- finds posts from accounts it does not follow yet.
 -- An unknown tag is not an error, it is an empty page, which is also what the screen shows for a
@@ -42,7 +43,8 @@ BEGIN
   FROM post_hashtags ph
   JOIN posts p ON p.id = ph.post_id AND p.status = 'PUBLISHED'
   JOIN users u ON u.id = p.author_id AND u.status = 'ACTIVE'
-  WHERE ph.hashtag_id = v_hashtag_id;
+  WHERE ph.hashtag_id = v_hashtag_id
+    AND fn__can_see_content(p_viewer_id, p.author_id);
 
   RETURN QUERY
   SELECT p.id, p.status, p.type, tv.object_key, ma.blurhash,
@@ -56,6 +58,7 @@ BEGIN
   LEFT JOIN media_variants tv ON tv.media_id = pm.media_id AND tv.variant = 'THUMB'
   WHERE ph.hashtag_id = v_hashtag_id
     AND (p.created_at, p.id) < (c.cursor_time, c.cursor_id)
+    AND fn__can_see_content(p_viewer_id, p.author_id)
     AND NOT EXISTS (SELECT 1 FROM blocks b
                     WHERE (b.blocker_id = p_viewer_id AND b.blocked_id = p.author_id)
                        OR (b.blocker_id = p.author_id AND b.blocked_id = p_viewer_id))

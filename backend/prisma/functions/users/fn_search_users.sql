@@ -1,12 +1,14 @@
 -- GET /users/search?q= (BR-PR-03, TRD SR-01). Ranking: username prefix, then display-name prefix,
 -- then (for queries of 3+ characters) substring and pg_trgm similarity matches, closest first.
 -- An empty query lists the newest users (onboarding "Find people"). Excludes the viewer,
--- non-ACTIVE users and anyone blocked in either direction.
+-- non-ACTIVE users and anyone blocked in either direction. Private accounts are found like any
+-- other (their header is public, BR-PR-08); follow_requested makes their button read Requested.
 -- Each stage reads at most 3 × limit candidates through its own index (btree text_pattern_ops for
 -- prefixes, GIN trigram for the rest), so the cost does not grow with the number of users.
 CREATE OR REPLACE FUNCTION fn_search_users(p_viewer_id uuid, p_q text, p_limit int DEFAULT 20)
 RETURNS TABLE (
-  user_id uuid, username citext, display_name varchar, avatar_s_key text, is_following boolean)
+  user_id uuid, username citext, display_name varchar, avatar_s_key text, is_following boolean,
+  follow_requested boolean)
 LANGUAGE plpgsql STABLE SECURITY DEFINER
 SET search_path = public, pg_temp
 AS $$
@@ -23,7 +25,8 @@ BEGIN
   IF v_q = '' THEN
     RETURN QUERY
     SELECT u.id, u.username, u.display_name, av.object_key,
-           EXISTS (SELECT 1 FROM follows fo WHERE fo.follower_id = p_viewer_id AND fo.following_id = u.id)
+           EXISTS (SELECT 1 FROM follows fo WHERE fo.follower_id = p_viewer_id AND fo.following_id = u.id),
+           EXISTS (SELECT 1 FROM follow_requests r WHERE r.requester_id = p_viewer_id AND r.target_id = u.id)
     FROM users u
     LEFT JOIN media_variants av ON av.media_id = u.avatar_media_id AND av.variant = 'AVATAR_S'
     WHERE u.status = 'ACTIVE' AND u.id <> p_viewer_id
@@ -56,7 +59,8 @@ BEGIN
     SELECT c.id, min(c.rank) AS rank, min(c.dist) AS dist FROM candidates c GROUP BY c.id
   )
   SELECT u.id, u.username, u.display_name, av.object_key,
-         EXISTS (SELECT 1 FROM follows fo WHERE fo.follower_id = p_viewer_id AND fo.following_id = u.id)
+         EXISTS (SELECT 1 FROM follows fo WHERE fo.follower_id = p_viewer_id AND fo.following_id = u.id),
+         EXISTS (SELECT 1 FROM follow_requests r WHERE r.requester_id = p_viewer_id AND r.target_id = u.id)
   FROM best
   JOIN users u ON u.id = best.id AND u.status = 'ACTIVE' AND u.id <> p_viewer_id
   LEFT JOIN media_variants av ON av.media_id = u.avatar_media_id AND av.variant = 'AVATAR_S'

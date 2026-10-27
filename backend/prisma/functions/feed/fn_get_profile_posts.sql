@@ -1,7 +1,8 @@
 -- GET /users/:username/posts (profile grid, BR-PR-01). Newest first, keyset paging. Other people
 -- see PUBLISHED posts; on their own profile the viewer also sees PROCESSING and FAILED posts, and
 -- HIDDEN ones (shown as "Removed for violating Community Guidelines", App Flow §10.3).
--- JA404 under the same rules as fn_get_profile; empty when the viewer blocked the profile.
+-- JA404 under the same rules as fn_get_profile; empty when the viewer blocked the profile, and
+-- for a private account the viewer does not follow (BR-PR-08).
 -- `type` and `media_count` are what the tile badges are drawn from: a play triangle on a video
 -- (BR-CT-07) and a carousel marker when the post holds more than one photo (BR-CT-09).
 CREATE OR REPLACE FUNCTION fn_get_profile_posts(
@@ -23,7 +24,7 @@ DECLARE
 BEGIN
   PERFORM fn__assert_active_user(p_viewer_id);
   t := fn__resolve_profile(p_viewer_id, p_username);
-  IF t.blocked_by_me THEN
+  IF t.blocked_by_me OR NOT fn__can_see_content(p_viewer_id, t.target_id) THEN
     RETURN;
   END IF;
 

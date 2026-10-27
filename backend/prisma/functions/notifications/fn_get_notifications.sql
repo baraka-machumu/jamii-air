@@ -1,7 +1,9 @@
 -- GET /notifications (BR-NT-02, Activity screen). Newest first, keyset paging. Hides actors who
 -- are not ACTIVE or blocked either way. A notification whose post or comment was since deleted
 -- or hidden stays in the list with target_available = false (the app shows "no longer available")
--- and without thumbnail or excerpt.
+-- and without thumbnail or excerpt. FOLLOW_REQUEST and FOLLOW_ACCEPTED (BR-PR-07) are about a
+-- person, like FOLLOW, so always available; a request that was accepted, declined or cancelled
+-- took its notification with it. actor_follow_requested: the viewer has asked to follow the actor.
 CREATE OR REPLACE FUNCTION fn_get_notifications(
   p_viewer_id   uuid,
   p_cursor_time timestamptz DEFAULT NULL,
@@ -11,7 +13,8 @@ RETURNS TABLE (
   notification_id uuid, type notification_type, created_at timestamptz, read_at timestamptz,
   actor_id uuid, actor_username citext, actor_display_name varchar, actor_avatar_key text,
   actor_followed_by_me boolean,
-  post_id uuid, post_thumb_key text, comment_id uuid, comment_excerpt text, target_available boolean)
+  post_id uuid, post_thumb_key text, comment_id uuid, comment_excerpt text, target_available boolean,
+  actor_follow_requested boolean)
 LANGUAGE plpgsql STABLE SECURITY DEFINER
 SET search_path = public, pg_temp
 AS $$
@@ -29,7 +32,8 @@ BEGIN
          CASE WHEN t.available THEN tv.object_key END,
          n.comment_id,
          CASE WHEN t.available THEN left(k.body, 100) END,
-         t.available
+         t.available,
+         EXISTS (SELECT 1 FROM follow_requests r WHERE r.requester_id = p_viewer_id AND r.target_id = a.id)
   FROM notifications n
   JOIN users a ON a.id = n.actor_id AND a.status = 'ACTIVE'
   LEFT JOIN media_variants av ON av.media_id = a.avatar_media_id AND av.variant = 'AVATAR_S'
@@ -39,7 +43,9 @@ BEGIN
   LEFT JOIN media_variants tv ON tv.media_id = pm.media_id AND tv.variant = 'THUMB'
   CROSS JOIN LATERAL (
     SELECT CASE n.type
-             WHEN 'FOLLOW'  THEN true
+             WHEN 'FOLLOW'          THEN true
+             WHEN 'FOLLOW_REQUEST'  THEN true
+             WHEN 'FOLLOW_ACCEPTED' THEN true
              WHEN 'LIKE'    THEN p.status = 'PUBLISHED'
              ELSE p.status = 'PUBLISHED' AND k.deleted_at IS NULL AND k.hidden_at IS NULL
            END AS available

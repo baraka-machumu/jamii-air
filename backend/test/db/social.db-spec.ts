@@ -9,12 +9,12 @@ const counts = (id: string) => one('SELECT follower_count, following_count FROM 
 describe('fn_follow_user / fn_unfollow_user', () => {
   it('follows idempotently and keeps both counters right', async () => {
     const [a, b] = [await createUser(), await createUser()];
-    expect(await follow(a.id, b.id)).toEqual({ following: true, follower_count: 1, notification_id: expect.any(String) });
-    expect(await follow(a.id, b.id)).toEqual({ following: true, follower_count: 1, notification_id: null });
+    expect(await follow(a.id, b.id)).toEqual({ following: true, requested: false, follower_count: 1, notification_id: expect.any(String) });
+    expect(await follow(a.id, b.id)).toEqual({ following: true, requested: false, follower_count: 1, notification_id: null });
     expect(await counts(a.id)).toEqual({ follower_count: 0, following_count: 1 });
 
-    expect(await one('SELECT * FROM fn_unfollow_user($1, $2)', [a.id, b.id])).toEqual({ following: false, follower_count: 0 });
-    expect(await one('SELECT * FROM fn_unfollow_user($1, $2)', [a.id, b.id])).toEqual({ following: false, follower_count: 0 });
+    expect(await one('SELECT * FROM fn_unfollow_user($1, $2)', [a.id, b.id])).toEqual({ following: false, requested: false, follower_count: 0 });
+    expect(await one('SELECT * FROM fn_unfollow_user($1, $2)', [a.id, b.id])).toEqual({ following: false, requested: false, follower_count: 0 });
     expect(await counts(a.id)).toEqual({ follower_count: 0, following_count: 0 });
   });
 

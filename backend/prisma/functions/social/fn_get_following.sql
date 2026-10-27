@@ -1,4 +1,5 @@
--- GET /users/:username/following (BR-PR-05, Should). Same shape and rules as fn_get_followers.
+-- GET /users/:username/following (BR-PR-05, Should). Same shape and rules as fn_get_followers,
+-- including the private-account rule (BR-PR-08).
 CREATE OR REPLACE FUNCTION fn_get_following(
   p_viewer_id   uuid,
   p_username    text,
@@ -7,7 +8,7 @@ CREATE OR REPLACE FUNCTION fn_get_following(
   p_limit       int         DEFAULT 20)
 RETURNS TABLE (
   user_id uuid, username citext, display_name varchar, avatar_s_key text,
-  is_following boolean, is_me boolean, followed_at timestamptz)
+  is_following boolean, is_me boolean, followed_at timestamptz, follow_requested boolean)
 LANGUAGE plpgsql STABLE SECURITY DEFINER
 SET search_path = public, pg_temp
 AS $$
@@ -18,7 +19,7 @@ DECLARE
 BEGIN
   PERFORM fn__assert_active_user(p_viewer_id);
   t := fn__resolve_profile(p_viewer_id, p_username);
-  IF t.blocked_by_me THEN
+  IF t.blocked_by_me OR NOT fn__can_see_content(p_viewer_id, t.target_id) THEN
     RETURN;
   END IF;
 
@@ -26,7 +27,8 @@ BEGIN
   SELECT u.id, u.username, u.display_name, av.object_key,
          EXISTS (SELECT 1 FROM follows mine WHERE mine.follower_id = p_viewer_id AND mine.following_id = u.id),
          u.id = p_viewer_id,
-         f.created_at
+         f.created_at,
+         EXISTS (SELECT 1 FROM follow_requests r WHERE r.requester_id = p_viewer_id AND r.target_id = u.id)
   FROM follows f
   JOIN users u ON u.id = f.following_id AND u.status = 'ACTIVE'
   LEFT JOIN media_variants av ON av.media_id = u.avatar_media_id AND av.variant = 'AVATAR_S'

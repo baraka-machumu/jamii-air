@@ -310,7 +310,7 @@
             "bearer": []
           }
         ],
-        "summary": "Edit display name, bio, username, avatar or language; only the fields sent change",
+        "summary": "Edit display name, bio, username, avatar, language or private account; only the fields sent change",
         "tags": [
           "users"
         ]
@@ -577,7 +577,7 @@
             "bearer": []
           }
         ],
-        "summary": "Follow (idempotent)",
+        "summary": "Follow (idempotent); a private account is asked instead (requested: true)",
         "tags": [
           "users"
         ]
@@ -611,7 +611,159 @@
             "bearer": []
           }
         ],
-        "summary": "Unfollow (idempotent)",
+        "summary": "Unfollow, or cancel a follow request (idempotent)",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/api/v1/me/follow-requests": {
+      "get": {
+        "operationId": "UsersController_followRequests",
+        "parameters": [
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "description": "nextCursor of the previous page",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FollowRequestPage"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "People asking to follow your private account, newest first (BR-PR-07)",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/api/v1/me/follow-requests/{userId}/accept": {
+      "post": {
+        "operationId": "UsersController_acceptFollowRequest",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FollowerCount"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "FOLLOW_REQUEST_NOT_FOUND"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Accept a follow request (idempotent); the requester is told",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/api/v1/me/follow-requests/{userId}": {
+      "delete": {
+        "operationId": "UsersController_declineFollowRequest",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Decline a follow request (idempotent); the requester is not told",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/api/v1/me/followers/{userId}": {
+      "delete": {
+        "operationId": "UsersController_removeFollower",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FollowerCount"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove a follower (idempotent); they are not told (BR-PR-09)",
         "tags": [
           "users"
         ]
@@ -3095,6 +3247,14 @@
           },
           "followingCount": {
             "type": "number"
+          },
+          "isPrivate": {
+            "type": "boolean",
+            "description": "A private account (BR-PR-06)"
+          },
+          "followRequestCount": {
+            "type": "number",
+            "description": "People waiting for you to accept (BR-PR-07)"
           }
         },
         "required": [
@@ -3109,7 +3269,9 @@
           "locale",
           "postCount",
           "followerCount",
-          "followingCount"
+          "followingCount",
+          "isPrivate",
+          "followRequestCount"
         ]
       },
       "UpdateMeDto": {
@@ -3139,6 +3301,10 @@
               "en",
               "sw"
             ]
+          },
+          "isPrivate": {
+            "type": "boolean",
+            "description": "Private account (BR-PR-06). Going public accepts every pending follow request"
           }
         }
       },
@@ -3161,6 +3327,10 @@
           },
           "isFollowing": {
             "type": "boolean"
+          },
+          "followRequested": {
+            "type": "boolean",
+            "description": "You asked to follow this private account: the button reads Requested"
           }
         },
         "required": [
@@ -3168,7 +3338,8 @@
           "username",
           "displayName",
           "avatarUrl",
-          "isFollowing"
+          "isFollowing",
+          "followRequested"
         ]
       },
       "UserSearchResult": {
@@ -3234,6 +3405,22 @@
             "type": "boolean",
             "description": "You blocked this user: show Unblock; posts and lists stay empty"
           },
+          "isPrivate": {
+            "type": "boolean",
+            "description": "A private account (BR-PR-06)"
+          },
+          "canSeeContent": {
+            "type": "boolean",
+            "description": "false: show \"This account is private\"; posts and lists come back empty (BR-PR-08)"
+          },
+          "followRequested": {
+            "type": "boolean",
+            "description": "You asked to follow and are waiting: the button reads Requested"
+          },
+          "followRequestCount": {
+            "type": "number",
+            "description": "People waiting for you to accept; only ever non-zero on your own profile"
+          },
           "shareUrl": {
             "type": "string",
             "description": "\"Copy profile link\": opens the profile in the app, else a landing page"
@@ -3256,6 +3443,10 @@
           "isFollowing",
           "followsMe",
           "isBlockedByMe",
+          "isPrivate",
+          "canSeeContent",
+          "followRequested",
+          "followRequestCount",
           "shareUrl",
           "createdAt"
         ]
@@ -3280,6 +3471,10 @@
           "isFollowing": {
             "type": "boolean"
           },
+          "followRequested": {
+            "type": "boolean",
+            "description": "You asked to follow this private account: the button reads Requested"
+          },
           "isMe": {
             "type": "boolean"
           },
@@ -3293,6 +3488,7 @@
           "displayName",
           "avatarUrl",
           "isFollowing",
+          "followRequested",
           "isMe",
           "followedAt"
         ]
@@ -3322,12 +3518,81 @@
           "following": {
             "type": "boolean"
           },
+          "requested": {
+            "type": "boolean",
+            "description": "A private account was asked rather than followed (BR-PR-07): the button reads Requested"
+          },
           "followerCount": {
             "type": "number"
           }
         },
         "required": [
           "following",
+          "requested",
+          "followerCount"
+        ]
+      },
+      "FollowRequest": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string",
+            "nullable": true
+          },
+          "avatarUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "isFollowing": {
+            "type": "boolean",
+            "description": "You already follow them: hide \"Follow back\" once accepted"
+          },
+          "requestedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "username",
+          "displayName",
+          "avatarUrl",
+          "isFollowing",
+          "requestedAt"
+        ]
+      },
+      "FollowRequestPage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FollowRequest"
+            }
+          },
+          "nextCursor": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor"
+        ]
+      },
+      "FollowerCount": {
+        "type": "object",
+        "properties": {
+          "followerCount": {
+            "type": "number"
+          }
+        },
+        "required": [
           "followerCount"
         ]
       },
@@ -3999,6 +4264,10 @@
           "isFollowing": {
             "type": "boolean",
             "description": "Hide \"Follow back\" when true"
+          },
+          "followRequested": {
+            "type": "boolean",
+            "description": "You asked to follow them (private account): \"Follow back\" reads Requested"
           }
         },
         "required": [
@@ -4006,7 +4275,8 @@
           "username",
           "displayName",
           "avatarUrl",
-          "isFollowing"
+          "isFollowing",
+          "followRequested"
         ]
       },
       "Notification": {
@@ -4021,9 +4291,11 @@
               "FOLLOW",
               "LIKE",
               "COMMENT",
-              "REPLY"
+              "REPLY",
+              "FOLLOW_REQUEST",
+              "FOLLOW_ACCEPTED"
             ],
-            "description": "REPLY: someone answered your comment (BR-FD-08). Its commentId is the reply"
+            "description": "REPLY: someone answered your comment (BR-FD-08), its commentId is the reply. FOLLOW_REQUEST: someone asked to follow your private account (open Follow requests); FOLLOW_ACCEPTED: your request was accepted (BR-PR-07)"
           },
           "actor": {
             "$ref": "#/components/schemas/NotificationActor"
@@ -5029,6 +5301,10 @@
             "items": {
               "$ref": "#/components/schemas/ModerationEntry"
             }
+          },
+          "isPrivate": {
+            "type": "boolean",
+            "description": "A private account (BR-PR-06); moderators still see all of it"
           }
         },
         "required": [
@@ -5052,7 +5328,8 @@
           "activeSessions",
           "recentPosts",
           "reportsAgainst",
-          "moderationHistory"
+          "moderationHistory",
+          "isPrivate"
         ]
       },
       "ModerationDto": {
@@ -5740,6 +6017,7 @@
               "COMMENT_NOT_FOUND",
               "CSRF_CHECK_FAILED",
               "EMAIL_TAKEN",
+              "FOLLOW_REQUEST_NOT_FOUND",
               "FORBIDDEN",
               "IDEMPOTENCY_KEY_REUSED",
               "INTERNAL_ERROR",

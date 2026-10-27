@@ -69,6 +69,9 @@ export default function User() {
               <Row label="Joined">{when(data.createdAt)}</Row>
               <Row label="Age">Confirmed 18+ at sign-up</Row>
               <Row label="Language">{data.locale === 'sw' ? 'Swahili' : 'English'}</Row>
+              <Row label="Account">
+                {data.isPrivate ? 'Private: only approved followers see the posts' : 'Public'}
+              </Row>
               <Row label="Invited with">{data.inviteCode ?? '—'}</Row>
               <Row label="Last active">{data.lastActiveAt ? `${ageSince(data.lastActiveAt)} ago` : 'never'}</Row>
               {data.suspendedAt && <Row label="Suspended">{when(data.suspendedAt)}</Row>}

@@ -40,6 +40,7 @@ const userDetail = (overrides: Record<string, unknown> = {}) => ({
   postCount: 12,
   followerCount: 34,
   followingCount: 20,
+  isPrivate: false,
   inviteCode: 'JAMII-7',
   suspendedAt: null,
   deletionRequestedAt: null,
@@ -156,6 +157,13 @@ describe('one account', () => {
     expect(screen.getByText('juma@example.test')).toBeInTheDocument();
     expect(screen.getByText('Swahili')).toBeInTheDocument();
     expect(screen.getByText('2 devices')).toBeInTheDocument();
+  });
+
+  it('says whether the account is private (BR-PR-06); moderators still see all of it', async () => {
+    server(listAnd([], userDetail({ isPrivate: true })));
+    renderAt(<App />, '/users/u1');
+
+    expect(await screen.findByText('Private: only approved followers see the posts')).toBeInTheDocument();
   });
 
   it('says the account is 18+ without printing a date of birth', async () => {

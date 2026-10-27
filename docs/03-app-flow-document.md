@@ -417,7 +417,7 @@ Undo: hidden content can be **Unhidden** and suspended users **Reinstated** from
 
 ### 15.5 Users
 
-Search by username, display name or email; filter by status. **User detail:** profile header, status, joined date, age confirmed (18+ — DOB itself not displayed), counts, recent posts grid (incl. hidden, badged), reports against them, moderation history, active sessions count. Actions: **Suspend / Reinstate**, **Revoke all sessions**.
+Search by username, display name or email; filter by status. **User detail:** profile header, status, Public / Private (BR-PR-06; moderators see a private account's content all the same), joined date, age confirmed (18+ — DOB itself not displayed), counts, recent posts grid (incl. hidden, badged), reports against them, moderation history, active sessions count. Actions: **Suspend / Reinstate**, **Revoke all sessions**.
 
 ### 15.6 Invite codes (pilot)
 

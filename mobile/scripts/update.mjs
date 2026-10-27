@@ -39,11 +39,15 @@ if (!args.includes('--message')) {
   args.push('--message', execSync('git log -1 --format=%s', { cwd: MOBILE, encoding: 'utf8' }).trim());
 }
 
+// `shell: true` (needed for npx on Windows) joins the arguments with spaces, so a message with
+// spaces in it arrived as one word per argument and eas refused it: quote anything with spaces.
+const quote = (arg) => (/[\s"]/.test(arg) ? `"${arg.replace(/"/g, '\\"')}"` : arg);
+
 console.log(`EAS Update → channel "${build.channel}" with ${Object.keys(env).join(', ') || 'no profile env'}`);
 const result = spawnSync('npx', [
   'eas-cli@latest', 'update', '--channel', build.channel, '--environment', profile,
   '--platform', 'android', '--non-interactive', ...args,
-], { cwd: MOBILE, stdio: 'inherit', shell: true, env: { ...process.env, ...env } });
+].map(quote), { cwd: MOBILE, stdio: 'inherit', shell: true, env: { ...process.env, ...env } });
 if (result.status !== 0) process.exit(result.status ?? 1);
 
 // The publish is done by now, so this cannot stop a bad bundle, only shout about it at once.

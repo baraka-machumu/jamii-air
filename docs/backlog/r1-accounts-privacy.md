@@ -20,7 +20,7 @@ Columns as in Plan §2.3. **Review** = built, every check green locally, committ
 |---|---|---|---|---|
 | A.0 Scope and docs | P, G | Review | this commit | BRS §6.2, BR-AC-09…11, BR-PR-04 and 06…09, BR-NT-01; D-13 in 00 §3a; App Flow §4.6, §8.2a, §8.5, §9, §10.4, §11; Plan §1.0a and §4. TRD and Schema change with A.1/A.6 |
 | A.1 Database | P | Review | this commit | 2 migrations (`a_private_enums`, `a_private_accounts`); `fn__can_see_content` and 4 new procedures (`fn_get_follow_requests`, `fn_accept_follow_request`, `fn_decline_follow_request`, `fn_remove_follower`), 12 changed. 13 new procedure tests in `test/db/private-accounts.db-spec.ts`; **158 pass**, drift check passes on 102 functions. Schema §19 |
-| A.2 Backend | P | To do | — | |
+| A.2 Backend | P | Review | this commit | `requested` on follow / unfollow; `GET /me/follow-requests`, `POST …/:userId/accept`, `DELETE …/:userId`, `DELETE /me/followers/:userId`; `isPrivate` on `PATCH /me` and `GET /me` (+ `followRequestCount`); `isPrivate`, `canSeeContent`, `followRequested` on profiles, `followRequested` on search, follow lists and notification actors; FOLLOW_REQUEST / FOLLOW_ACCEPTED pushes in en and sw; `FOLLOW_REQUEST_NOT_FOUND`; admin user detail `isPrivate`. **75 unit, 90 e2e pass** (6 new e2e, conformance covers the new shapes); OpenAPI 62 paths; TRD §5.1 |
 | A.3 Mobile | P | To do | — | JavaScript only: ships over EAS Update |
 | A.4 Admin portal | P | To do | — | |
 | A.5 Google Cloud OAuth client | G | To do (owner) | — | Free. See "What the owner sets up for Google" |

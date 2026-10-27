@@ -182,6 +182,7 @@ export class AdminUserDetail {
   @ApiProperty({ type: [AdminRecentPost], nullable: true, description: 'Any status, hidden ones badged' }) recentPosts!: AdminRecentPost[] | null;
   @ApiProperty({ type: [ReportRef], nullable: true }) reportsAgainst!: ReportRef[] | null;
   @ApiProperty({ type: [ModerationEntry], nullable: true }) moderationHistory!: ModerationEntry[] | null;
+  @ApiProperty({ description: 'A private account (BR-PR-06); moderators still see all of it' }) isPrivate!: boolean;
 }
 
 export class UserState {

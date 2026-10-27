@@ -47,11 +47,16 @@ export class NotificationActor {
   @ApiProperty({ nullable: true, type: String }) displayName!: string | null;
   @ApiProperty({ nullable: true, type: String }) avatarUrl!: string | null;
   @ApiProperty({ description: 'Hide "Follow back" when true' }) isFollowing!: boolean;
+  @ApiProperty({ description: 'You asked to follow them (private account): "Follow back" reads Requested' }) followRequested!: boolean;
 }
 
 export class Notification {
   @ApiProperty() id!: string;
-  @ApiProperty({ enum: ['FOLLOW', 'LIKE', 'COMMENT', 'REPLY'], description: 'REPLY: someone answered your comment (BR-FD-08). Its commentId is the reply' }) type!: string;
+  @ApiProperty({
+    enum: ['FOLLOW', 'LIKE', 'COMMENT', 'REPLY', 'FOLLOW_REQUEST', 'FOLLOW_ACCEPTED'],
+    description: 'REPLY: someone answered your comment (BR-FD-08), its commentId is the reply. FOLLOW_REQUEST: someone asked to '
+      + 'follow your private account (open Follow requests); FOLLOW_ACCEPTED: your request was accepted (BR-PR-07)',
+  }) type!: string;
   @ApiProperty({ type: NotificationActor }) actor!: NotificationActor;
   @ApiProperty({ nullable: true, type: String }) postId!: string | null;
   @ApiProperty({ nullable: true, type: String, description: '320 × 320; null when the post is gone' }) postThumbUrl!: string | null;

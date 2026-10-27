@@ -23,6 +23,7 @@ export class NotificationsService {
       actor: {
         id: r.actor_id!, username: r.actor_username!, displayName: r.actor_display_name,
         avatarUrl: this.urls.of(r.actor_avatar_key), isFollowing: r.actor_followed_by_me ?? false,
+        followRequested: r.actor_follow_requested ?? false,
       },
       postId: r.post_id,
       postThumbUrl: this.urls.of(r.post_thumb_key),

@@ -1,6 +1,6 @@
 // Profiles and the social graph (Plan task 2.6). Rules live in the procedures; this layer shapes
 // responses (camelCase, media URLs, pages) and enqueues side effects after the calls commit
-// (SP-09): avatar processing and follow pushes.
+// (SP-09): avatar processing and follow pushes (a follow, a follow request, an accepted request).
 import { Injectable } from '@nestjs/common';
 import type { InputJsonObject } from '@prisma/client/runtime/client';
 import { ApiError } from '../../common/errors/api-error.js';
@@ -11,7 +11,7 @@ import { MediaJobs, NotificationJobs } from '../../infrastructure/queue/queue.mo
 import { MediaUrls } from '../../infrastructure/storage/media-urls.js';
 import { ShareLinks } from '../links/share-links.js';
 import { MediaService } from '../media/media.service.js';
-import type { FollowListItem, FollowState, Me, Profile, UpdateMeDto, UserSummary } from './users.dto.js';
+import type { FollowListItem, FollowRequest, FollowState, Me, Profile, UpdateMeDto, UserSummary } from './users.dto.js';
 
 @Injectable()
 export class UsersService {
@@ -30,7 +30,7 @@ export class UsersService {
     // through the profile procedure.
     const user = await this.prisma.user.findUnique({
       where: { id: viewerId },
-      select: { username: true, email: true, locale: true, avatarMediaId: true },
+      select: { username: true, email: true, locale: true, avatarMediaId: true, isPrivate: true },
     });
     if (!user) throw new ApiError(404, 'USER_NOT_FOUND');
     const profile = await this.procedures.getProfile(viewerId, user.username);
@@ -47,6 +47,8 @@ export class UsersService {
       postCount: profile.post_count ?? 0,
       followerCount: profile.follower_count ?? 0,
       followingCount: profile.following_count ?? 0,
+      isPrivate: user.isPrivate,
+      followRequestCount: profile.follow_request_count ?? 0,
     };
   }
 
@@ -76,6 +78,10 @@ export class UsersService {
       isFollowing: p.is_following ?? false,
       followsMe: p.follows_me ?? false,
       isBlockedByMe: p.is_blocked_by_me ?? false,
+      isPrivate: p.is_private ?? false,
+      canSeeContent: p.can_see_content ?? false,
+      followRequested: p.follow_requested ?? false,
+      followRequestCount: p.follow_request_count ?? 0,
       shareUrl: this.links.profile(p.username!),
       createdAt: p.created_at!.toISOString(),
     };
@@ -87,6 +93,7 @@ export class UsersService {
       items: rows.map((r) => ({
         id: r.user_id!, username: r.username!, displayName: r.display_name,
         avatarUrl: this.urls.of(r.avatar_s_key), isFollowing: r.is_following ?? false,
+        followRequested: r.follow_requested ?? false,
       })),
     };
   }
@@ -94,12 +101,12 @@ export class UsersService {
   async follow(viewerId: string, targetId: string): Promise<FollowState> {
     const row = await this.procedures.followUser(viewerId, targetId);
     await this.notificationJobs.push(row.notification_id);
-    return { following: row.following ?? true, followerCount: row.follower_count ?? 0 };
+    return { following: row.following ?? false, requested: row.requested ?? false, followerCount: row.follower_count ?? 0 };
   }
 
   async unfollow(viewerId: string, targetId: string): Promise<FollowState> {
     const row = await this.procedures.unfollowUser(viewerId, targetId);
-    return { following: row.following ?? false, followerCount: row.follower_count ?? 0 };
+    return { following: row.following ?? false, requested: row.requested ?? false, followerCount: row.follower_count ?? 0 };
   }
 
   async followers(viewerId: string, username: string, cursor?: string, limit?: number): Promise<Page<FollowListItem>> {
@@ -114,11 +121,36 @@ export class UsersService {
     return this.followPage(rows, size);
   }
 
+  async followRequests(viewerId: string, cursor?: string, limit?: number): Promise<Page<FollowRequest>> {
+    const size = clampLimit(limit);
+    const rows = await this.procedures.getFollowRequests(viewerId, decodeCursor(cursor), size);
+    return toPage(rows, size, (r) => ({ time: r.requested_at!, id: r.user_id! }), (r) => ({
+      id: r.user_id!, username: r.username!, displayName: r.display_name,
+      avatarUrl: this.urls.of(r.avatar_s_key), isFollowing: r.is_following ?? false,
+      requestedAt: r.requested_at!.toISOString(),
+    }));
+  }
+
+  async acceptFollowRequest(viewerId: string, requesterId: string): Promise<{ followerCount: number }> {
+    const row = await this.procedures.acceptFollowRequest(viewerId, requesterId);
+    await this.notificationJobs.push(row.notification_id);
+    return { followerCount: row.follower_count ?? 0 };
+  }
+
+  async declineFollowRequest(viewerId: string, requesterId: string): Promise<void> {
+    await this.procedures.declineFollowRequest(viewerId, requesterId);
+  }
+
+  async removeFollower(viewerId: string, followerId: string): Promise<{ followerCount: number }> {
+    const row = await this.procedures.removeFollower(viewerId, followerId);
+    return { followerCount: row.follower_count ?? 0 };
+  }
+
   private followPage(rows: FollowListRow[], limit: number): Page<FollowListItem> {
     return toPage(rows, limit, (r) => ({ time: r.followed_at!, id: r.user_id! }), (r) => ({
       id: r.user_id!, username: r.username!, displayName: r.display_name,
       avatarUrl: this.urls.of(r.avatar_s_key), isFollowing: r.is_following ?? false,
-      isMe: r.is_me ?? false, followedAt: r.followed_at!.toISOString(),
+      isMe: r.is_me ?? false, followedAt: r.followed_at!.toISOString(), followRequested: r.follow_requested ?? false,
     }));
   }
 }

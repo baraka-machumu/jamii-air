@@ -2,7 +2,7 @@
 // URLs, never email (except your own), date of birth or hashes (API-09).
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsIn, IsInt, IsOptional, IsString, IsUUID, Matches, Max, MaxLength, Min, ValidateIf } from 'class-validator';
+import { IsBoolean, IsIn, IsInt, IsOptional, IsString, IsUUID, Matches, Max, MaxLength, Min, ValidateIf } from 'class-validator';
 import { USERNAME_PATTERN } from '../auth/auth.dto.js';
 
 export class UpdateMeDto {
@@ -35,6 +35,11 @@ export class UpdateMeDto {
   @IsOptional()
   @IsIn(['en', 'sw'])
   locale?: 'en' | 'sw';
+
+  @ApiPropertyOptional({ description: 'Private account (BR-PR-06). Going public accepts every pending follow request' })
+  @IsOptional()
+  @IsBoolean()
+  isPrivate?: boolean;
 }
 
 export class SearchQuery {
@@ -75,6 +80,7 @@ export class UserSummary {
   @ApiProperty({ nullable: true, type: String }) displayName!: string | null;
   @ApiProperty({ nullable: true, type: String }) avatarUrl!: string | null;
   @ApiProperty() isFollowing!: boolean;
+  @ApiProperty({ description: 'You asked to follow this private account: the button reads Requested' }) followRequested!: boolean;
 }
 
 export class UserSearchResult {
@@ -105,6 +111,10 @@ export class Profile {
   @ApiProperty() isFollowing!: boolean;
   @ApiProperty() followsMe!: boolean;
   @ApiProperty({ description: 'You blocked this user: show Unblock; posts and lists stay empty' }) isBlockedByMe!: boolean;
+  @ApiProperty({ description: 'A private account (BR-PR-06)' }) isPrivate!: boolean;
+  @ApiProperty({ description: 'false: show "This account is private"; posts and lists come back empty (BR-PR-08)' }) canSeeContent!: boolean;
+  @ApiProperty({ description: 'You asked to follow and are waiting: the button reads Requested' }) followRequested!: boolean;
+  @ApiProperty({ description: 'People waiting for you to accept; only ever non-zero on your own profile' }) followRequestCount!: number;
   @ApiProperty({ description: '"Copy profile link": opens the profile in the app, else a landing page' }) shareUrl!: string;
   @ApiProperty() createdAt!: string;
 }
@@ -122,9 +132,30 @@ export class Me {
   @ApiProperty() postCount!: number;
   @ApiProperty() followerCount!: number;
   @ApiProperty() followingCount!: number;
+  @ApiProperty({ description: 'A private account (BR-PR-06)' }) isPrivate!: boolean;
+  @ApiProperty({ description: 'People waiting for you to accept (BR-PR-07)' }) followRequestCount!: number;
 }
 
 export class FollowState {
   @ApiProperty() following!: boolean;
+  @ApiProperty({ description: 'A private account was asked rather than followed (BR-PR-07): the button reads Requested' }) requested!: boolean;
+  @ApiProperty() followerCount!: number;
+}
+
+export class FollowRequest {
+  @ApiProperty() id!: string;
+  @ApiProperty() username!: string;
+  @ApiProperty({ nullable: true, type: String }) displayName!: string | null;
+  @ApiProperty({ nullable: true, type: String }) avatarUrl!: string | null;
+  @ApiProperty({ description: 'You already follow them: hide "Follow back" once accepted' }) isFollowing!: boolean;
+  @ApiProperty() requestedAt!: string;
+}
+
+export class FollowRequestPage {
+  @ApiProperty({ type: [FollowRequest] }) items!: FollowRequest[];
+  @ApiProperty({ nullable: true, type: String }) nextCursor!: string | null;
+}
+
+export class FollowerCount {
   @ApiProperty() followerCount!: number;
 }

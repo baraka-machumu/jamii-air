@@ -45,6 +45,16 @@ describe('API responses match the OpenAPI spec (e2e)', () => {
     ok('FollowListPage', (await as(app, me).get(`/api/v1/users/${me.username}/followers`).expect(200)).body);
     ok('FollowListPage', (await as(app, fan).get(`/api/v1/users/${fan.username}/following`).expect(200)).body);
     ok('GridPage', (await as(app, fan).get(`/api/v1/users/${me.username}/posts`).expect(200)).body);
+    // A private account: a follow request, accepted, and the follower then removed (BR-PR-06…09).
+    const asker = await registerUser(app);
+    await as(app, me).patch('/api/v1/me').send({ isPrivate: true }).expect(200);
+    ok('FollowState', (await as(app, asker).put(`/api/v1/users/${me.id}/follow`).expect(200)).body);
+    ok('FollowRequestPage', (await as(app, me).get('/api/v1/me/follow-requests').expect(200)).body);
+    ok('FollowerCount', (await as(app, me).post(`/api/v1/me/follow-requests/${asker.id}/accept`).expect(200)).body);
+    ok('FollowerCount', (await as(app, me).delete(`/api/v1/me/followers/${asker.id}`).expect(200)).body);
+    await as(app, asker).put(`/api/v1/users/${me.id}/follow`).expect(200);
+    await as(app, me).delete(`/api/v1/me/follow-requests/${asker.id}`).expect(204);
+    await as(app, me).patch('/api/v1/me').send({ isPrivate: false }).expect(200);
 
     ok('UploadIntent', (await as(app, me).post('/api/v1/media/uploads').send({ kind: 'IMAGE', purpose: 'POST', mimeType: 'image/jpeg', byteSize: 1000 }).expect(201)).body);
     ok('MediaStatus', (await as(app, me).get(`/api/v1/media/${mediaId}`).expect(200)).body);

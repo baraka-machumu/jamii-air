@@ -55,7 +55,7 @@ describe('users (e2e)', () => {
     const following = await as(app, fans[0]).get(`/api/v1/users/${fans[0].username}/following`).expect(200);
     expect(following.body.items.map((u: { id: string }) => u.id)).toEqual([star.id]);
 
-    expect((await as(app, fans[1]).delete(`/api/v1/users/${star.id}/follow`).expect(200)).body).toEqual({ following: false, followerCount: 2 });
+    expect((await as(app, fans[1]).delete(`/api/v1/users/${star.id}/follow`).expect(200)).body).toEqual({ following: false, requested: false, followerCount: 2 });
   });
 
   it('rejects bad input with stable codes', async () => {

@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Document** | 02 — Technical Requirements Document |
-| **Version** | 1.9 (Plan 5.4 security review, [09](09-security-review.md): SE-07 at any depth and inside strings, SE-09 enforced in CI, new SE-11 trusted proxy) · 1.8 (R1 scope change 2026-10-16, BRS §6.1: video posts §9.1, carousels, replies and hashtags in §5.1, MD-01 per kind, FD-05 now server-side) · 1.7 (Phase 3: mobile stack as built, §3: Expo Router, on-device storage, native photo upload, animations with React Native `Animated`, clipboard, push registration; Phase 2: admin sign-in §8.2 and API review endpoints, see [07](07-api-review.md)) |
+| **Version** | 1.10 (increment A 2026-10-27, BRS §6.2: private accounts in §5.1 — follow requests, remove follower, `isPrivate`) · 1.9 (Plan 5.4 security review, [09](09-security-review.md): SE-07 at any depth and inside strings, SE-09 enforced in CI, new SE-11 trusted proxy) · 1.8 (R1 scope change 2026-10-16, BRS §6.1: video posts §9.1, carousels, replies and hashtags in §5.1, MD-01 per kind, FD-05 now server-side) · 1.7 (Phase 3: mobile stack as built, §3: Expo Router, on-device storage, native photo upload, animations with React Native `Animated`, clipboard, push registration; Phase 2: admin sign-in §8.2 and API review endpoints, see [07](07-api-review.md)) |
 | **Status** | **Approved** — 2026-10-11 |
 | **Date** | 2026-10-10 |
 | **Scope** | Release 1 (MVP) in detail; R1.1–R4 as forward-compatibility requirements |
@@ -198,13 +198,17 @@ admin/src/
 | POST | `/auth/password/reset` | 🔓 | Reset with code (S) | `fn_reset_password` | 5 / h / IP |
 | POST | `/auth/password/change` | 🔒 | Change password; signs out other devices (S) | `fn_change_password` | 5 / h |
 | GET | `/me` | 🔒 | Current user | Prisma read | — |
-| PATCH | `/me` | 🔒 | Update displayName, bio, username, avatarMediaId, locale | `fn_update_profile` | 20 / h |
+| PATCH | `/me` | 🔒 | Update displayName, bio, username, avatarMediaId, locale, **isPrivate** (going public accepts every pending request, BR-PR-06) | `fn_update_profile` | 20 / h |
 | DELETE | `/me` | 🔒 | Request account deletion (password confirm) | `fn_request_account_deletion` | 3 / day |
 | GET | `/users/search?q=` | 🔒 | Search users | `fn_search_users` | 60 / min |
-| GET | `/users/:username` | 🔒 | Profile + `isFollowing`, `isBlocked` | `fn_get_profile` | — |
+| GET | `/users/:username` | 🔒 | Profile + `isFollowing`, `isBlocked`, `isPrivate`, `canSeeContent`, `followRequested` (BR-PR-08) | `fn_get_profile` | — |
 | GET | `/users/:username/posts` | 🔒 | Profile grid | `fn_get_profile_posts` | — |
 | GET | `/users/:username/followers` · `/following` | 🔒 | Lists (S) | `fn_get_followers` · `fn_get_following` | — |
-| PUT / DELETE | `/users/:id/follow` | 🔒 | Follow / unfollow (idempotent) | `fn_follow_user` · `fn_unfollow_user` | 200 / day |
+| PUT / DELETE | `/users/:id/follow` | 🔒 | Follow / unfollow (idempotent); a private account is asked (`requested: true`), and DELETE cancels a request | `fn_follow_user` · `fn_unfollow_user` | 200 / day |
+| GET | `/me/follow-requests` | 🔒 | People asking to follow you, newest first (BR-PR-07) | `fn_get_follow_requests` | — |
+| POST | `/me/follow-requests/:userId/accept` | 🔒 | Accept (idempotent; the requester is pushed FOLLOW_ACCEPTED) | `fn_accept_follow_request` | 200 / day |
+| DELETE | `/me/follow-requests/:userId` | 🔒 | Decline, 204 (idempotent; nobody is told) | `fn_decline_follow_request` | 200 / day |
+| DELETE | `/me/followers/:userId` | 🔒 | Remove a follower (idempotent; not told, BR-PR-09) | `fn_remove_follower` | 200 / day |
 | PUT / DELETE | `/users/:id/block` | 🔒 | Block / unblock | `fn_block_user` · `fn_unblock_user` | 50 / day |
 | GET | `/me/blocks` | 🔒 | Blocked users | `fn_get_blocked_users` | — |
 | POST | `/media/uploads` | 🔒 | Upload intent → `{ mediaId, uploadUrl, headers, expiresAt }`; `kind` IMAGE or VIDEO | `fn_create_upload_intent` | 150 / h (one per file: a 10-photo carousel is 10) |

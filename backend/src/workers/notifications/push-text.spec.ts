@@ -12,12 +12,13 @@ describe('push text', () => {
 
   it('names the actor in every type and language', () => {
     for (const lang of ['en', 'sw'] as const) {
-      for (const type of ['LIKE', 'COMMENT', 'FOLLOW'] as const) {
+      for (const type of ['LIKE', 'COMMENT', 'REPLY', 'FOLLOW', 'FOLLOW_REQUEST', 'FOLLOW_ACCEPTED'] as const) {
         const text = pushText(type, 'amina', lang);
         expect(text.title).toBe('Jamii Air');
         expect(text.body).toMatch(/^amina /);
       }
     }
     expect(pushText('FOLLOW', 'neema', 'sw').body).toBe('neema ameanza kukufuata');
+    expect(pushText('FOLLOW_REQUEST', 'neema', 'en').body).toBe('neema asked to follow you');
   });
 });

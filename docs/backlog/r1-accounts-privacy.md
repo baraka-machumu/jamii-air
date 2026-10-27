@@ -26,7 +26,7 @@ Columns as in Plan §2.3. **Review** = built, every check green locally, committ
 | A.5 Google Cloud OAuth client | G | To do (owner) | — | Free. See "What the owner sets up for Google" |
 | A.6 Database and backend | G | To do | — | |
 | A.7 Mobile | G | To do | — | Native module: **new `preview` APK** |
-| A.8 UAT deploy and device checks | P, G | To do | — | |
+| A.8 UAT deploy and device checks | P, G | **P deployed 2026-10-27** | — | Epic P on UAT: image, 2 migrations (drift check passes on UAT), portal; smoke test green and the 4 new routes in the running spec. App half as EAS Update [9b8d812a](https://expo.dev/accounts/bmachumu/projects/jamii-air/updates/9b8d812a-786c-43ac-b00c-1b12153bba49) on `preview`, runtime 1.0.1, after the API. **Next:** device checks A.8.a–f, k; G waits for A.5 |
 
 ## Design — private accounts
 

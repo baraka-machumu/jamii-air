@@ -106,7 +106,15 @@ PUT the photo to the presigned URL → create post → worker published it (blur
 variants) → feed → share landing page. The `.webp` variant is readable without auth (200) and the
 original is **not** (403), which is the intended policy.
 
-## Redeploying (done four times: 2026-10-15, 2026-10-16, 2026-10-19, 2026-10-22)
+## Redeploying (done five times: 2026-10-15, 2026-10-16, 2026-10-19, 2026-10-22, 2026-10-27)
+
+The 2026-10-27 run shipped private accounts (increment A, epic P): API image, the two migrations
+`a_private_enums` and `a_private_accounts` over the tunnel, and the portal. Every changed procedure
+returns a superset of its old columns, so the API still running on the old image kept working in
+the minute between migrating and restarting. `npm run db:drift-check` was run against UAT through
+the same tunnel (102 functions match). Two stale portal chunks removed, the superseded image removed;
+`/` stayed at 2.9 GB free. The app half went out afterwards as an EAS Update — in that order,
+because the new app reads a profile without `canSeeContent` as private.
 
 The 2026-10-22 run shipped the security review (Plan 5.4, [doc 09](../../docs/09-security-review.md)):
 log scrubbing, Prisma 7.10.1 and `TRUST_PROXY`. API image only — no migrations, portal unchanged.

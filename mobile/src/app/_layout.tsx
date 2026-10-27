@@ -22,6 +22,7 @@ import { UpdateRequired } from '@/components/UpdateRequired';
 import { resetLikes } from '@/engagement/likes';
 import i18n, { resolveLanguage } from '@/i18n';
 import { rememberLink, usePendingLink } from '@/links/pendingLink';
+import { useActiveVideo } from '@/media/activeVideo';
 import { usePushHandling } from '@/notifications/push';
 import { useFollowStore } from '@/people/follow';
 import { useRecentSearches } from '@/people/recentSearches';
@@ -50,11 +51,16 @@ export default function RootLayout() {
 
   // app_open: at launch, and whenever the app comes back to the foreground (TRD PA-01). Going to
   // the background is the moment to send what is queued: the app may not be opened again soon.
+  // It also stops any video, which would otherwise come back frozen (src/media/activeVideo.ts).
   useEffect(() => {
     track('app_open');
     const sub = AppState.addEventListener('change', (state) => {
-      if (state === 'active') track('app_open');
-      else void flush();
+      if (state === 'active') {
+        track('app_open');
+        return;
+      }
+      void flush();
+      if (state === 'background') useActiveVideo.getState().stopAll();
     });
     return () => sub.remove();
   }, []);

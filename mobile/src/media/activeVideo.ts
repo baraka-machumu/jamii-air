@@ -3,6 +3,11 @@
 // clip nobody is looking at keeps spending the viewer's data bundle (BRS §11) and holding a
 // decoder. "Stopped" means the page goes back to its poster and the player is released.
 //
+// Leaving the app stops it too (the screen turned off, the home button, another app). Android takes
+// the video's surface away while the app is in the background, and a player kept across that came
+// back frozen on its last frame with no ▶ to start it again, until the app was restarted. Released
+// instead, the page shows its poster on return and ▶ makes a fresh player.
+//
 // Tapping a playing video opens its post, like tapping a photo. The video then carries on there
 // from the same moment: the feed hands it off, and the post screen's page picks it up as it mounts.
 import { create } from 'zustand';
@@ -31,6 +36,8 @@ interface ActiveVideoState {
   play: (video: Playing) => void;
   /** Stops this page's video, and only if it is the one playing. */
   stop: (key: string) => void;
+  /** Stops whatever is playing: the app has left the foreground. */
+  stopAll: () => void;
   /** Stops the video unless its post is among these (the posts a list has on screen). */
   keepOnly: (postIds: ReadonlySet<string>) => void;
   handoff: Handoff | null;
@@ -51,5 +58,6 @@ export const useActiveVideo = create<ActiveVideoState>()((set, get) => ({
     return handoff;
   },
   stop: (key) => set((s) => (s.playing?.key === key ? { playing: null } : s)),
+  stopAll: () => set({ playing: null, handoff: null }),
   keepOnly: (postIds) => set((s) => (s.playing && !postIds.has(s.playing.postId) ? { playing: null } : s)),
 }));

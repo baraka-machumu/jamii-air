@@ -6,7 +6,7 @@ import { useVideoPlayer } from 'expo-video';
 import { FlashList } from '@shopify/flash-list';
 import { router } from 'expo-router';
 import { renderRouter } from 'expo-router/testing-library';
-import { Dimensions } from 'react-native';
+import { AppState, type AppStateStatus, Dimensions } from 'react-native';
 import { tokenStore } from '@/auth/tokenStore';
 import { useActiveVideo } from '@/media/activeVideo';
 import { useSession } from '@/stores/session';
@@ -225,6 +225,30 @@ describe('one video at a time (BR-CT-07, BRS §11)', () => {
 
     act(() => router.push('/search'));
     expect(useActiveVideo.getState().playing).toBeNull();
+  });
+
+  it('stops a video when the app leaves the foreground, and plays it again on return', async () => {
+    // The screen turning off: Android takes the surface away, and a player kept across it froze.
+    oneVideo();
+    renderRouter(routes, { initialUrl: '/' });
+    // React Native's jest setup mocks AppState, so the app's listeners are in its calls.
+    const appState = (state: AppStateStatus) => jest.mocked(AppState.addEventListener).mock.calls
+      .filter(([type]) => type === 'change')
+      .forEach(([, listener]) => (listener as (next: AppStateStatus) => void)(state));
+
+    fireEvent.press(await screen.findByRole('button', { name: 'Play video' }));
+    await screen.findByRole('button', { name: 'Unmute' });
+    const players = jest.mocked(useVideoPlayer).mock.results.length;
+
+    act(() => appState('background'));
+    expect(useActiveVideo.getState().playing).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Unmute' })).toBeNull();
+
+    act(() => appState('active'));
+    fireEvent.press(await screen.findByRole('button', { name: 'Play video' }));
+    await screen.findByRole('button', { name: 'Unmute' });
+    // A fresh player, not the one that was there when the screen went off.
+    expect(jest.mocked(useVideoPlayer).mock.results.length).toBeGreaterThan(players);
   });
 });
 

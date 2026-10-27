@@ -27,6 +27,7 @@ Columns as in Plan §2.3. **Review** = built, every check green locally, committ
 | S.4 Admin portal | S1, S2 | Review | `1df6977` | Carousel photos numbered; a reported video gets a player, only after *Click to show*. 4 new tests, **10 files pass**, build clean |
 | S.5 Device checks | all | To do | — | See below. **Run them on 1.0.1** ([build 92f0a99b](https://expo.dev/accounts/bmachumu/projects/jamii-air/builds/92f0a99b-693e-43c5-9aad-4296c8b22f0c), 2026-10-22), which supersedes the build below. On the new `preview` build finished 2026-10-19 ([EAS build 07e214d8](https://expo.dev/accounts/bmachumu/projects/jamii-air/builds/07e214d8-eaf1-4b47-af1f-420891fe1697)), pointed at UAT. `expo-video` is native, so the old APK cannot get this |
 | S.7 Device-run defects | S1, S2 | Review | this commit | Videos never played; carousel swipes were slow. See below. **231 mobile tests pass** (2 new, 1 tightened), typecheck and lint clean. **App half shipped 2026-10-20** as EAS Update [f7a4bbb2](https://expo.dev/accounts/bmachumu/projects/jamii-air/updates/f7a4bbb2-49ee-45c2-93c7-8c5939bf46f0) on `preview`, published with `APP_VARIANT=preview EXPO_PUBLIC_API_URL=http://41.59.227.223:4011 … --environment preview` (a bare `npm run update:preview` would bundle without the UAT URL; checked in the exported bundle). **Server half shipped 2026-10-20:** the host's compose file matched `HEAD`, was replaced, and `minio-init` re-run (other containers untouched). Checked from outside: a real `video_720.mp4` answers `206` with `video/mp4` and byte ranges, its `original` still `403`. **Next:** S.5.a and S.5.d again on the phone |
+| S.8 Video frozen after screen-off | S2 | Review | this commit | Found by the owner on UAT, 2026-10-27. See below. **237 mobile tests pass** (1 new, checked to fail without the fix), typecheck and lint clean. JavaScript only, so it ships over EAS Update to 1.0.1 |
 | S.6 UAT deploy | S1 | **Done 2026-10-19** | `d7cda60` | Image built locally and shipped per [deploy/uat/README.md](../../deploy/uat/README.md); the 7 migrations applied over the tunnel; API and worker on the new image, the superseded one removed (`/` back to 3.1 GB free); portal shipped and 3 stale assets cleared. Smoke test from outside green (health, portal proxy, media, the new routes in the running spec). **The real ffmpeg pipeline was run inside the running UAT worker** on a synthetic 1080×1920 clip → 720×1280, 8 s, and locally in the same image it stripped a planted GPS tag and refused a 70 s clip and a fake file |
 
 **Defect S5, what it was.** After sharing, nothing appeared. The app did refresh the feed and scroll
@@ -68,6 +69,16 @@ soon as `POST /posts` returns rather than only after polling. The mobile test fo
   same sound setting. **236 mobile tests pass** (5 new for these two). Both shipped 2026-10-20 as
   EAS Update [3f67ab88](https://expo.dev/accounts/bmachumu/projects/jamii-air/updates/3f67ab88-af75-40a4-bc65-fd2f415113a6) on `preview`.
 
+**Defect found on UAT (S.8, 2026-10-27).** *A video that was playing when the screen turned off
+came back frozen, and would not play again until the app was restarted.* Nothing stopped a video
+when the app left the foreground: the screen-off, home-button and app-switch paths do not change
+focus, so `useFocusEffect` never fired, the player stayed mounted and Android took its surface
+away underneath it. On return the page still counted as playing, so it showed the frozen frame
+with only a mute button and no ▶. Now the root layout stops the playing video as soon as the app
+goes to the background (`stopAll` in `src/media/activeVideo.ts`); the player is released, the page
+shows its poster on return, and ▶ creates a fresh player. Same trade-off as stopping on scroll: it
+restarts from the beginning rather than resuming.
+
 **Note on the e2e run.** Locally, `notifications.e2e-spec.ts` (and now and then one media test)
 fails while a developer's `node dist/worker.js` is running against the same Redis: that worker
 consumes the jobs the suite enqueues — including push jobs, whose real Expo call drops the test's
@@ -97,5 +108,6 @@ To be ticked on the reference Android with the new `preview` build against UAT.
 - **Hashtags are parsed, not sent**: the app finds tags in the caption with the server's rule instead of a second list in the API.
 - **A video takes taps like a photo** (2026-10-20): tap opens the post, double-tap likes; ▶ plays. Carousels still do not take the double-tap.
 - **One video plays at a time, and a stopped video goes back to its poster** (2026-10-20) rather than pausing in place: it frees the decoder and stops the download, at the cost of starting again from the beginning.
+- **Leaving the app stops the video** (2026-10-27), as leaving the screen does; resuming in place was not kept because the player does not survive losing its surface on Android.
 - **A carousel preloads one photo ahead, not all ten** (2026-10-20): swipes land on a loaded photo, and a carousel nobody swipes costs one photo more than a single post.
 - **Tag lists are not limited to follows** (that is how people are found), but apply every other feed rule.

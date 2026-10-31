@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Document** | 05 — Backend Schema |
-| **Version** | 1.6 (2026-10-31, BRS §6.3 Kidili: **planned** tables for the Ocean, Stories, Udaku rooms, Chat and Shops in §20, not built yet) · 1.5 (increment A 2026-10-27, BRS §6.2: private accounts — `users.is_private`, `follow_requests`, the visibility rule; see §19) · 1.4 (R1 scope change 2026-10-16: video, carousels, replies, hashtags, own processing posts in the feed; see §18) · 1.3 (Phase 2 API review: `fn_change_password` and five changed procedures; see §17) |
+| **Version** | 1.7 (2026-11-01: §20 draft follows the answers to Q-K1…Q-K8 — reactions enum, verified flags, delivery fee per shop, no commission) · 1.6 (2026-10-31, BRS §6.3 Kidili: **planned** tables for the Ocean, Stories, Udaku rooms, Chat and Shops in §20, not built yet) · 1.5 (increment A 2026-10-27, BRS §6.2: private accounts — `users.is_private`, `follow_requests`, the visibility rule; see §19) · 1.4 (R1 scope change 2026-10-16: video, carousels, replies, hashtags, own processing posts in the feed; see §18) · 1.3 (Phase 2 API review: `fn_change_password` and five changed procedures; see §17) |
 | **Status** | **Approved** — 2026-10-11 |
 | **Date** | 2026-10-09 |
 | **Scope** | PostgreSQL schema (Prisma), stored procedures, grants, object storage layout, Redis, retention |
@@ -1243,17 +1243,17 @@ keys, `timestamptz`, `citext` where case-insensitive, writes only through `fn_*`
 | K1/K2 | `saved_posts` | `user_id`, `post_id`, `saved_at`; PK (user, post) | BR-FD-13 (Could) |
 | K3 Stories | `stories` | `id`, `author_id`, `media_asset_id`, `text_overlay` (jsonb), `product_id` null, `created_at`, `expires_at`, `hidden_at` | Index (author, expires_at); every read filters `expires_at > now()` |
 | | `story_views` | `story_id`, `viewer_id`, `viewed_at`, `liked` | PK (story, viewer) |
-| K4 Udaku | `rooms` | `id`, `host_id`, `name`, `about`, `topic` (enum), `avatar_asset_id`, `is_listed`, `member_count`, `closed_at`, `closed_reason` | Unique name per host |
+| K4 Udaku | `rooms` | `id`, `host_id`, `name`, `about`, `topic` (enum), `avatar_asset_id`, `is_listed`, `is_verified`, `member_count`, `closed_at`, `closed_reason` | Unique name per host; `is_verified` set only by an admin procedure (BR-UD-11), as is a new `users.is_verified` |
 | | `room_members` | `room_id`, `user_id`, `joined_at`, `muted`, `last_read_post_id`, `banned_at` | PK (room, user) |
 | | `room_posts` | `id`, `room_id`, `kind` (TEXT, PHOTO, VIDEO, POLL), `body`, `view_count`, `created_at`, `hidden_at` | Media via `room_post_media` like `post_media` |
-| | `room_reactions` | `room_post_id`, `user_id`, `reaction` (enum), `created_at` | PK (post, user): one reaction each, changeable |
+| | `room_reactions` | `room_post_id`, `user_id`, `reaction` (enum LOVE, FIRE, LAUGH, WOW, SAD, CLAP), `created_at` | PK (post, user): one reaction each, changeable (Q-K7) |
 | | `room_poll_options`, `room_poll_votes` | option text and order; one vote per member | |
 | K5 Chat | `conversations` | `id`, `kind` (DIRECT), `created_at`, `last_message_at` | One per pair: unique on the ordered pair in `conversation_members` |
 | | `conversation_members` | `conversation_id`, `user_id`, `state` (ACTIVE, REQUESTED, DECLINED), `last_read_message_id`, `muted`, `cleared_before` | `state = REQUESTED` for the recipient of a first message from a non-followed sender |
 | | `messages` | `id`, `conversation_id`, `sender_id`, `client_id`, `kind` (TEXT, PHOTO, POST, PRODUCT, STORY_REPLY), `body`, `media_asset_id`, `ref_post_id`, `ref_product_id`, `ref_story_id`, `created_at`, `deleted_at` | Unique (sender, client_id) makes a resend return the first message |
 | K6 Shops | `seller_applications` | `id`, `user_id`, `shop_name`, `category`, `region`, `payout_network`, `payout_msisdn`, `nida_enc`, `id_photo_key`, `status` (PENDING, APPROVED, REJECTED), `reason`, `reviewed_by`, `reviewed_at` | NIDA encrypted in Node; photo in a private prefix (TRD §19.5) |
-| | `sellers` | `user_id` PK, `shop_name`, `payout_network`, `payout_msisdn`, `approved_at`, `suspended_at` | Created on approval |
-| | `products` | `id`, `seller_id`, `name`, `category`, `description`, `price_tzs` (bigint), `delivery_fee_tzs`, `pickup_only`, `status` (ACTIVE, PAUSED, HIDDEN, DELETED), `created_at` | Photos via `product_media` |
+| | `sellers` | `user_id` PK, `shop_name`, `payout_network`, `payout_msisdn`, `delivery_fee_tzs`, `offers_pickup`, `approved_at`, `suspended_at` | Created on approval; **one delivery fee per shop order** (Q-K5) |
+| | `products` | `id`, `seller_id`, `name`, `category`, `description`, `price_tzs` (bigint), `pickup_allowed`, `status` (ACTIVE, PAUSED, HIDDEN, DELETED), `created_at` | Photos via `product_media` |
 | | `product_options` | `id`, `product_id`, `label` (e.g. "Terracotta"), `stock`, `reserved` | Stock reserved at payment start |
 | | `cart_items` | `user_id`, `product_option_id`, `quantity`, `added_at` | PK (user, option) |
 | | `orders` | `id`, `number` (human, e.g. 2051), `buyer_id`, `seller_id`, `status` (TRD §19.4), `items_tzs`, `delivery_tzs`, `total_tzs`, `fulfilment` (DELIVERY, PICKUP), `address` (jsonb), `checkout_id`, timestamps per step | One per shop per checkout |
@@ -1261,7 +1261,7 @@ keys, `timestamptz`, `citext` where case-insensitive, writes only through `fn_*`
 | | `order_events` | `order_id`, `status`, `actor` (buyer, seller, admin, system), `note`, `at` | Every move; the timeline |
 | | `payments` | `id`, `checkout_id`, `buyer_id`, `amount_tzs`, `network`, `msisdn`, `status`, `provider_ref`, `idempotency_key`, timestamps | Written before the provider is called |
 | | `payouts` | `id`, `order_id`, `seller_id`, `amount_tzs`, `msisdn`, `status`, `provider_ref`, `attempts`, timestamps | One per completed order |
-| | `ledger_entries` | `id`, `account` (BUYER_PAYMENT, HOLDING, SELLER_PAYABLE, PAYOUT, REFUND), `amount_tzs`, `payment_id` / `payout_id` / `order_id`, `at` | Double entry; sums to zero per transaction |
+| | `ledger_entries` | `id`, `account` (BUYER_PAYMENT, HOLDING, SELLER_PAYABLE, PAYOUT, REFUND), `amount_tzs`, `payment_id` / `payout_id` / `order_id`, `at` | Double entry; sums to zero per transaction. No commission account for now (D-22); adding one later is a new enum value |
 | All | `notification_type` | new values per stage (STORY_REPLY, SELLER_APPROVED, SELLER_REJECTED, ORDER_PAID, ORDER_SENT, ORDER_COMPLETED, PAYOUT_SENT, ORDER_PROBLEM, ROOM_POST) | Added in their own migration, as §18 did |
 | All | `reports.target_type` | adds STORY, ROOM, ROOM_POST, PRODUCT, MESSAGE | Admin report flow unchanged |
 

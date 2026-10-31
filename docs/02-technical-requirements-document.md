@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Document** | 02 — Technical Requirements Document |
-| **Version** | 1.11 (2026-10-31, BRS §6.3 Kidili: technical direction in §19 — real-time chat, stories expiry, the Ocean feed, payments and payouts, seller identity data, ADR-013…016) · 1.10 (increment A 2026-10-27, BRS §6.2: private accounts in §5.1 — follow requests, remove follower, `isPrivate`) · 1.9 (Plan 5.4 security review, [09](09-security-review.md): SE-07 at any depth and inside strings, SE-09 enforced in CI, new SE-11 trusted proxy) · 1.8 (R1 scope change 2026-10-16, BRS §6.1: video posts §9.1, carousels, replies and hashtags in §5.1, MD-01 per kind, FD-05 now server-side) · 1.7 (Phase 3: mobile stack as built, §3: Expo Router, on-device storage, native photo upload, animations with React Native `Animated`, clipboard, push registration; Phase 2: admin sign-in §8.2 and API review endpoints, see [07](07-api-review.md)) |
+| **Version** | 1.12 (2026-11-01: §19.4 payout hold 3 days, no commission for now — D-22) · 1.11 (2026-10-31, BRS §6.3 Kidili: technical direction in §19 — real-time chat, stories expiry, the Ocean feed, payments and payouts, seller identity data, ADR-013…016) · 1.10 (increment A 2026-10-27, BRS §6.2: private accounts in §5.1 — follow requests, remove follower, `isPrivate`) · 1.9 (Plan 5.4 security review, [09](09-security-review.md): SE-07 at any depth and inside strings, SE-09 enforced in CI, new SE-11 trusted proxy) · 1.8 (R1 scope change 2026-10-16, BRS §6.1: video posts §9.1, carousels, replies and hashtags in §5.1, MD-01 per kind, FD-05 now server-side) · 1.7 (Phase 3: mobile stack as built, §3: Expo Router, on-device storage, native photo upload, animations with React Native `Animated`, clipboard, push registration; Phase 2: admin sign-in §8.2 and API review endpoints, see [07](07-api-review.md)) |
 | **Status** | **Approved** — 2026-10-11 |
 | **Date** | 2026-10-10 |
 | **Scope** | Release 1 (MVP) in detail; R1.1–R4 as forward-compatibility requirements |
@@ -635,11 +635,12 @@ NestJS API, one worker, PostgreSQL with stored procedures, Redis, MinIO and ngin
 - **Money rules (NFR-09):** amounts are `bigint` shillings; a payment or payout row is written
   **before** the provider is called, with an idempotency key the provider sees; callbacks are
   verified (signature or a status re-query), matched by reference, and safe to receive twice;
-  a **ledger** (`ledger_entries`, double entry: buyer → Kidili holding → seller) lets the books be
+  a **ledger** (`ledger_entries`, double entry: buyer → Kidili holding → seller; **no commission
+  for now**, D-22 — a commission would be one more account, not a redesign) lets the books be
   reconciled with the provider's statement. Stock is reserved when the payment starts and released
   if it fails or expires.
 - **Payout after delivery (D-20):** a worker job completes orders that are DELIVERED, or SENT for
-  longer than the hold time with no problem raised (setting, proposed 3 days, Q-K3), and requests
+  longer than the hold time with no problem raised (**3 days**, a setting; Q-K3), and requests
   the payout. Failures retry with backoff and show in the portal.
 - **Result to the app:** the checkout screen polls `GET /payments/:id` every few seconds and also
   listens for `payment.updated` on the real-time connection when it exists.

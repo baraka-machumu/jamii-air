@@ -75,7 +75,8 @@ B1–B4 are one browser session. B5–B8 are one phone session (B8 adds S.5.i in
 | C3 | How the Maestro loop runs in CI: GitHub Actions emulator, or Maestro Cloud (paid) | 5.1b | ☐ |
 | C4 | Whether UAT data is worth backing up before the pilot | E6 | ☐ |
 | C5 | **Which mobile-money payment provider** for Shops (D-21) — **on hold by the owner, 2026-10-31**. When it is picked up: compare licensed aggregators that cover M-Pesa, Mixx by Yas and Airtel Money for both collection and payout, with their real fees, before choosing | Plan K6d (taking money and paying sellers); D6 | ⏸ pending |
-| C6 | The Kidili open questions Q-K1…Q-K8 and the design canvas sign-off ([tracker](backlog/kidili.md#open-questions-for-the-owner-k0b)) | Plan K1 onwards | ☐ |
+| C6 | The Kidili open questions Q-K1…Q-K8 and the design canvas ([tracker](backlog/kidili.md#open-questions-for-the-owner-k0b)) — **done**: canvas approved 2026-10-31, answers 2026-11-01 | Plan K1 onwards | ✅ |
+| C7 | **Commission on sales**: none for now (D-22, 2026-11-01); the owner decides later whether Kidili takes one | Seller terms, ledger | ⏸ later |
 
 ---
 

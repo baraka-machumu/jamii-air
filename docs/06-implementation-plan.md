@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Document** | 06 — Implementation Plan |
-| **Version** | 1.24 (2026-10-31: the app becomes **Kidili** — increment K in six prioritised stages, §1.0b and §4 "Increment K"; K.0 docs done) · 1.23 (2026-10-27: production on hold; private accounts and Google sign-in added as increment A — §1.0a, §4) · 1.22 (R1 scope change: a video froze after the screen turned off — S.8) · 1.21 (Plan 5.4 security review done: [09](09-security-review.md)) · 1.20 (R1 scope change: two defects from the first device run — videos would not play, carousel swipes were slow — S.7) · 1.19 (R1 scope change 2026-10-16: video posts, carousels, replies, hashtags and the shared-post defect, built through every layer — §4 "R1 scope change") · 1.18 (Phase 3: 3.1–3.8 built and checked on the reference Android; 3.9 engagement, 3.10 notifications and 3.11 safety built) |
+| **Version** | 1.25 (2026-11-01: K.0.b done — canvas approved, open questions answered, D-22 no commission for now; K1 next) · 1.24 (2026-10-31: the app becomes **Kidili** — increment K in six prioritised stages, §1.0b and §4 "Increment K"; K.0 docs done) · 1.23 (2026-10-27: production on hold; private accounts and Google sign-in added as increment A — §1.0a, §4) · 1.22 (R1 scope change: a video froze after the screen turned off — S.8) · 1.21 (Plan 5.4 security review done: [09](09-security-review.md)) · 1.20 (R1 scope change: two defects from the first device run — videos would not play, carousel swipes were slow — S.7) · 1.19 (R1 scope change 2026-10-16: video posts, carousels, replies, hashtags and the shared-post defect, built through every layer — §4 "R1 scope change") · 1.18 (Phase 3: 3.1–3.8 built and checked on the reference Android; 3.9 engagement, 3.10 notifications and 3.11 safety built) |
 | **Status** | **Approved** — 2026-10-11 |
 | **Date** | 2026-10-10 |
 | **Team** | 1 engineer building with Claude Code; Product (stakeholder) as product owner |
@@ -52,7 +52,7 @@ Visual design (Design Brief, doc 04) is produced by the engineer with Claude Cod
 | 4 Admin portal | ✅ **Done, bar 4.7 hosting.** 4.1–4.6 and 4.8 built: Vite + React + TS, Tailwind 4 + shadcn/ui, sign-in with mandatory 2FA, dashboard, reports queue and detail, users, invites, audit log, admins, and a Playwright run of the exit path. 4.7 (hosting) is **part done** — the portal is served on UAT with self-signed TLS; the IP allowlist and real certificates wait for Plan 5.0. Given a design pass on 2026-10-16: a grouped icon sidebar, a top bar with an account menu, one page-header shape, dark mode, and a recharts headline chart beside the twelve tiles. Sessions now idle out after 60 minutes, not 30. **Admin and Admin E2E are both green on GitHub**, so the Playwright exit path runs in CI (4.8.j). **✅ Done (2026-10-16)** bar 4.7 hosting: the commits are reviewed. Still worth doing: one session looking at the portal by hand (4.2.h, 4.3.f, 4.6.l) | [Phase 4 backlog](backlog/phase-4-admin.md#status) |
 | **R1 scope change** | **Review** (2026-10-18): video posts, multi-photo carousels, comment replies and hashtags moved into R1 by the owner on 2026-10-16 (BRS §6.1), plus the fix for a shared post not appearing. Built through every layer and committed; every suite green locally. The `preview` build with `expo-video` (2026-10-19) and the UAT deploy with ffmpeg are done; the first device run found three defects (videos would not play, slow carousel swipes, several videos at once), fixed and shipped over EAS Update on 2026-10-20 (S.7) and confirmed on the phone. A video frozen after the screen turned off (found on UAT 2026-10-27) is fixed as S.8. **Open:** the device checks S.5 | [R1 scope change backlog](backlog/r1-scope-change.md#status) |
 | **Increment A** — private accounts, Google sign-in | **In progress** (2026-10-27): private accounts (epic P) built through every layer, deployed to UAT and shipped to the APK over EAS Update — device checks next. Google sign-in (epic G) waits for the owner's Google Cloud OAuth client (A.5) | [Increment A backlog](backlog/r1-accounts-privacy.md#status) |
-| **Increment K — Kidili** | **K.0 docs done (2026-10-31).** The app becomes Kidili: new name and navigation, The Ocean, Stories, Udaku rooms, one-to-one Chat, Shops (BRS §6.3). Screens drawn first on the [design canvas](https://claude.ai/artifact/9X3qXrP46Z5piDjwbFzr9p). Six stages in priority order, K1 first; Shops' payments wait for the provider choice (D-21). **Next:** the owner signs off the canvas (K.0.b), then K1 | [Increment K backlog](backlog/kidili.md#status) |
+| **Increment K — Kidili** | **K.0 docs done (2026-10-31).** The app becomes Kidili: new name and navigation, The Ocean, Stories, Udaku rooms, one-to-one Chat, Shops (BRS §6.3). Screens drawn first on the [design canvas](https://claude.ai/artifact/9X3qXrP46Z5piDjwbFzr9p). Six stages in priority order, K1 first; Shops' payments wait for the provider choice (D-21). Canvas approved by the owner 2026-10-31; the open questions answered 2026-11-01 (no commission for now, D-22). **Next:** K1 | [Increment K backlog](backlog/kidili.md#status) |
 | 5–6 Release, pilot | **On hold** (owner, 2026-10-27, D-13) — 5.4 done | §4 Phases 5–6 |
 
 - **Database:** 11 migrations and 94 functions. The drift check passes, and the 123 procedure tests pass, including the authorization matrix and the SR-01/03/04 security checks. Every measured P95 is under 50 ms at 10k users / 1M posts (task 1.13).
@@ -382,18 +382,18 @@ Tracker with every task, its priority and its column: [`docs/backlog/kidili.md`]
 
 | Priority | Stage | Epic | Requirements | Why this place |
 |---|---|---|---|---|
-| — | **K.0** | Docs and design | BRS §6.3 | ✅ Docs 2026-10-31; canvas sign-off by the owner open |
+| — | **K.0** | Docs and design | BRS §6.3 | ✅ Docs 2026-10-31; ✅ canvas approved 2026-10-31; ✅ questions Q-K1…Q-K8 answered 2026-11-01 |
 | **P1** | **K1** | Kidili brand & navigation | BR-BN-01…05, BR-FD-13 | Mobile only, no new data; every later stage lands in the new shell |
 | **P2** | **K2** | The Ocean | BR-OC-01…06 | Reuses the video posts R1 already has; one feed and view counts |
 | **P3** | **K3** | Stories | BR-ST-01…08 | Reuses the media pipeline; adds expiry |
-| **P4** | **K4** | Udaku rooms | BR-UD-01…10 | New tables, no new infrastructure (push, not real time) |
+| **P4** | **K4** | Udaku rooms | BR-UD-01…11 | New tables, no new infrastructure (push, not real time) |
 | **P5** | **K5** | Chat | BR-CH-01…10 | Needs the new real-time gateway (TRD §19.2); story replies (BR-ST-07) land here |
 | **P6** | **K6** | Shops | BR-SH-01…16 | Largest; payments wait for the provider (D-21), so K6a–K6c and K6e are built first, K6d last |
 
 | # | Task | Layer |
 |---|---|---|
 | K.0 | ✅ Docs: BRS §6.3 (D-14…D-21, BR-BN/OC/ST/UD/CH/SH, NFR-09…11), App Flow §16, Design Brief §15, TRD §19, Schema §20 (draft), this plan, the tracker, 00 and 08 | docs |
-| K.0.b | Owner signs off the canvas and the open questions Q-K1…Q-K8 in the tracker | owner |
+| K.0.b | ✅ Canvas approved by the owner (2026-10-31); Q-K1…Q-K8 answered (2026-11-01): the proposed answers, and no commission for now (D-22) | owner |
 | **K1.1** | Tokens: Kidili palette light + dark, AA test for every pair; Nunito 900 for the wordmark | mobile |
 | K1.2 | Logo, wordmark, app icon, adaptive and monochrome icons, splash; `name: "Kidili"` in `app.json`; store texts | mobile |
 | K1.3 | Tab layout Home · Udaku · + · Chat · Profile; Home top tabs (Posts live; Stories, Ocean, Shops as "coming soon" until their stage); Search and bell in the header; Activity and Search keep their screens | mobile |
@@ -521,8 +521,8 @@ If priorities change, these stories are dropped first, in this order: 00) from i
 > **Since 2026-10-27:** production is on hold (D-13) and increment A is the current work — see §1.0a.
 > **Since 2026-10-31:** the app becomes Kidili (§1.0b). In order:
 > 1. ✅ K.0 docs (this version of every document, and [backlog/kidili.md](backlog/kidili.md)).
-> 2. **K.0.b** — the owner signs off the [design canvas](https://claude.ai/artifact/9X3qXrP46Z5piDjwbFzr9p) and answers Q-K1…Q-K8.
-> 3. **K1** Kidili brand & navigation (P1), then K2 → K6 in priority order.
+> 2. ✅ **K.0.b** — the [design canvas](https://claude.ai/artifact/9X3qXrP46Z5piDjwbFzr9p) approved (2026-10-31); Q-K1…Q-K8 answered (2026-11-01, D-22).
+> 3. **K1** Kidili brand & navigation (P1) — **next**; then K2 → K6 in priority order.
 > 4. Beside it: A.8 device checks for private accounts; Google sign-in when A.5 arrives.
 > 5. Pending, no work until decided: the payment provider (D-21, Release Readiness C5/D6).
 

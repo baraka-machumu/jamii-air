@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Document** | 03 — App Flow |
-| **Version** | 1.5 (2026-10-31, BRS §6.3: the app becomes **Kidili** — new navigation, Stories, The Ocean, Udaku rooms, Chat, Shops and the matching admin pages, all in §16) · 1.4 (2026-10-27, BRS §6.2: Sign in with Google §4.6, private accounts §8.2a, follow requests §8.5, Activity §9, Settings §11, delete account for a Google-only account §10.4) · 1.3 (R1 scope change 2026-10-16, BRS §6.1: carousels and video in §5–§6, replies §7.2, hashtags §7.5, a post on screen the moment it is shared §5) · 1.2 (Phase 2 API review: change password, removed-post badge, admin onboarding by temporary password) |
+| **Version** | 1.6 (2026-11-01: the answers to Q-K1…Q-K8 in §16 — reactions, verified mark, 3-day payout hold, delivery fee per shop order, no commission) · 1.5 (2026-10-31, BRS §6.3: the app becomes **Kidili** — new navigation, Stories, The Ocean, Udaku rooms, Chat, Shops and the matching admin pages, all in §16) · 1.4 (2026-10-27, BRS §6.2: Sign in with Google §4.6, private accounts §8.2a, follow requests §8.5, Activity §9, Settings §11, delete account for a Google-only account §10.4) · 1.3 (R1 scope change 2026-10-16, BRS §6.1: carousels and video in §5–§6, replies §7.2, hashtags §7.5, a post on screen the moment it is shared §5) · 1.2 (Phase 2 API review: change password, removed-post badge, admin onboarding by temporary password) |
 | **Status** | **Approved** — 2026-10-11 |
 | **Date** | 2026-10-09 |
 | **Scope** | Release 1 mobile app (Android & iOS) and admin portal (web, §15). R2 Reels flow sketched in §14. |
@@ -550,16 +550,16 @@ the camera) · **Udaku update** (post to your room, or Start a room if you have 
 **Sell a product** (new product if you are an approved seller, otherwise Apply to sell, §16.9).
 Cancel closes it.
 
-### 16.6 Udaku rooms (BR-UD-01…10) — *Udaku (rooms)*, *Udaku room*, *Start a room*
+### 16.6 Udaku rooms (BR-UD-01…11) — *Udaku (rooms)*, *Udaku room*, *Start a room*
 
 1. **Udaku tab:** "Rooms to join" (cards with members count and **Join**), then "Your rooms"
-   (latest post first, unread count, a verified mark for rooms Kidili marks as such).
+   (latest post first, unread count, a verified mark on rooms an admin has verified, BR-UD-11).
 2. **A room:** header with photo, name, members count, host, **mute** bell and ⋯ (Share, Report,
    Leave). Posts as cards, newest at the bottom, with date chips; each shows its reactions, views
    and time. Polls show bars and percentages after voting.
 3. **Not a member:** the bottom bar is **Join room**. **Member:** "Only the host posts here. React
    to join in." and **Joined** (tap to leave, with a confirm).
-4. **React:** tap a reaction chip, or **+** to pick one of the fixed set; tapping your reaction
+4. **React:** tap a reaction chip, or **+** to pick one of the six (love, fire, laugh, wow, sad, clap); tapping your reaction
    again removes it.
 5. **Host view:** the bottom bar is a composer: text, photo, video, poll. ⋯ on a post → Delete.
    Room ⋯ → Edit room, Members (remove and ban), Delete room.
@@ -623,13 +623,14 @@ Cancel closes it.
    review" with what was sent. A push and an Activity row say when it is approved or rejected (with
    the reason); a rejected applicant can apply again.
 2. **New product** (approved sellers): photos (≤ 10), name, category, price (TSh), options with
-   stock per option, description, delivery fee or pick-up only → **List product**. It appears in
+   stock per option, description, pick-up allowed or not → **List product** (the delivery fee is set once for the shop, per order, in My shop; Q-K5). It appears in
    Shops at once; an admin can hide it (BR-SH-15).
 3. **My shop** (Profile → the shop card): Products (edit, pause, delete) and **Orders** by state.
    For a paid order the seller taps **Mark as sent** or **Ready for pick-up**; the buyer is told.
-4. **Getting paid (D-20):** when the buyer taps *I received it*, or a set time after *Mark as sent*
-   with no problem raised (proposed 3 days, open question Q-K3), the order is **Completed** and the
-   payout goes to the seller's number; the seller sees *Paid out TSh …* on the order.
+4. **Getting paid (D-20):** when the buyer taps *I received it*, or **3 days** after *Mark as sent*
+   with no problem raised (Q-K3), the order is **Completed** and the payout — the items plus the
+   delivery fee, with no commission (D-22) — goes to the seller's number; the seller sees
+   *Paid out TSh …* on the order.
 5. **Profile:** a seller's profile shows the shop card and a **Shop** tab next to Posts and Ocean.
 
 ### 16.10 Profile changes — *Profile*
@@ -648,7 +649,7 @@ The sidebar gains **Seller applications** (pending count), **Products**, **Order
 | **Seller applications** — *Admin portal · Seller applications* | Tabs Pending / Approved / Rejected. Table: applicant, shop, category, region, account age (amber when new), reports (red when > 1), applied. Detail panel: shop, payout network and number, NIDA (masked), name on ID, ID photo hidden until **Show ID photo**. **Approve seller**, or **Reject** with a required reason sent to the applicant. An approved seller can be **suspended** from selling (hides their products; open orders continue). Every action audit-logged. |
 | **Products** | Search and filter; open a product; **Hide** / **Restore** with a reason. |
 | **Orders & payouts** | Orders with payment and payout state; filters *Problem raised*, *Payout failed*. Order detail: timeline, payment reference, the buyer's problem. **Release payout** or **Refund buyer** for a disputed order; **Retry payout**. All with a reason, all audit-logged. |
-| **Udaku rooms** | Rooms with members and reports; open a room's posts; **Hide post**, **Close room** (the host is told why). |
+| **Udaku rooms** | Rooms with members and reports; open a room's posts; **Hide post**, **Close room** (the host is told why); **Verify** / **Unverify** a room (BR-UD-11; the same switch is on User detail for accounts). |
 | **Reported messages** (inside a report) | Only the reported message and the 10 before it; nothing else of the conversation. |
 
 ### 16.12 Notifications added (BR-NT-01)

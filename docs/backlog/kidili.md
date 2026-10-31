@@ -18,11 +18,11 @@ database → backend → mobile → admin → UAT and device checks — and is s
 
 | Priority | Stage | Epic | Requirements | State |
 |---|---|---|---|---|
-| — | K.0 | Docs and design | BRS §6.3 | **Review** — docs written; canvas sign-off open |
+| — | K.0 | Docs and design | BRS §6.3 | **Review** — docs written; canvas approved 2026-10-31; questions answered 2026-11-01 |
 | **P1** | K1 | Kidili brand & navigation | BR-BN-01…05, BR-FD-13 | To do — **next** |
 | **P2** | K2 | The Ocean | BR-OC-01…06 | To do |
 | **P3** | K3 | Stories | BR-ST-01…08 | To do |
-| **P4** | K4 | Udaku rooms | BR-UD-01…10 | To do |
+| **P4** | K4 | Udaku rooms | BR-UD-01…11 | To do |
 | **P5** | K5 | Chat | BR-CH-01…10 | To do |
 | **P6** | K6 | Shops | BR-SH-01…16 | To do; **K6d blocked by D-21** |
 
@@ -35,8 +35,8 @@ commits reviewed, and the stage's device checks below. Priority inside a stage i
 
 | Task | Stage | Pri. | Layer | Column | Depends on | Commit | Notes |
 |---|---|---|---|---|---|---|---|
-| K.0 Docs | K.0 | M | docs | Review | — | — | BRS 1.4 (§6.3, D-14…D-21, §8.9–§8.14, NFR-09…11), TRD 1.11 (§19), App Flow 1.5 (§16), Design Brief 2.0 (§15), Schema 1.6 (§20 draft), Plan 1.24, this tracker, 00 Index 2.0, 08 C5/D6 |
-| K.0.b Canvas sign-off + Q-K1…Q-K8 | K.0 | M | owner | To do | K.0 | — | The owner checks the canvas and answers the open questions below |
+| K.0 Docs | K.0 | M | docs | Review | — | `9454400` | BRS 1.4 (§6.3, D-14…D-21, §8.9–§8.14, NFR-09…11), TRD 1.11 (§19), App Flow 1.5 (§16), Design Brief 2.0 (§15), Schema 1.6 (§20 draft), Plan 1.24, this tracker, 00 Index 2.0, 08 C5/D6. Answers written in BRS 1.5, App Flow 1.6, TRD 1.12, Schema 1.7, Plan 1.25 (this commit) |
+| K.0.b Canvas sign-off + Q-K1…Q-K8 | K.0 | M | owner | **Done** | K.0 | this commit | ✅ Canvas approved 2026-10-31. ✅ Questions answered 2026-11-01: the proposed answers, except Q-K4 — no commission **for now**, decided later (D-22) |
 | K1.1 Kidili tokens light + dark, AA test | K1 | M | mobile | To do | K.0.b | — | Design Brief §15.3; `tokens.test.ts` checks every pair |
 | K1.2 Logo, icon, splash, `name: "Kidili"`, store texts | K1 | M | mobile | To do | K1.1 | — | App ID and scheme unchanged (D-14) |
 | K1.3 New tab layout, Home top tabs, header Search + bell | K1 | M | mobile | To do | K1.1 | — | Stories / Ocean / Shops tabs show "coming soon" until their stage |
@@ -72,18 +72,18 @@ commits reviewed, and the stage's device checks below. Priority inside a stage i
 
 ## Open questions for the owner (K.0.b)
 
-Each has a proposed answer that the docs already assume; the owner confirms or changes it.
+**All answered by the owner on 2026-11-01.** Written into the requirements shown.
 
-| # | Question | Proposed | Affects |
+| # | Question | Answer | Written into |
 |---|---|---|---|
-| Q-K1 | Which videos are in The Ocean: everyone's public videos plus people you follow, or only people you follow? | Public + followed, newest first | BR-OC-01, K2 |
-| Q-K2 | How long can a story video be? | 60 s, the same as posts | BR-ST-01, K3 |
-| Q-K3 | If the buyer never taps *I received it*, how long after *Mark as sent* is the seller paid? | 3 days with no problem raised | BR-SH-12, K6d |
-| Q-K4 | Does Kidili take a commission on each sale? | Not for now | Ledger, K6d |
-| Q-K5 | Is the delivery fee set per product or once per shop order? | Once per shop order | BR-SH-04, K6b |
-| Q-K6 | Who gets the verified mark on rooms and accounts? | Only when an admin sets it | BR-UD, K4 |
-| Q-K7 | Which reactions do Udaku rooms offer? | Love, fire, laugh, wow, sad, clap | BR-UD-04, K4 |
-| Q-K8 | Can someone send more than one message before a request is accepted? | No, one | BR-CH-04, K5 |
+| Q-K1 | Which videos are in The Ocean: everyone's public videos plus people you follow, or only people you follow? | ✅ Everyone's public videos plus people you follow, newest first | BR-OC-01, K2 |
+| Q-K2 | How long can a story video be? | ✅ 60 s, the same as posts | BR-ST-01, K3 |
+| Q-K3 | If the buyer never taps *I received it*, how long after *Mark as sent* is the seller paid? | ✅ 3 days with no problem raised (a setting) | BR-SH-12, App Flow §16.9, TRD §19.4, K6d |
+| Q-K4 | Does Kidili take a commission on each sale? | ✅ **No commission for now; to be decided later** (D-22). The seller gets the full price plus delivery | BRS D-22, BR-SH-12, TRD §19.4, Schema §20 ledger, [08](../08-release-readiness-tracker.md) C7 |
+| Q-K5 | Is the delivery fee set per product or once per shop order? | ✅ Once per shop order, set by the seller | BR-SH-04, App Flow §16.9, Schema §20 `sellers`, K6b |
+| Q-K6 | Who gets the verified mark on rooms and accounts? | ✅ Only when an admin sets it in the portal | BR-UD-11 (new), App Flow §16.6 / §16.11, Schema §20, K4 |
+| Q-K7 | Which reactions do Udaku rooms offer? | ✅ Love, fire, laugh, wow, sad, clap | BR-UD-04, App Flow §16.6, Schema §20, K4 |
+| Q-K8 | Can someone send more than one message before a request is accepted? | ✅ No, only one | BR-CH-04, App Flow §16.7, K5 |
 
 ## Pending (no work until decided)
 
@@ -91,6 +91,7 @@ Each has a proposed answer that the docs already assume; the owner confirms or c
 |---|---|---|---|
 | **Payment provider** (D-21) | Has a cost: a fee per payment and per payout, plus a registered business. The owner put it on hold on 2026-10-31 | K6d (real money); everything before it can be built | [08](../08-release-readiness-tracker.md) C5, D6 |
 | Legal advice on holding buyers' money until delivery | Payment and e-money rules | Shops going live with real money | BRS §13 |
+| **Commission on sales** (D-22) | None for now; the owner decides later | Nothing now: the ledger can take a commission account later | [08](../08-release-readiness-tracker.md) C7 |
 
 ## Device checks
 
@@ -149,6 +150,9 @@ To be ticked on the reference Android against UAT, stage by stage.
 | D-19 | Chat is **one-to-one**; first messages from non-followed people are requests | 2026-10-31 | Owner |
 | D-20 | The seller is **paid after delivery** | 2026-10-31 | Owner |
 | D-21 | Payment provider choice **pending** (cost) | 2026-10-31 | Owner |
+| — | Design canvas **approved** | 2026-10-31 | Owner |
+| D-22 | **No commission** on sales for now; decided later | 2026-11-01 | Owner |
+| — | Q-K1…Q-K3, Q-K5…Q-K8: the proposed answers accepted (table above) | 2026-11-01 | Owner |
 | — | Design first: every stage starts by drawing any screen not yet on the canvas | 2026-10-31 | Owner |
 | — | Stage order P1–P6 as above: cheapest and most reusable first; payments last because they wait on D-21. The owner can reorder (for example Shops K6a–K6c before Chat) | 2026-10-31 | Engineer, proposed |
 | — | Terracotta darkened from the user design's `#C0603A` to `#B4502A` for AA contrast | 2026-10-31 | Engineer |

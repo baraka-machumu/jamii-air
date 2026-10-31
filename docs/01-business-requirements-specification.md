@@ -3,9 +3,9 @@
 | | |
 |---|---|
 | **Document** | 01 — Business Requirements Specification |
-| **Version** | 1.4 (2026-10-31: the app becomes **Kidili** — new navigation, Stories, The Ocean, Udaku rooms, one-to-one Chat and Shops; see §6.3 and §8.9–§8.14) · 1.3 (R1 scope widened again by the owner on 2026-10-27: private accounts and Google sign-in — see §6.2) · 1.2 (R1 scope widened by the owner on 2026-10-16: video posts, comment replies, hashtags, multi-photo carousel — see §6.1) |
+| **Version** | 1.5 (2026-11-01: the answers to Q-K1…Q-K8 written into §8.10–§8.14; D-22 no commission for now; BR-UD-11 verified mark) · 1.4 (2026-10-31: the app becomes **Kidili** — new navigation, Stories, The Ocean, Udaku rooms, one-to-one Chat and Shops; see §6.3 and §8.9–§8.14) · 1.3 (R1 scope widened again by the owner on 2026-10-27: private accounts and Google sign-in — see §6.2) · 1.2 (R1 scope widened by the owner on 2026-10-16: video posts, comment replies, hashtags, multi-photo carousel — see §6.1) |
 | **Date** | 2026-10-09 |
-| **Status** | **Signed off** — 2026-10-10; §6.1 scope change signed off 2026-10-16; §6.2 requested by the owner 2026-10-27; §6.3 (Kidili) decided by the owner 2026-10-31, screens on the [design canvas](https://claude.ai/artifact/9X3qXrP46Z5piDjwbFzr9p) awaiting sign-off |
+| **Status** | **Signed off** — 2026-10-10; §6.1 scope change signed off 2026-10-16; §6.2 requested by the owner 2026-10-27; §6.3 (Kidili) decided by the owner 2026-10-31, screens on the [design canvas](https://claude.ai/artifact/9X3qXrP46Z5piDjwbFzr9p) approved by the owner 2026-10-31 |
 | **Related** | [00 Index & Review](00-README.md) · [02 TRD](02-technical-requirements-document.md) · [06 Implementation Plan](06-implementation-plan.md) |
 
 ---
@@ -125,7 +125,7 @@ are in App Flow §16.
 | **Kidili name, look and navigation** | — | BR-BN-01…05 | New name, icon, wordmark and colours; bottom bar Home · Udaku · Create · Chat · Profile; Home's top tabs Posts · Stories · The Ocean · Shops. Mobile only, plus a new `preview` APK (name and icon are native). |
 | **The Ocean** (short vertical videos) | R2 (Reels surface) | BR-OC-01…06 | A full-screen vertical feed of the video posts R1 already makes (§6.1). One feed procedure, view counts, a player screen. |
 | **Stories** (24 hours) | R4 | BR-ST-01…08 | A new content type that expires; a viewer with progress bars; replies go to Chat. Reuses the media pipeline. |
-| **Udaku rooms** (broadcast rooms) | not planned | BR-UD-01…10 | Anyone starts a room; only the host posts; members join, react and mute. Like WhatsApp Channels. |
+| **Udaku rooms** (broadcast rooms) | not planned | BR-UD-01…11 | Anyone starts a room; only the host posts; members join, react and mute. Like WhatsApp Channels. |
 | **Chat** (one-to-one messages) | R4 | BR-CH-01…10 | Private messages with photos, read ticks and message requests. **Needs a real-time connection** (WebSocket) the server does not have today. |
 | **Shops** (buy and sell) | out of scope | BR-SH-01…16 | Approved sellers list products; buyers use a cart and pay with **mobile money**; Kidili pays the seller **after delivery**. Seller approval, orders and payouts in the admin portal. |
 
@@ -141,6 +141,12 @@ are in App Flow §16.
 | D-19 | Chat is **one-to-one** only (no groups). A message from someone you don't follow arrives as a **request**. |
 | D-20 | **The seller is paid after delivery.** The buyer's money is collected by Kidili's payment provider and paid out to the seller's mobile-money number once the order is delivered. |
 | D-21 | **Choosing a payment provider is pending** (it has a cost; see §12 and the [Release Readiness Tracker](08-release-readiness-tracker.md) C5/D6). Everything in Shops up to "awaiting payment" can be built before it is chosen; taking money and paying out cannot. |
+| D-22 | **No commission on sales for now** (owner, 2026-11-01). The seller receives the full item price plus their delivery fee. Whether Kidili takes a commission later is to be decided; the ledger is built so one can be added (TRD §19.4). |
+
+**Answers to the open questions (owner, 2026-11-01).** The owner accepted the proposed answers to
+Q-K1…Q-K3 and Q-K5…Q-K8 ([tracker](backlog/kidili.md#open-questions-for-the-owner-k0b)); Q-K4 is
+D-22. They are written into BR-OC-01, BR-ST-01, BR-SH-04, BR-SH-12, BR-UD-04, BR-UD-11 and
+BR-CH-04.
 
 **What this costs.**
 - **Payments** are the only new running cost: a provider (aggregator) takes a fee per payment and
@@ -287,7 +293,7 @@ Priority: **M** = Must (release blocked without it) · **S** = Should (strongly 
 
 | ID | Requirement | Priority |
 |---|---|---|
-| BR-OC-01 | The Ocean shows **video posts** full screen, one at a time, swiped vertically. It contains videos from public accounts and from accounts the user follows, newest first (no ranking: D-4), under the feed's visibility rules (blocked, hidden, private). | M |
+| BR-OC-01 | The Ocean shows **video posts** full screen, one at a time, swiped vertically. It contains videos from public accounts and from accounts the user follows, newest first (no ranking: D-4; Q-K1), under the feed's visibility rules (blocked, hidden, private). | M |
 | BR-OC-02 | The video on screen plays automatically and loops; it pauses when it leaves the screen or the app goes to the background. Sound can be turned on and off. | M |
 | BR-OC-03 | From the Ocean a user can like, comment, share, follow the author and report, as on any post. | M |
 | BR-OC-04 | Each Ocean video shows how many times it has been **viewed**; a view counts once per person. | S |
@@ -298,7 +304,7 @@ Priority: **M** = Must (release blocked without it) · **S** = Should (strongly 
 
 | ID | Requirement | Priority |
 |---|---|---|
-| BR-ST-01 | A user can post a **story**: a photo, or a video of at most 60 seconds, optionally with text on it. | M |
+| BR-ST-01 | A user can post a **story**: a photo, or a video of at most 60 seconds (the same as posts; Q-K2), optionally with text on it. | M |
 | BR-ST-02 | A story is seen for **24 hours** and then disappears for everyone. Its media is deleted afterwards. | M |
 | BR-ST-03 | Who can see a story follows the same rule as posts: anyone for a public account, approved followers for a private one; never someone blocked. | M |
 | BR-ST-04 | The Stories tab lists people the user follows who have a story, new ones first, seen ones after. Profiles and post authors show a ring when they have a story. | M |
@@ -314,13 +320,14 @@ Priority: **M** = Must (release blocked without it) · **S** = Should (strongly 
 | BR-UD-01 | **Any user** can start a room: name, photo, what it is about, topic, and whether it appears in "Rooms to join" (D-18). | M |
 | BR-UD-02 | Only the room's **host** posts in it: text, photos, one video, or a poll. The host can delete their posts. | M |
 | BR-UD-03 | Anyone can find a listed room, see its posts and **join**; members can leave at any time. Unlisted rooms are opened by link only. | M |
-| BR-UD-04 | Members **react** to a post with one of a fixed set of reactions (one per member per post, can be changed); counts are shown. Members cannot comment or post. | M |
+| BR-UD-04 | Members **react** to a post with one of six reactions — **love, fire, laugh, wow, sad, clap** (Q-K7) — one per member per post, which they can change or remove; counts are shown. Members cannot comment or post. | M |
 | BR-UD-05 | Members can vote once in a poll and see the results. | S |
 | BR-UD-06 | Members get a push for new posts unless they **mute** the room; the Udaku tab shows unread counts. | M |
 | BR-UD-07 | Udaku lists the user's rooms (latest post first) and "Rooms to join" (most members first, by topic). | M |
 | BR-UD-08 | Each post shows how many people have seen it. | C |
 | BR-UD-09 | A room or a room post can be reported. An admin can hide a post or close a room, and the host is told why. | M |
 | BR-UD-10 | Blocking the host hides their rooms from the blocker; a host can remove and ban a member. | S |
+| BR-UD-11 | A **verified** mark on a room or an account is given and removed **only by an admin** in the portal; nobody can request it in the app (Q-K6). | C |
 
 ### 8.13 Chat — one-to-one messages (§6.3)
 
@@ -329,7 +336,7 @@ Priority: **M** = Must (release blocked without it) · **S** = Should (strongly 
 | BR-CH-01 | A user can send another user **private messages**: text and photos. Only one-to-one (D-19). | M |
 | BR-CH-02 | Messages arrive **in real time** when the other person has the app open, and as a push notification when not. | M |
 | BR-CH-03 | Each message shows its time and whether it was delivered and read; the other person's "typing…" shows while they type. | S |
-| BR-CH-04 | A message from someone the recipient does not follow goes to **Requests**. The recipient can accept (the chat moves to their list), delete, or block. The sender sees no read state until it is accepted. | M |
+| BR-CH-04 | A message from someone the recipient does not follow goes to **Requests**. The recipient can accept (the chat moves to their list), delete, or block. Until it is accepted the sender can send **only that one message** and sees no read state (Q-K8). | M |
 | BR-CH-05 | The Chats list shows conversations, latest first, with unread counts, and filters **All · Unread · Orders · Requests**. | M |
 | BR-CH-06 | A user can share a post, an Ocean video or a product into a chat; **Message seller** starts a chat with the product attached. | S |
 | BR-CH-07 | A user can delete a message they sent, for both people. | S |
@@ -344,7 +351,7 @@ Priority: **M** = Must (release blocked without it) · **S** = Should (strongly 
 | BR-SH-01 | Shops shows products from **approved sellers**, newest first, with categories and search. | M |
 | BR-SH-02 | A user can **apply to sell**: shop name, what they sell, region, the mobile-money number and network for payouts (in their own name), their NIDA number and a photo of their ID, and agree to the seller rules. They see the application's state. | M |
 | BR-SH-03 | An admin approves or rejects an application in the **admin portal**; a rejection carries a reason sent to the applicant. An admin can later suspend a seller, which hides their products (D-17). | M |
-| BR-SH-04 | An approved seller lists a product: up to 10 photos, name, price in TSh, options (e.g. colour), stock, description, and how it is delivered (delivery fee, or pick-up). They can edit, pause or delete it. | M |
+| BR-SH-04 | An approved seller lists a product: up to 10 photos, name, price in TSh, options (e.g. colour), stock and description. The seller sets **one delivery fee per shop order**, however many items it holds, and can offer pick-up instead (Q-K5). They can edit, pause or delete a product. | M |
 | BR-SH-05 | A product page shows its photos, price, options, the seller (with **Message**), delivery and stock. | M |
 | BR-SH-06 | A product can be tagged on a post, story or Ocean video by its seller (BR-OC-06, BR-ST-08). | S |
 | BR-SH-07 | A buyer has a **cart** that is kept across sessions and grouped by shop. Checking out makes **one order per shop**. | M |
@@ -352,7 +359,7 @@ Priority: **M** = Must (release blocked without it) · **S** = Should (strongly 
 | BR-SH-09 | The buyer sees whether the payment is waiting, succeeded or failed; a failed or abandoned payment takes no money and keeps the cart. | M |
 | BR-SH-10 | An order moves through **Paid → Sent / Ready for pick-up → Delivered → Completed**, or **Cancelled / Refunded**. Buyer and seller are notified at each step. | M |
 | BR-SH-11 | The seller sees their orders and marks each one sent or ready; the buyer confirms it was received. | M |
-| BR-SH-12 | **The seller is paid after delivery** (D-20): once the buyer confirms receipt — or a set time after it was marked sent with no complaint — Kidili pays the order's amount to the seller's mobile-money number. | M |
+| BR-SH-12 | **The seller is paid after delivery** (D-20): once the buyer confirms receipt — or **3 days** after it was marked sent with no problem raised (Q-K3; a setting) — Kidili pays the order's full amount, items plus delivery, to the seller's mobile-money number. No commission is taken for now (D-22). | M |
 | BR-SH-13 | A buyer can raise a problem with an order before it completes; an admin decides (refund or release) in the portal. | M |
 | BR-SH-14 | Admins see orders, payments and payouts in the portal, and can retry a failed payout. Every money action is audit-logged (BR-SF-04). | M |
 | BR-SH-15 | A product or seller can be reported; an admin can hide a product. | M |

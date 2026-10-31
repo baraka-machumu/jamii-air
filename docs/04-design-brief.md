@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Document** | 04 — Design Brief |
-| **Version** | 2.0 (2026-10-31: **Kidili** — new brand, colours, navigation and screens, §15; awaiting the owner's sign-off) · 1.3 (designs delivered and approved on a Claude design canvas, §12; §5 motion as built) |
+| **Version** | 2.0 (2026-10-31: **Kidili** — new brand, colours, navigation and screens, §15; screens approved by the owner 2026-10-31) · 1.3 (designs delivered and approved on a Claude design canvas, §12; §5 motion as built) |
 | **Status** | **Approved** — 2026-10-11 |
 | **Date** | 2026-10-09 |
 | **For** | Whoever produces the designs (the engineer with Claude Code until a designer joins — D-11), mobile and web engineers |

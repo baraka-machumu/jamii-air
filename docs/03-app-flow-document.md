@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Document** | 03 — App Flow |
-| **Version** | 1.4 (2026-10-27, BRS §6.2: Sign in with Google §4.6, private accounts §8.2a, follow requests §8.5, Activity §9, Settings §11, delete account for a Google-only account §10.4) · 1.3 (R1 scope change 2026-10-16, BRS §6.1: carousels and video in §5–§6, replies §7.2, hashtags §7.5, a post on screen the moment it is shared §5) · 1.2 (Phase 2 API review: change password, removed-post badge, admin onboarding by temporary password) |
+| **Version** | 1.5 (2026-10-31, BRS §6.3: the app becomes **Kidili** — new navigation, Stories, The Ocean, Udaku rooms, Chat, Shops and the matching admin pages, all in §16) · 1.4 (2026-10-27, BRS §6.2: Sign in with Google §4.6, private accounts §8.2a, follow requests §8.5, Activity §9, Settings §11, delete account for a Google-only account §10.4) · 1.3 (R1 scope change 2026-10-16, BRS §6.1: carousels and video in §5–§6, replies §7.2, hashtags §7.5, a post on screen the moment it is shared §5) · 1.2 (Phase 2 API review: change password, removed-post badge, admin onboarding by temporary password) |
 | **Status** | **Approved** — 2026-10-11 |
 | **Date** | 2026-10-09 |
 | **Scope** | Release 1 mobile app (Android & iOS) and admin portal (web, §15). R2 Reels flow sketched in §14. |
@@ -77,7 +77,9 @@ flowchart TB
 ```
 
 **Bottom tabs (R1):** Home · Search · Create · Activity · Profile.
-**R2:** Create moves to a header button on Home; a **Reels** tab takes the centre slot.
+**Kidili (BRS §6.3, from Plan task K1):** Home · Udaku · **+** · Chat · Profile, with Home's top
+tabs Posts · Stories · The Ocean · Shops, and Search and Activity in Home's header — see §16.1.
+The R2 Reels tab is replaced by The Ocean.
 
 ## 3. App launch & session restore
 
@@ -358,6 +360,7 @@ Pending deep link is stored during auth and resumed after login/onboarding.
 ## 14. Release 2 preview — Reels flow (not in R1)
 
 *Since the 2026-10-16 scope change, recording or picking a video and posting it is R1 (§6). What remains here is the Reels **surface**.*
+*Since 2026-10-31 (BRS §6.3) the vertical feed is R1 as **The Ocean** (§16.4); what stays in R2 below is trim, cover choice, resumable upload and the data-saver ladder.*
 
 - **Reels tab:** full-screen vertical pager; one video plays at a time, muted by default until the user taps sound; preloads next 2 videos at low rendition; pauses when off-screen or app backgrounded.
 - **Create Reel:** record (≤ 60 s) or pick video → trim → cover frame → caption → upload (same upload-intent flow with `kind: VIDEO`, resumable multipart) → "Processing…" while transcoding.
@@ -440,3 +443,217 @@ List admins with role and last login. **Add admin** (email, name, role) → a **
 | Error | Inline banner with Retry; mutations never fail silently. |
 | Permission denied (moderator on super-admin page) | "You don't have access to this page." |
 | Concurrent edit (another admin already resolved) | `409` → "This report was already handled by {admin}" + refresh. |
+
+## 16. Kidili (BRS §6.3, 2026-10-31)
+
+The app becomes **Kidili** (D-14). This section is the flow for everything §6.3 adds or moves. Where
+it conflicts with §2–§15, **§16 wins once Plan task K1 ships**; until then the app is as §2–§15
+describe. Every screen here is drawn, clickable, on the
+[design canvas](https://claude.ai/artifact/9X3qXrP46Z5piDjwbFzr9p) (artboard names in *italics*);
+the look is Design Brief §15. The universal rules of §1 apply unchanged.
+
+### 16.1 Navigation map
+
+```mermaid
+flowchart TB
+    subgraph TABS[Bottom bar]
+        H[Home]
+        U[Udaku]
+        C((+ Create))
+        CH[Chat]
+        P[Profile]
+    end
+    subgraph HOME[Home top tabs]
+        HP[Posts - default]
+        HS[Stories]
+        HO[The Ocean]
+        HSH[Shops]
+    end
+    H --> HOME
+    H -. header .-> SEARCH[Search]
+    H -. header .-> ACT[Activity / notifications]
+    HP --> PD[Post and comments]
+    HS --> SV[Story viewer]
+    SV -- reply --> CT[Chat conversation]
+    HO --> PD
+    HSH --> PR[Product] --> CART[Cart] --> CO[Checkout] --> PAY[Mobile money prompt] --> ORD[Order placed]
+    PR -- Message --> CT
+    HSH -. header .-> CART
+    U --> ROOM[Udaku room]
+    U --> NR[Start a room]
+    CH --> CT
+    C --> NP[New post]
+    C --> NS[New story]
+    C --> NO[New Ocean video]
+    C --> NUR[Udaku update / Start a room]
+    C --> SELL{Approved seller?}
+    SELL -- yes --> NPR[New product]
+    SELL -- no --> APPLY[Apply to sell]
+    P --> MYORD[My orders]
+    P --> SHOPM[My shop: products and orders]
+    P --> SAVED[Saved]
+```
+
+**Bottom bar (BR-BN-02):** Home · Udaku · **+** · Chat · Profile, icons with labels; the active one
+is terracotta and filled. Chat carries an unread count, Udaku a dot for new room posts. The
+**+** opens the Create menu (§16.5). Tapping the active tab again scrolls to the top.
+
+**Home header (BR-BN-04):** the Kidili wordmark, then **Search** (the current Search screen, §8.1)
+and the **bell** (the current Activity screen, §9, with its unread dot). On Shops the header
+also shows the **cart** with its item count.
+
+**Home top tabs (BR-BN-03):** Posts · Stories · The Ocean · Shops. The choice is remembered
+while the app is open; a cold start opens Posts. On The Ocean the tabs and the bottom bar turn
+dark so the video fills the screen.
+
+### 16.2 Posts (the home feed) — *Main*, *Post and comments*, *New post*
+
+The feed of §5, restyled: full-width photos, the author's avatar with a story ring when they have
+a story, a product tag on photos from approved sellers (BR-SH-06), and **Save** (BR-FD-13).
+Post detail and comments are §7 restyled. **New post** is §6 on one screen: pick photos (numbered
+in the order picked) or a video, crop, caption with a counter, *Tag a product* (approved sellers
+only), *Location*, and *Also add to your story*.
+
+### 16.3 Stories (BR-ST-01…08) — *Home · Stories*, *Story viewer*
+
+1. **Stories tab:** "Add to your story" on top; below, a grid of people followed who have a story,
+   unseen first with a purple ring, seen after with a grey one.
+2. **Create a story** (+ → Story, or Add to your story): camera or gallery → one photo or a video
+   ≤ 60 s → optional text → *Share to story*. Same upload sequence as §6.1.
+3. **Viewer:** full screen; progress bars on top (one per story of that person); tap right/left to
+   move, hold to pause, swipe down to close, swipe left for the next person. Marks each story seen.
+   A product tag opens the product.
+4. **Reply / like:** the reply field at the bottom sends a Chat message to the author with the
+   story attached (§16.7); the heart likes the story.
+5. **Your own story:** the viewer shows *Seen by N*; tapping it lists viewers. ⋯ → Delete.
+6. **Expiry:** after 24 h it leaves every list; opening an old link says "This story is no longer
+   available".
+7. **States:** empty tab → "No new stories. Add yours"; a story still processing shows a spinner
+   ring on your avatar; offline → stories already loaded still play.
+
+### 16.4 The Ocean (BR-OC-01…06) — *Home · The Ocean*
+
+1. Vertical pager of video posts, one full-screen video at a time; it **plays on arrival, loops,
+   pauses** when swiped away or the app is backgrounded. Tap toggles sound.
+2. Right-side rail: author (with **+** to follow), like, comment, save, share; a spinning disc for
+   the sound. Bottom left: author, caption with hashtags, sound, and a **product tag** if any.
+3. A view is counted once per person after 2 s of play.
+4. On mobile data only the next video is preloaded (BR-OC-05).
+5. Comments open as a sheet over the video (§7.2); ⋯ → Report.
+6. **States:** loading → dark skeleton; no videos → "Nothing in the Ocean yet. Post a video";
+   a video fails → poster image + "Couldn't play · Retry".
+
+### 16.5 Create menu (BR-BN-02) — *Create*
+
+A bottom sheet: **Post** (§16.2) · **Story** (§16.3) · **Ocean video** (§6, video only, opens on
+the camera) · **Udaku update** (post to your room, or Start a room if you have none, §16.6) ·
+**Sell a product** (new product if you are an approved seller, otherwise Apply to sell, §16.9).
+Cancel closes it.
+
+### 16.6 Udaku rooms (BR-UD-01…10) — *Udaku (rooms)*, *Udaku room*, *Start a room*
+
+1. **Udaku tab:** "Rooms to join" (cards with members count and **Join**), then "Your rooms"
+   (latest post first, unread count, a verified mark for rooms Kidili marks as such).
+2. **A room:** header with photo, name, members count, host, **mute** bell and ⋯ (Share, Report,
+   Leave). Posts as cards, newest at the bottom, with date chips; each shows its reactions, views
+   and time. Polls show bars and percentages after voting.
+3. **Not a member:** the bottom bar is **Join room**. **Member:** "Only the host posts here. React
+   to join in." and **Joined** (tap to leave, with a confirm).
+4. **React:** tap a reaction chip, or **+** to pick one of the fixed set; tapping your reaction
+   again removes it.
+5. **Host view:** the bottom bar is a composer: text, photo, video, poll. ⋯ on a post → Delete.
+   Room ⋯ → Edit room, Members (remove and ban), Delete room.
+6. **Start a room:** photo, name, what it is about, topic chips, *Show in Rooms to join* switch →
+   **Create room** opens the new, empty room as host.
+7. **Pushes:** a new post notifies members who have not muted the room, at most one push per room
+   per 10 minutes (the rest show in the room's unread count).
+8. **States:** no rooms → "Join a room to see updates here"; a closed room → "This room was closed
+   for breaking the rules".
+
+### 16.7 Chat (BR-CH-01…10) — *Chats*, *Chat conversation*
+
+1. **Chats list:** search, **new chat** (pick a person), filters **All · Unread · Orders ·
+   Requests (count)**. Rows: avatar with an online dot, name, a **Shop** badge for sellers, last
+   message or "typing…", time, read ticks for your own last message, unread count.
+2. **Conversation:** header with avatar, name and Online / last seen; messages as bubbles (yours
+   purple on the right) with date chips. A product card when the chat started from **Message**, a
+   story preview when it started from a story reply. Photos open full screen.
+3. **Send:** attach (photo, post, product), camera, text, send. A message shows *Sending…* →
+   one tick (delivered) → two purple ticks (read). A failed send shows *Retry*; a retry never
+   duplicates (each message carries a client id).
+4. **Live and push:** while the app is open it holds a live connection (TRD §19.2) and new messages
+   appear at once; otherwise a push opens the conversation.
+5. **Requests:** a first message from someone you don't follow lands in **Requests** with
+   **Accept · Delete · Block**. Until accepted, the sender sees no read ticks and cannot send more.
+6. **Message ⋯:** Copy, Delete for everyone (own messages), Report. **Conversation ⋯:** Mute,
+   Block, Report, Delete chat (for you).
+7. **States:** empty list → "No chats yet. Message someone from their profile"; offline → messages
+   wait with *Waiting for network*.
+
+### 16.8 Shops — buying (BR-SH-01, 05, 07–13) — *Home · Shops*, *Product*, *Cart*, *Checkout*, *Mobile money*
+
+1. **Shops tab:** search products and shops; category chips; a two-column grid of products (photo,
+   tag, name, price, shop, **+** to add to cart). The header shows the cart with its count.
+2. **Product:** photo carousel; name, price, unit; the shop with **Message**; options (e.g. colour
+   swatches) and quantity; description; delivery fee or pick-up; **Add to cart** and **Buy now**.
+   Out of stock → the buttons are replaced by "Out of stock".
+3. **Cart:** grouped by shop, "your cart becomes one order per shop"; quantity steppers (at 1 the
+   minus becomes a bin); delivery per shop; items, delivery and total; **Checkout**. Prices and
+   stock are re-checked on opening; a change is flagged on the line.
+4. **Checkout:** *Deliver to* (saved address, Change); *How you get it*: delivery (fee) or pick-up
+   (free); *Pay with* M-Pesa · Mixx by Yas · Airtel Money and the number; total; **Pay TSh …**.
+5. **Mobile money prompt:** "Check your phone" with the number, the amount and a countdown;
+   *Send again*; *Use another number or network*. The app waits for the payment result from the
+   server (TRD §19.4), which arrives live or on refresh.
+   - **Paid** → "Order placed": one row per shop order (#, items, total, *Paid*); **See my
+     orders**, **Keep shopping**. Those items leave the cart.
+   - **Failed / timed out** → "Payment didn't go through. No money was taken and your cart is
+     saved." **Try again** / **Change payment method**.
+6. **My orders** (Profile → Orders): each order with its state (BR-SH-10). Opening one shows the
+   items, the shop (**Message**), the timeline, and the buyer's actions: **I received it** (once
+   sent or ready) and **Report a problem** (until completed).
+7. **While D-21 is pending**, Checkout ends at "Payments are coming soon" and no order is created;
+   everything before it works.
+
+### 16.9 Shops — selling (BR-SH-02–04, 11–12) — *Apply to sell*, admin *Seller applications*
+
+1. **Apply to sell** (+ → Sell a product, or Profile → Start selling): steps *Apply → Kidili
+   reviews → Start selling*. Form: shop name, what you sell, region, payout network and number
+   (in your name), NIDA number, ID photo, the seller rules → **Send application** → "Application in
+   review" with what was sent. A push and an Activity row say when it is approved or rejected (with
+   the reason); a rejected applicant can apply again.
+2. **New product** (approved sellers): photos (≤ 10), name, category, price (TSh), options with
+   stock per option, description, delivery fee or pick-up only → **List product**. It appears in
+   Shops at once; an admin can hide it (BR-SH-15).
+3. **My shop** (Profile → the shop card): Products (edit, pause, delete) and **Orders** by state.
+   For a paid order the seller taps **Mark as sent** or **Ready for pick-up**; the buyer is told.
+4. **Getting paid (D-20):** when the buyer taps *I received it*, or a set time after *Mark as sent*
+   with no problem raised (proposed 3 days, open question Q-K3), the order is **Completed** and the
+   payout goes to the seller's number; the seller sees *Paid out TSh …* on the order.
+5. **Profile:** a seller's profile shows the shop card and a **Shop** tab next to Posts and Ocean.
+
+### 16.10 Profile changes — *Profile*
+
+Header as §8.3; a story ring on the avatar when there is a story; **Edit profile** and **Share
+profile**; the shop card for sellers. Tabs **Posts · Ocean · Shop** (Shop only for sellers). The
+menu gains **Saved**, **My orders** and **Start selling** / **My shop**.
+
+### 16.11 Admin portal additions (§15)
+
+The sidebar gains **Seller applications** (pending count), **Products**, **Orders & payouts** and
+**Udaku rooms**; Reports also carry stories, rooms, room posts, products and messages.
+
+| Page | What an admin does |
+|---|---|
+| **Seller applications** — *Admin portal · Seller applications* | Tabs Pending / Approved / Rejected. Table: applicant, shop, category, region, account age (amber when new), reports (red when > 1), applied. Detail panel: shop, payout network and number, NIDA (masked), name on ID, ID photo hidden until **Show ID photo**. **Approve seller**, or **Reject** with a required reason sent to the applicant. An approved seller can be **suspended** from selling (hides their products; open orders continue). Every action audit-logged. |
+| **Products** | Search and filter; open a product; **Hide** / **Restore** with a reason. |
+| **Orders & payouts** | Orders with payment and payout state; filters *Problem raised*, *Payout failed*. Order detail: timeline, payment reference, the buyer's problem. **Release payout** or **Refund buyer** for a disputed order; **Retry payout**. All with a reason, all audit-logged. |
+| **Udaku rooms** | Rooms with members and reports; open a room's posts; **Hide post**, **Close room** (the host is told why). |
+| **Reported messages** (inside a report) | Only the reported message and the 10 before it; nothing else of the conversation. |
+
+### 16.12 Notifications added (BR-NT-01)
+
+New Activity rows and pushes: someone replied to your story · your seller application was approved
+or rejected · new order (seller) · order sent / ready / completed (buyer) · payout sent (seller) ·
+problem raised on an order (seller) · a new post in a room you joined (subject to §16.6.7) · a new
+message or message request (push only; Chat has its own list).

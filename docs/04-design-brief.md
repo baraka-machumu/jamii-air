@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Document** | 04 — Design Brief |
-| **Version** | 1.3 (designs delivered and approved on a Claude design canvas, §12; §5 motion as built) |
+| **Version** | 2.0 (2026-10-31: **Kidili** — new brand, colours, navigation and screens, §15; awaiting the owner's sign-off) · 1.3 (designs delivered and approved on a Claude design canvas, §12; §5 motion as built) |
 | **Status** | **Approved** — 2026-10-11 |
 | **Date** | 2026-10-09 |
 | **For** | Whoever produces the designs (the engineer with Claude Code until a designer joins — D-11), mobile and web engineers |
@@ -218,3 +218,81 @@ The admin portal is a separate desktop web app used by 1–3 team members (App F
 - First-time users complete sign-up → first follow without help.
 - No accessibility contrast failures in an automated audit.
 - Engineering can build every screen from the component library without one-off styles.
+
+## 15. Kidili (BRS §6.3, 2026-10-31)
+
+The owner received a user design for a renamed app, **Kidili** (two reference images in
+[`docs/user_design/`](user_design/)), and asked for the screens to be drawn before any code. They
+are on a **[design canvas](https://claude.ai/artifact/9X3qXrP46Z5piDjwbFzr9p)**: 19 phone screens
+and one admin portal page, clickable (press Play on any artboard). This section supersedes §2 (name
+and logo) and §4.1 (colour) once Plan task K1 ships; everything else in §1–§14 still holds.
+
+### 15.1 Reviewing the user design
+
+The two reference images disagreed, so the canvas follows the owner's own list (BRS §6.3, D-15)
+and takes its *look* from the second image:
+
+| In the user design | What the canvas does | Why |
+|---|---|---|
+| Image 1: six bottom tabs, "Chat" twice, Wallet, Influencers | Five slots: Home · Udaku · **+** · Chat · Profile | The owner's list; Wallet and Influencers are not in scope |
+| Image 2: Stories in the bottom bar, Udaku in both bars | Stories, The Ocean and Shops are Home's top tabs, with Posts first | The owner's list; Posts was missing as a tab (raised by the owner on review) |
+| A "Posts" pill in the centre of the bar | A **+** that opens the Create menu | Every content type needs one way in |
+| Terracotta `#C0603A` with white text | Darkened to **`#B4502A`** | `#C0603A` is 4.2 : 1 on white and fails AA; `#B4502A` is 5.1 : 1 |
+| Stock photos of people | Coloured placeholders and initials | No stock photography in the UI (§4.6) |
+
+### 15.2 Brand
+
+- **Name:** Kidili, written **KIDILI** in the wordmark. "Jamii Air" stays the code name (D-14).
+- **Logo:** a purple speech bubble with a white **K** drawn in three strokes; the wordmark beside it
+  in Nunito 900. The existing display face (`Nunito_800ExtraBold`) is already bundled; the 900
+  weight is added for the wordmark only. Icon, adaptive icon, monochrome notification icon and
+  splash are redrawn from it in K1.
+- **Line:** "Chat · Business · Shop" (from the user design), to be validated like §2.3.
+
+### 15.3 Colour (light; dark derived and tested in K1)
+
+| Token | Kidili light | Was | Use | Contrast |
+|---|---|---|---|---|
+| `bg` | `#FAF7F2` *(cream)* | `#FFFFFF` | Screen background | — |
+| `surface` | `#FFFFFF` | `#F3F4F6` | Cards, sheets, bars | — |
+| `surfaceMuted` *(new)* | `#F3EEE6` | — | Chat and room backgrounds, chips | — |
+| `text` | `#1E1A16` | `#111827` | Primary text | 16.2 on `bg` |
+| `textMuted` | `#6B6259` | `#6B7280` | Secondary text | 5.6 on `bg`, 6.0 on white |
+| `primary` | `#B4502A` *(Kidili terracotta)* | `#C2410C` | Buttons, active tab, badges | white on it 5.1 |
+| `brand` (was `brandDeep`) | `#5B2EBF` *(Kidili purple)* | `#1E1B4B` | Logo, wordmark, story rings, own chat bubbles, links, unread counts | white on it 8.1 |
+| `primarySoft`, `brandSoft` *(new)* | `#F8E9E1`, `#EEE8FB` | — | Tinted chips and icon tiles | non-text |
+| `accent` | `#0F766E` | same | Online, success highlights | 5.5 |
+| `success` / `like` / `danger` | `#15803D` / `#E11D48` / `#B91C1C` | same | As §4.1 | as §4.1 |
+| `border` | `#ECE6DC` | `#E5E7EB` | Hairlines, card borders | non-text |
+
+Dark mode keeps the structure: near-black warm ground, `brand` lightened (e.g. `#C9B8F5`, 10.3 on
+`#14121A`) and `primary` lightened (e.g. `#F08A5D`, 7.5). The token test (`tokens.test.ts`) keeps
+checking every text pair, in both modes, before K1 is done (BR-BN-05).
+
+### 15.4 Shape and components added
+
+- Cards: white, 1 px `border`, radius **14–16**; the feed keeps **full-bleed photos with no radius**
+  (§4.3), only the surrounding chrome changes.
+- **Segmented top tabs** (Home): a white pill bar with hairline dividers; the active tab is
+  terracotta with a 2.5 px underline. On The Ocean they become white text over the video.
+- **Bottom bar with centre +**: 52 px terracotta disc; four labelled tabs; badges in `brand`.
+- **Story ring**: 2.5 px `brand` ring when unseen, `#E2DACE` when seen; "+" badge on your own.
+- **Story viewer**, **Ocean player** (right action rail, dark bars), **room card**, **room post
+  card** with reaction chips and poll bars, **chat bubble** (own: `brand` with white text; other:
+  white), **product card**, **quantity stepper**, **status pills** (Paid amber, Delivered green,
+  Problem red), **mobile-money option rows**, **multi-step header** (Apply to sell).
+- Icons stay Lucide outline (§4.4); Udaku uses the megaphone, The Ocean the waves.
+
+### 15.5 Screens on the canvas
+
+| Row | Screens (artboard titles) |
+|---|---|
+| Home | Home · Posts (feed) · Home · Stories · Story viewer (24 h) · Post and comments · New post · Home · The Ocean (reels) · Create (centre button) |
+| Shops | Home · Shops · Product · Cart · Checkout · Mobile money: PIN prompt, then order placed · Apply to sell |
+| Social | Udaku (rooms) · Udaku room · Start a room · Chats (one-to-one) · Chat conversation · Profile |
+| Admin portal | Seller applications |
+
+**Still to draw before their stage starts** (Plan §4 "Increment K"): New product, My shop (seller
+orders), My orders and order detail, Story camera and text tool, the room host's composer and
+poll, Saved, the admin Products / Orders & payouts / Udaku rooms pages, and the dark variants.
+Each is drawn on the same canvas as the first task of its stage.

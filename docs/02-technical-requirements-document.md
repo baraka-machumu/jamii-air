@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Document** | 02 — Technical Requirements Document |
-| **Version** | 1.10 (increment A 2026-10-27, BRS §6.2: private accounts in §5.1 — follow requests, remove follower, `isPrivate`) · 1.9 (Plan 5.4 security review, [09](09-security-review.md): SE-07 at any depth and inside strings, SE-09 enforced in CI, new SE-11 trusted proxy) · 1.8 (R1 scope change 2026-10-16, BRS §6.1: video posts §9.1, carousels, replies and hashtags in §5.1, MD-01 per kind, FD-05 now server-side) · 1.7 (Phase 3: mobile stack as built, §3: Expo Router, on-device storage, native photo upload, animations with React Native `Animated`, clipboard, push registration; Phase 2: admin sign-in §8.2 and API review endpoints, see [07](07-api-review.md)) |
+| **Version** | 1.11 (2026-10-31, BRS §6.3 Kidili: technical direction in §19 — real-time chat, stories expiry, the Ocean feed, payments and payouts, seller identity data, ADR-013…016) · 1.10 (increment A 2026-10-27, BRS §6.2: private accounts in §5.1 — follow requests, remove follower, `isPrivate`) · 1.9 (Plan 5.4 security review, [09](09-security-review.md): SE-07 at any depth and inside strings, SE-09 enforced in CI, new SE-11 trusted proxy) · 1.8 (R1 scope change 2026-10-16, BRS §6.1: video posts §9.1, carousels, replies and hashtags in §5.1, MD-01 per kind, FD-05 now server-side) · 1.7 (Phase 3: mobile stack as built, §3: Expo Router, on-device storage, native photo upload, animations with React Native `Animated`, clipboard, push registration; Phase 2: admin sign-in §8.2 and API review endpoints, see [07](07-api-review.md)) |
 | **Status** | **Approved** — 2026-10-11 |
 | **Date** | 2026-10-10 |
 | **Scope** | Release 1 (MVP) in detail; R1.1–R4 as forward-compatibility requirements |
@@ -580,3 +580,85 @@ Capacity model (10k DAU): ≈ 500k feed requests/day ≈ 6 req/s average, ~60 re
 | Function changes can drift from source control | SV-01…SV-03 (source files + migration + CI drift check). |
 | Deploy ordering between functions and API code | Expand → contract signatures (SV-04). |
 | Scaling CPU-heavy logic on the DB | Keep heavy computation (hashing, images) in Node; procedures do set-based data work only. |
+
+## 19. Kidili — technical direction (BRS §6.3, 2026-10-31)
+
+This section sets the **direction** for what Kidili adds. Each Plan stage (K1–K6) turns its part
+into exact endpoints, procedures and tests, and updates §5 and Schema §20 as it is built — the same
+way §5.1 grew with the earlier increments. Nothing here changes ADR-001 to ADR-012: it is still one
+NestJS API, one worker, PostgreSQL with stored procedures, Redis, MinIO and nginx.
+
+### 19.1 What changes per layer
+
+| Feature | Database | Backend | Mobile | Admin portal |
+|---|---|---|---|---|
+| Kidili brand & nav (K1) | — | Push titles, share-page and email texts say Kidili | Tokens, wordmark, icon, splash, `name` in `app.json`, the new tab layout and Home top tabs. **New `preview` APK** (name and icon are native) | Name and colours |
+| The Ocean (K2) | `fn_get_ocean_feed` (video posts, public + followed, newest first, visibility rules), `post_views`, `fn_record_post_view`, `posts.view_count` | `GET /ocean`, `POST /posts/:id/view` | Vertical pager (FlashList, paging), one player at a time (`expo-video`, already in the APK), preload-next rule | Views on post detail |
+| Stories (K3) | `stories`, `story_views`, `story_likes`; `fn_create_story`, `fn_get_story_tray`, `fn_get_user_stories`, `fn_view_story`, `fn_maint_expire_stories` | `/stories` endpoints; upload intent `kind: STORY`; expiry job in the worker deletes media from MinIO | Stories tab, viewer, camera/text tool, story rings | Reported stories, Remove |
+| Udaku rooms (K4) | `rooms`, `room_members`, `room_posts` (+ media, polls), `room_reactions`, `room_poll_votes`; procedures per action | `/rooms` endpoints; push fan-out per room through BullMQ with the 10-minute coalescing rule | Udaku tab, room, composer, Start a room | Rooms page, Hide post, Close room |
+| Chat (K5) | `conversations`, `conversation_members` (last read, muted, request state), `messages` (client id, kind, reply-to-story / product / post); procedures for send, list, read, request accept/decline, delete | **Real-time gateway** (§19.2), REST for history and sending as a fallback, chat pushes | Chats list, conversation, attachments, sending queue | Reported message view |
+| Shops (K6) | `seller_applications`, `sellers`, `products` (+ media, options, stock), `carts`, `orders`, `order_items`, `order_events`, `payments`, `payouts`, `ledger_entries` (§19.4) | `/shops`, `/cart`, `/orders`, `/seller/*`; **payments module** with a provider adapter and a callback endpoint; payout job; private bucket for ID photos (§19.5) | Shops tab, product, cart, checkout, payment states, my orders, apply, my shop | Seller applications, Products, Orders & payouts |
+
+### 19.2 Real-time connection (Chat; later rooms and payment results)
+
+- **WebSocket** through NestJS's gateway with **Socket.IO** (`@nestjs/websockets`,
+  `@nestjs/platform-socket.io`) and its **Redis adapter**, so a second API instance (§17 stage 3)
+  works without change. nginx proxies the upgrade on the existing API host.
+- The app opens one connection while in the foreground, authenticated with the **access token**
+  (refreshed and reconnected when it rotates), and closes it in the background — push covers the
+  rest (NFR-10). No new native module: the Socket.IO client is JavaScript.
+- Sending goes through a stored procedure first (the source of truth), then the event is published
+  to the recipient's room `user:<id>`. A message carries a **client id**; sending it twice returns
+  the first one (BR-CH-10).
+- Events: `message.new`, `message.read`, `message.deleted`, `typing`, `presence`; later
+  `payment.updated` (§19.4) and `room.post`.
+- Rate limits per user on sends and typing events; message length cap; photos through the normal
+  upload intent (`kind: MESSAGE`), private to the two people (presigned GET only for members).
+
+### 19.3 Expiry and counters
+
+- Stories expire by a `expires_at` filter in every read (exact) and a worker job that deletes rows
+  and objects after 24 h plus a grace period (storage).
+- Views (Ocean, stories, room posts) are written once per viewer with `ON CONFLICT DO NOTHING`, and
+  counters updated in the same procedure, as likes are today (Schema §8.3).
+
+### 19.4 Payments and payouts (D-16, D-20, D-21)
+
+- **Provider adapter.** A `PaymentProvider` interface in the backend: `requestCollection` (push a
+  PIN prompt to a phone for an amount), `verifyCallback`, `getStatus`, `requestPayout`. One adapter
+  per provider; the provider is **pending (D-21)**, so K6 builds and tests everything against a
+  **fake provider** (also used on UAT) and the real adapter is added when the owner chooses.
+- **States in the database** (ADR-003): orders move only through procedures —
+  `AWAITING_PAYMENT → PAID → SENT | READY_FOR_PICKUP → DELIVERED → COMPLETED`, with
+  `CANCELLED`, `PROBLEM_RAISED`, `REFUNDED`; every move appends an `order_events` row. Payments
+  `PENDING → SUCCEEDED | FAILED | EXPIRED`; payouts `SCHEDULED → SENT → CONFIRMED | FAILED`.
+- **Money rules (NFR-09):** amounts are `bigint` shillings; a payment or payout row is written
+  **before** the provider is called, with an idempotency key the provider sees; callbacks are
+  verified (signature or a status re-query), matched by reference, and safe to receive twice;
+  a **ledger** (`ledger_entries`, double entry: buyer → Kidili holding → seller) lets the books be
+  reconciled with the provider's statement. Stock is reserved when the payment starts and released
+  if it fails or expires.
+- **Payout after delivery (D-20):** a worker job completes orders that are DELIVERED, or SENT for
+  longer than the hold time with no problem raised (setting, proposed 3 days, Q-K3), and requests
+  the payout. Failures retry with backoff and show in the portal.
+- **Result to the app:** the checkout screen polls `GET /payments/:id` every few seconds and also
+  listens for `payment.updated` on the real-time connection when it exists.
+- The callback endpoint is public but accepts only the provider's verified calls, and is excluded
+  from the user rate limit.
+
+### 19.5 Seller identity data (NFR-11)
+
+ID photos go to a **private MinIO prefix** that nginx never serves; the admin API hands out a
+short-lived presigned GET to an admin who opens the application, and logs that it did. NIDA
+numbers are stored encrypted at the application level (key from the environment), shown masked,
+and deleted with the photo on rejection or when a seller leaves.
+
+### 19.6 New ADRs
+
+| ADR | Decision | Status |
+|---|---|---|
+| ADR-013 | Kidili is a rename of what users see only; app ID `tz.jamiiair.app`, scheme and code names stay (D-14) | Accepted |
+| ADR-014 | Real-time chat over WebSocket (Socket.IO + Redis adapter) inside the existing API; push when the app is closed | Proposed (K5) |
+| ADR-015 | Payments through a licensed mobile-money aggregator behind a `PaymentProvider` adapter; order and money states in stored procedures with a double-entry ledger | Proposed (K6); provider pending (D-21) |
+| ADR-016 | The Ocean is a feed over existing video posts, not a new content type | Proposed (K2) |
+| ADR-009 | *Amended:* the vertical feed is now The Ocean (R1); only HLS, trim and resumable upload remain R2 | Amended 2026-10-31 |

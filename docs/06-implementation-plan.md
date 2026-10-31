@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Document** | 06 — Implementation Plan |
-| **Version** | 1.23 (2026-10-27: production on hold; private accounts and Google sign-in added as increment A — §1.0a, §4) · 1.22 (R1 scope change: a video froze after the screen turned off — S.8) · 1.21 (Plan 5.4 security review done: [09](09-security-review.md)) · 1.20 (R1 scope change: two defects from the first device run — videos would not play, carousel swipes were slow — S.7) · 1.19 (R1 scope change 2026-10-16: video posts, carousels, replies, hashtags and the shared-post defect, built through every layer — §4 "R1 scope change") · 1.18 (Phase 3: 3.1–3.8 built and checked on the reference Android; 3.9 engagement, 3.10 notifications and 3.11 safety built) |
+| **Version** | 1.24 (2026-10-31: the app becomes **Kidili** — increment K in six prioritised stages, §1.0b and §4 "Increment K"; K.0 docs done) · 1.23 (2026-10-27: production on hold; private accounts and Google sign-in added as increment A — §1.0a, §4) · 1.22 (R1 scope change: a video froze after the screen turned off — S.8) · 1.21 (Plan 5.4 security review done: [09](09-security-review.md)) · 1.20 (R1 scope change: two defects from the first device run — videos would not play, carousel swipes were slow — S.7) · 1.19 (R1 scope change 2026-10-16: video posts, carousels, replies, hashtags and the shared-post defect, built through every layer — §4 "R1 scope change") · 1.18 (Phase 3: 3.1–3.8 built and checked on the reference Android; 3.9 engagement, 3.10 notifications and 3.11 safety built) |
 | **Status** | **Approved** — 2026-10-11 |
 | **Date** | 2026-10-10 |
 | **Team** | 1 engineer building with Claude Code; Product (stakeholder) as product owner |
@@ -52,6 +52,7 @@ Visual design (Design Brief, doc 04) is produced by the engineer with Claude Cod
 | 4 Admin portal | ✅ **Done, bar 4.7 hosting.** 4.1–4.6 and 4.8 built: Vite + React + TS, Tailwind 4 + shadcn/ui, sign-in with mandatory 2FA, dashboard, reports queue and detail, users, invites, audit log, admins, and a Playwright run of the exit path. 4.7 (hosting) is **part done** — the portal is served on UAT with self-signed TLS; the IP allowlist and real certificates wait for Plan 5.0. Given a design pass on 2026-10-16: a grouped icon sidebar, a top bar with an account menu, one page-header shape, dark mode, and a recharts headline chart beside the twelve tiles. Sessions now idle out after 60 minutes, not 30. **Admin and Admin E2E are both green on GitHub**, so the Playwright exit path runs in CI (4.8.j). **✅ Done (2026-10-16)** bar 4.7 hosting: the commits are reviewed. Still worth doing: one session looking at the portal by hand (4.2.h, 4.3.f, 4.6.l) | [Phase 4 backlog](backlog/phase-4-admin.md#status) |
 | **R1 scope change** | **Review** (2026-10-18): video posts, multi-photo carousels, comment replies and hashtags moved into R1 by the owner on 2026-10-16 (BRS §6.1), plus the fix for a shared post not appearing. Built through every layer and committed; every suite green locally. The `preview` build with `expo-video` (2026-10-19) and the UAT deploy with ffmpeg are done; the first device run found three defects (videos would not play, slow carousel swipes, several videos at once), fixed and shipped over EAS Update on 2026-10-20 (S.7) and confirmed on the phone. A video frozen after the screen turned off (found on UAT 2026-10-27) is fixed as S.8. **Open:** the device checks S.5 | [R1 scope change backlog](backlog/r1-scope-change.md#status) |
 | **Increment A** — private accounts, Google sign-in | **In progress** (2026-10-27): private accounts (epic P) built through every layer, deployed to UAT and shipped to the APK over EAS Update — device checks next. Google sign-in (epic G) waits for the owner's Google Cloud OAuth client (A.5) | [Increment A backlog](backlog/r1-accounts-privacy.md#status) |
+| **Increment K — Kidili** | **K.0 docs done (2026-10-31).** The app becomes Kidili: new name and navigation, The Ocean, Stories, Udaku rooms, one-to-one Chat, Shops (BRS §6.3). Screens drawn first on the [design canvas](https://claude.ai/artifact/9X3qXrP46Z5piDjwbFzr9p). Six stages in priority order, K1 first; Shops' payments wait for the provider choice (D-21). **Next:** the owner signs off the canvas (K.0.b), then K1 | [Increment K backlog](backlog/kidili.md#status) |
 | 5–6 Release, pilot | **On hold** (owner, 2026-10-27, D-13) — 5.4 done | §4 Phases 5–6 |
 
 - **Database:** 11 migrations and 94 functions. The drift check passes, and the 123 procedure tests pass, including the authorization matrix and the SR-01/03/04 security checks. Every measured P95 is under 50 ms at 10k users / 1M posts (task 1.13).
@@ -92,6 +93,21 @@ Two features came in the same day (BRS §6.2): **private accounts** with follow 
 in the usual layer order (§4 "Increment A"), private accounts first because they need nothing
 from outside; Google sign-in needs a free Google Cloud OAuth client, which the owner creates.
 Tracker: [backlog/r1-accounts-privacy.md](backlog/r1-accounts-privacy.md).
+
+### 1.0b Jamii Air becomes Kidili (2026-10-31)
+
+The owner brought a new user design and reshaped the app around it: it is renamed **Kidili** and
+gains **The Ocean** (vertical videos), **Stories**, **Udaku rooms**, one-to-one **Chat** and
+**Shops**, with a new navigation (BRS §6.3, decisions D-14…D-21). Before any code, every main
+screen was drawn on a [design canvas](https://claude.ai/artifact/9X3qXrP46Z5piDjwbFzr9p) (Design
+Brief §15), and the owner answered the open questions there.
+
+It is built as increment **K** (§4 "Increment K"): **six stages in priority order**, each going
+through the usual layers (docs → database → backend → mobile → admin) and each shippable to UAT on
+its own. Increment A carries on beside it: its device checks (A.8) and Google sign-in (waiting on
+A.5) are not blocked by K. Production stays on hold (D-13).
+
+Tracker: [backlog/kidili.md](backlog/kidili.md).
 
 ### 1.1 Where the project stands (2026-10-16)
 
@@ -355,6 +371,66 @@ is Google sign-in (BR-AC-09…11). P comes first. Tracker:
 
 **Exit:** the device checks in the tracker ticked on the reference Android against UAT; CI green; the commits reviewed.
 
+### Increment K — Kidili (added 2026-10-31)
+
+BRS §6.3. One **stage** per epic, in **priority order** — cheapest and most reusable first, the
+feature that waits on an outside decision last. Every stage runs the layer order on its own slice:
+**design** (any screen not yet on the canvas) → **database** → **backend** → **mobile** → **admin
+portal** → **UAT deploy and device checks**. A stage is Done when its exit gate passes; the next
+starts then. Stories inside a stage keep the BRS MoSCoW: Musts first (§2.3).
+Tracker with every task, its priority and its column: [`docs/backlog/kidili.md`](backlog/kidili.md).
+
+| Priority | Stage | Epic | Requirements | Why this place |
+|---|---|---|---|---|
+| — | **K.0** | Docs and design | BRS §6.3 | ✅ Docs 2026-10-31; canvas sign-off by the owner open |
+| **P1** | **K1** | Kidili brand & navigation | BR-BN-01…05, BR-FD-13 | Mobile only, no new data; every later stage lands in the new shell |
+| **P2** | **K2** | The Ocean | BR-OC-01…06 | Reuses the video posts R1 already has; one feed and view counts |
+| **P3** | **K3** | Stories | BR-ST-01…08 | Reuses the media pipeline; adds expiry |
+| **P4** | **K4** | Udaku rooms | BR-UD-01…10 | New tables, no new infrastructure (push, not real time) |
+| **P5** | **K5** | Chat | BR-CH-01…10 | Needs the new real-time gateway (TRD §19.2); story replies (BR-ST-07) land here |
+| **P6** | **K6** | Shops | BR-SH-01…16 | Largest; payments wait for the provider (D-21), so K6a–K6c and K6e are built first, K6d last |
+
+| # | Task | Layer |
+|---|---|---|
+| K.0 | ✅ Docs: BRS §6.3 (D-14…D-21, BR-BN/OC/ST/UD/CH/SH, NFR-09…11), App Flow §16, Design Brief §15, TRD §19, Schema §20 (draft), this plan, the tracker, 00 and 08 | docs |
+| K.0.b | Owner signs off the canvas and the open questions Q-K1…Q-K8 in the tracker | owner |
+| **K1.1** | Tokens: Kidili palette light + dark, AA test for every pair; Nunito 900 for the wordmark | mobile |
+| K1.2 | Logo, wordmark, app icon, adaptive and monochrome icons, splash; `name: "Kidili"` in `app.json`; store texts | mobile |
+| K1.3 | Tab layout Home · Udaku · + · Chat · Profile; Home top tabs (Posts live; Stories, Ocean, Shops as "coming soon" until their stage); Search and bell in the header; Activity and Search keep their screens | mobile |
+| K1.4 | Restyle Posts feed, post detail, comments, New post (one screen), profile, Create menu (items enabled stage by stage) | mobile |
+| K1.5 | Saved posts (C): `saved_posts`, save/unsave, Saved on the profile | db · api · mobile |
+| K1.6 | Kidili in push titles, share-link page, emails; portal name and colours | api · admin |
+| K1.7 | New `preview` APK; UAT deploy; device checks K1 | deploy |
+| **K2.1** | `post_views`, `fn_record_post_view`, `fn_get_ocean_feed`, procedure tests | db |
+| K2.2 | `GET /ocean`, `POST /posts/:id/view`, e2e | api |
+| K2.3 | Ocean pager, one player, sound, rail, comments sheet, preload rule on mobile data | mobile |
+| K2.4 | Views on the portal's post detail; UAT deploy; device checks K2 | admin · deploy |
+| **K3.1** | Draw the story camera and text tool | design |
+| K3.2 | `stories`, `story_views`, procedures, expiry job, tests | db |
+| K3.3 | `/stories` endpoints, upload `kind: STORY`, media deletion in the worker, e2e | api |
+| K3.4 | Stories tab, viewer, create, rings on avatars, viewers list | mobile |
+| K3.5 | Reported stories in the portal; UAT deploy; device checks K3 | admin · deploy |
+| **K4.1** | Draw the host's composer, poll and room settings | design |
+| K4.2 | Room tables and procedures, tests | db |
+| K4.3 | `/rooms` endpoints, push fan-out with coalescing, e2e | api |
+| K4.4 | Udaku tab, room, join / react / vote / mute, Start a room, host composer | mobile |
+| K4.5 | Portal Udaku rooms page (hide post, close room); UAT deploy; device checks K4 | admin · deploy |
+| **K5.1** | Real-time gateway: Socket.IO + Redis adapter, auth, nginx upgrade on UAT, load check (NFR-10) | api · deploy |
+| K5.2 | Conversation and message tables and procedures (requests, read state, client id), tests | db |
+| K5.3 | Chat REST + events, chat pushes, story replies (BR-ST-07), e2e | api |
+| K5.4 | Chats list, conversation, attachments, sending queue, Requests, Message from profile and product | mobile |
+| K5.5 | Reported messages in the portal; UAT deploy; device checks K5 | admin · deploy |
+| **K6a** | Sellers: draw nothing new (canvas has it); `seller_applications`, `sellers`, private ID storage, apply endpoints, Apply to sell screens, portal **Seller applications** | db · api · mobile · admin |
+| **K6b** | Catalogue: draw New product and My shop; products, options, stock, media, product tags on posts / stories / Ocean, Shops tab and product page, portal **Products** | all |
+| **K6c** | Cart and orders up to "awaiting payment": cart, checkout, orders, order states, My orders, seller order handling, "Payments are coming soon" | all |
+| **K6d** | 🔒 **D-21** Payments and payouts: `PaymentProvider` with a fake provider first, then the chosen one; payments, ledger, payout job, mobile-money prompt screens | db · api · mobile |
+| **K6e** | Portal **Orders & payouts**: disputes, refund or release, retry payout; UAT deploy; device checks K6 | admin · deploy |
+
+**Exit (each stage):** its device checks in the tracker ticked on the reference Android against
+UAT; CI green; the commits reviewed; the docs the stage touched updated (TRD §5, Schema §20 → a
+"Changes in version" section, App Flow §16 where the build differs).
+**Exit (increment K):** all six stages Done, K6d included once D-21 is decided.
+
 ### Phase 5 — Release readiness
 
 | # | Task |
@@ -412,9 +488,9 @@ The pilot is the only stage paced by real users rather than by build speed: it r
 | Release | Key work | Entry criteria |
 |---|---|---|
 | **R1.1 — Public launch** | Open sign-up + email verification; illegal-content hash matching (**now video too**); PgBouncer; public store release; low-data mode; re-check video storage cost against NFR-07 | Pilot go decision |
-| **R2 — Reels** | *Video upload, one 720p rendition and video moderation are R1 since 2026-10-16.* What is left: resumable multipart upload; an HLS ladder (360p/720p); Reels tab with vertical pager and preloading; view counts; data-saver; `fn_get_reels_feed` | R1.1 stable; video storage/CDN cost model approved |
+| **R2 — Reels** | *Video upload, one 720p rendition and video moderation are R1 since 2026-10-16; the vertical feed, preloading and view counts are R1 as The Ocean since 2026-10-31 (K2).* What is left: resumable multipart upload; an HLS ladder (360p/720p); trim and cover choice; data-saver setting | R1.1 stable; video storage/CDN cost model approved |
 | R3 — Discovery | Explore page, @mentions, trending hashtags, better search. *Plain hashtags are R1 since 2026-10-16.* **AI/ML features will be designed in a separate document before R3.** | ≥ 1,000 DAU |
-| R4 — Scale & engage | Stories, DMs, multiple API instances, read replica | Measured triggers (TRD §17) |
+| R4 — Scale & engage | *Stories and one-to-one chat are R1 since 2026-10-31 (K3, K5).* Group chats, multiple API instances, read replica | Measured triggers (TRD §17) |
 
 Each release follows the same model: layer order docs → database → backend → mobile → admin portal, built in agile increments by epic.
 
@@ -436,13 +512,19 @@ Each release follows the same model: layer order docs → database → backend �
 
 ## 8. Scope-cut order (bottom of the backlog)
 
-If priorities change, these stories are dropped first, in this order: 0) from the R1 scope change, if the pilot must start sooner: video (S1) first — it is the only part with a running cost and a new build — then hashtags (S4), replies (S3), carousels (S2); the defect fix (S5) is never cut · 1) Caption edit (C) · 2) followers/following lists (S) · 3) password reset (S — admins trigger resets manually) · 4) admin "Admins" management page (super-admin manages admins via a seed/SQL script during the pilot) · 5) dashboard trend charts (keep KPI numbers) · 6) dark mode.
+If priorities change, these stories are dropped first, in this order: 00) from increment K, the Could and Should stories first — saved posts, room post views, story viewers list, typing indicators, delete-for-everyone, product tags — then whole stages from the bottom of the priority list (K6d waits on D-21 anyway); K1 is never cut once started, because every later stage lands in its shell · 0) from the R1 scope change, if the pilot must start sooner: video (S1) first — it is the only part with a running cost and a new build — then hashtags (S4), replies (S3), carousels (S2); the defect fix (S5) is never cut · 1) Caption edit (C) · 2) followers/following lists (S) · 3) password reset (S — admins trigger resets manually) · 4) admin "Admins" management page (super-admin manages admins via a seed/SQL script during the pilot) · 5) dashboard trend charts (keep KPI numbers) · 6) dark mode.
 
 **Never cut:** 18+ enforcement, auth security, stored-procedure authorization tests, EXIF stripping, block/report, admin portal core (login + 2FA, reports, hide, suspend, audit log), account deletion, backups + restore test.
 
 ## 9. Immediate next steps
 
 > **Since 2026-10-27:** production is on hold (D-13) and increment A is the current work — see §1.0a.
+> **Since 2026-10-31:** the app becomes Kidili (§1.0b). In order:
+> 1. ✅ K.0 docs (this version of every document, and [backlog/kidili.md](backlog/kidili.md)).
+> 2. **K.0.b** — the owner signs off the [design canvas](https://claude.ai/artifact/9X3qXrP46Z5piDjwbFzr9p) and answers Q-K1…Q-K8.
+> 3. **K1** Kidili brand & navigation (P1), then K2 → K6 in priority order.
+> 4. Beside it: A.8 device checks for private accounts; Google sign-in when A.5 arrives.
+> 5. Pending, no work until decided: the payment provider (D-21, Release Readiness C5/D6).
 
 1. ✅ Phase 0 complete: BRS signed off, documents approved, decisions D-7…D-12 recorded, repo on GitHub.
 2. ✅ **Phase 1 · Database** built and tested locally (tasks 1.1–1.14).

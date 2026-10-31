@@ -2,9 +2,9 @@
 
 | | |
 |---|---|
-| **Project** | Jamii Air — photo & short-video social platform |
-| **Phase** | **Phases 0–4 Done** (2026-10-16): built, CI green on GitHub, commits reviewed. The stack runs on UAT and the core loop is confirmed on a real phone. On 2026-10-16 the owner widened R1 (video, carousels, replies, hashtags); that increment is built and in Review ([tracker](backlog/r1-scope-change.md)). **Since 2026-10-27 production is on hold** (D-13): Phases 5–6 wait for the owner's go, and increment A — private accounts and sign in with Google — is being built on UAT ([tracker](backlog/r1-accounts-privacy.md)). What production will need is in the [Release Readiness Tracker](08-release-readiness-tracker.md). Status: [Plan §1](06-implementation-plan.md#1-summary) |
-| **Doc version** | 1.9 — 2026-10-27 (BRS §6.2: private accounts and Google sign-in, D-13 production on hold; BRS 1.3, App Flow 1.4, Plan 1.23; tracker [backlog/r1-accounts-privacy.md](backlog/r1-accounts-privacy.md)) · 1.8 — 2026-10-18 (R1 scope change, BRS §6.1: video posts, carousels, replies, hashtags; BRS 1.2, TRD 1.8, App Flow 1.3, Schema 1.4, Plan 1.19; tracker [backlog/r1-scope-change.md](backlog/r1-scope-change.md)) · 1.7 — 2026-10-14 (TRD 1.7 and Design Brief 1.3: mobile stack and motion as built; Plan 1.18: status after 3.11; Phase 3 decisions in the [Phase 3 backlog](backlog/phase-3-mobile.md#decisions-taken-during-phase-3)) |
+| **Project** | **Kidili** (code name Jamii Air) — post, chat and shop: photo and video posts, The Ocean, Stories, Udaku rooms, one-to-one chat and Shops |
+| **Phase** | **Since 2026-10-31 the app becomes Kidili** (BRS §6.3, D-14…D-21): increment K, six stages in priority order, K.0 docs done, K1 next once the owner signs off the [design canvas](https://claude.ai/artifact/9X3qXrP46Z5piDjwbFzr9p) ([tracker](backlog/kidili.md)). Before that: **Phases 0–4 Done** (2026-10-16): built, CI green on GitHub, commits reviewed. The stack runs on UAT and the core loop is confirmed on a real phone. On 2026-10-16 the owner widened R1 (video, carousels, replies, hashtags); that increment is built and in Review ([tracker](backlog/r1-scope-change.md)). **Since 2026-10-27 production is on hold** (D-13): Phases 5–6 wait for the owner's go, and increment A — private accounts and sign in with Google — is being built on UAT ([tracker](backlog/r1-accounts-privacy.md)). What production will need is in the [Release Readiness Tracker](08-release-readiness-tracker.md). Status: [Plan §1](06-implementation-plan.md#1-summary) |
+| **Doc version** | 2.0 — 2026-10-31 (BRS §6.3: the app becomes **Kidili** — Stories, The Ocean, Udaku rooms, Chat, Shops; D-14…D-21; BRS 1.4, TRD 1.11, App Flow 1.5, Design Brief 2.0, Schema 1.6, Plan 1.24; tracker [backlog/kidili.md](backlog/kidili.md)) · 1.9 — 2026-10-27 (BRS §6.2: private accounts and Google sign-in, D-13 production on hold; BRS 1.3, App Flow 1.4, Plan 1.23; tracker [backlog/r1-accounts-privacy.md](backlog/r1-accounts-privacy.md)) · 1.8 — 2026-10-18 (R1 scope change, BRS §6.1: video posts, carousels, replies, hashtags; BRS 1.2, TRD 1.8, App Flow 1.3, Schema 1.4, Plan 1.19; tracker [backlog/r1-scope-change.md](backlog/r1-scope-change.md)) · 1.7 — 2026-10-14 (TRD 1.7 and Design Brief 1.3: mobile stack and motion as built; Plan 1.18: status after 3.11; Phase 3 decisions in the [Phase 3 backlog](backlog/phase-3-mobile.md#decisions-taken-during-phase-3)) |
 | **Prepared by** | Senior Software Engineer |
 | **Source guidelines** | `instagram_mvp_technical_specification_10_users.pdf` (the "Spec"), `application-consideration.txt` (the "Guidelines") |
 
@@ -25,16 +25,18 @@ Read in this order. Every later document builds on the decisions in the earlier 
 | 07 | [API Review](07-api-review.md) | Does every screen have the endpoints it needs? (Plan task 2.14 record) | Engineering |
 | 08 | [Release Readiness Tracker](08-release-readiness-tracker.md) | What is left that is **not** writing code: accounts, costs, manual checks, decisions, ops | Owner |
 | 09 | [Security Review](09-security-review.md) | What was checked for security, what it found, what was fixed and what is accepted (Plan task 5.4 record) | Engineering, owner |
+| — | [Backlog trackers](backlog/) — the to-do lists, one per phase or increment; **current: [Increment K — Kidili](backlog/kidili.md)** | What is being built now, in what priority, and what state each task is in | Whole team |
+| — | [User design](user_design/) and the [Kidili design canvas](https://claude.ai/artifact/9X3qXrP46Z5piDjwbFzr9p) | What the owner's designer submitted, and the screens drawn from it (Design Brief §15) | Product, engineering |
 
 ## 2. Release numbering
 
 | Release | Name | Contents |
 |---|---|---|
-| **R1** | **MVP — private pilot** | Accounts, profiles, follow, photo posts, feed, likes, comments, share link, notifications, block/report, **admin portal (web)** |
-| R1.1 | Public launch | Open sign-up, email verification, carousel, store release, illegal-content hash matching |
-| **R2** | **Reels** | Short vertical video |
-| R3 | Discovery | Explore, hashtags, mentions; AI/ML features (to be planned separately) |
-| R4 | Scale & engage | Stories, DMs, horizontal scaling |
+| **R1** | **MVP — private pilot** (as **Kidili** since 2026-10-31) | Accounts, profiles, follow, photo and video posts, carousels, feed, likes, comments and replies, hashtags, share link, notifications, block/report, private accounts, Google sign-in, **admin portal (web)**; since BRS §6.3: **The Ocean, Stories, Udaku rooms, one-to-one Chat, Shops** |
+| R1.1 | Public launch | Open sign-up, email verification, store release, illegal-content hash matching |
+| **R2** | **Reels** | What the Ocean does not yet have: HLS ladder, trim, cover choice, resumable upload |
+| R3 | Discovery | Explore, mentions, trending hashtags; AI/ML features (to be planned separately) |
+| R4 | Scale & engage | Group chats, horizontal scaling |
 
 ## 3. Stakeholder decisions (2026-10-09)
 
@@ -58,6 +60,19 @@ Read in this order. Every later document builds on the decisions in the earlier 
 | D-11 | **Team: 1 engineer building with Claude Code.** | Plan roles, reviews and ceremonies adjusted (Plan §2–§3). Design deliverables (doc 04) are produced by the engineer with Claude Code unless a designer joins. |
 | D-12 | **Environments for now: local + UAT. Production servers come at a later stage.** The UAT server's address is supplied through the environment variable **`UAT_SERVER_IP`** (never hard-coded). Only the GitHub and Expo (`bmachumu`) accounts are needed now. **Testing is on Android only** until production; iOS is verified in Plan 5.1a. Apple, Google Play, Sentry, PostHog and email accounts are created when production (or a phase that needs them) arrives. The BRS is **signed off**. | "Staging" is renamed **UAT** in all documents. TRD §16; Plan Phases 0, 2, 3, 5. |
 | D-13 | **Signing up with Google needs no invite code** (owner, 2026-10-27). The same day: **production is on hold**; product keeps being built and tested on UAT until the owner says go. | BRS §6.2 (BR-AC-09…11), Plan §1.0a. A Google account is a way in around the invite code during the pilot; 18+, Terms and username still apply. |
+
+## 3b. Stakeholder decisions (2026-10-31) — Kidili
+
+| # | Decision | Effect on the documents |
+|---|---|---|
+| D-14 | **The app is renamed Kidili.** Only what users see changes; the app ID `tz.jamiiair.app`, the `jamiiair://` scheme, the repo and code names stay. | BRS §6.3, BR-BN-01; Design Brief §15; TRD ADR-013. |
+| D-15 | **Navigation:** Home · Udaku · + · Chat · Profile; Home's top tabs Posts · Stories · The Ocean · Shops; Search and Activity in Home's header. | App Flow §16.1; Plan K1. |
+| D-16 | **Shops take mobile money only** (M-Pesa, Mixx by Yas, Airtel Money). | BR-SH-08; TRD §19.4. |
+| D-17 | **Only admin-approved sellers** list products; approval in the admin portal. | BR-SH-02/03; App Flow §16.9, §16.11. |
+| D-18 | **Anyone can start an Udaku room**; only the host posts. | BR-UD-01…10. |
+| D-19 | **Chat is one-to-one**, with message requests. | BR-CH-01…10; TRD §19.2. |
+| D-20 | **Sellers are paid after delivery.** | BR-SH-12; TRD §19.4. |
+| D-21 | **Payment provider: pending** (it costs money). Shops are built up to "awaiting payment" without it. | Plan K6d blocked; [08](08-release-readiness-tracker.md) C5, D6. |
 
 ## 4. Review of the source guidelines
 

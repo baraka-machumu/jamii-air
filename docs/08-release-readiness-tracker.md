@@ -74,6 +74,8 @@ B1–B4 are one browser session. B5–B8 are one phone session (B8 adds S.5.i in
 | C2 | Pay for **Apple Developer** (annual) and **Google Play Console** (one-off) now, or after the shakedown? | D3, D4, all of iOS, and store distribution | ☐ |
 | C3 | How the Maestro loop runs in CI: GitHub Actions emulator, or Maestro Cloud (paid) | 5.1b | ☐ |
 | C4 | Whether UAT data is worth backing up before the pilot | E6 | ☐ |
+| C5 | **Which mobile-money payment provider** for Shops (D-21) — **on hold by the owner, 2026-10-31**. When it is picked up: compare licensed aggregators that cover M-Pesa, Mixx by Yas and Airtel Money for both collection and payout, with their real fees, before choosing | Plan K6d (taking money and paying sellers); D6 | ⏸ pending |
+| C6 | The Kidili open questions Q-K1…Q-K8 and the design canvas sign-off ([tracker](backlog/kidili.md#open-questions-for-the-owner-k0b)) | Plan K1 onwards | ☐ |
 
 ---
 
@@ -88,6 +90,7 @@ Everything here was deferred by decision D-12 and is now the gate for most of Ph
 | D3 | **Apple Developer** account, plus an iPhone as second reference device | All of iOS: 5.1a, APNs, TestFlight | ☐ |
 | D4 | **Google Play Console** account | Play internal testing, store listing | ☐ |
 | D5 | Office **IP addresses** for the admin allowlist | 4.7 proper, 5.1 | ☐ |
+| D6 | **Payment provider account** for Kidili Shops: a fee per payment and per payout (amount unknown until C5), a **registered business**, and legal advice on holding buyers' money until delivery (D-20) | Plan K6d; Shops with real money | ⏸ 🔒 C5 |
 
 ---
 

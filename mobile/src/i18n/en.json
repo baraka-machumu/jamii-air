@@ -57,10 +57,43 @@
   },
   "tabs": {
     "home": "Home",
+    "udaku": "Udaku",
+    "create": "Create",
+    "chat": "Chat",
+    "profile": "Profile",
     "search": "Search",
-    "create": "Create a post",
-    "activity": "Activity",
-    "profile": "Your profile"
+    "activity": "Activity"
+  },
+  "home": {
+    "sections": "Home sections",
+    "posts": "Posts",
+    "stories": "Stories",
+    "ocean": "The Ocean",
+    "shops": "Shops",
+    "notifications": "Notifications",
+    "notificationsUnread": "Notifications, {{count}} new"
+  },
+  "soon": {
+    "title": "Coming soon",
+    "stories": "Stories from the people you follow, gone after 24 hours.",
+    "ocean": "Short vertical videos from everyone, one after another.",
+    "shops": "Shop from approved sellers and pay with mobile money.",
+    "udaku": "Rooms where a host posts the news and members react.",
+    "chat": "One-to-one messages with the people you know."
+  },
+  "createMenu": {
+    "title": "Create",
+    "post": "Post",
+    "postBody": "Photos or a video for your Home feed",
+    "story": "Story",
+    "storyBody": "Gone after 24 hours",
+    "ocean": "Ocean video",
+    "oceanBody": "A short vertical video for The Ocean",
+    "udaku": "Udaku update",
+    "udakuBody": "Post to your room, or start a room",
+    "sell": "Sell a product",
+    "sellBody": "Approved sellers list in Shops",
+    "soon": "Coming soon"
   },
   "settings": {
     "language": "Language",
@@ -273,7 +306,8 @@
     "videoTooLongTitle": "Video too long",
     "videoTooLongBody": "A video can be up to {{seconds}} seconds. Trim it and try again.",
     "videoTooBigTitle": "Video too large",
-    "videoTooBigBody": "A video can be up to {{megabytes}} MB. Record a shorter one, or choose a smaller file."
+    "videoTooBigBody": "A video can be up to {{megabytes}} MB. Record a shorter one, or choose a smaller file.",
+    "newPost": "New post"
   },
   "feed": {
     "postBy": "Post by {{username}}",

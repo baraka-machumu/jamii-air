@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Document** | 03 — App Flow |
-| **Version** | 1.6 (2026-11-01: the answers to Q-K1…Q-K8 in §16 — reactions, verified mark, 3-day payout hold, delivery fee per shop order, no commission) · 1.5 (2026-10-31, BRS §6.3: the app becomes **Kidili** — new navigation, Stories, The Ocean, Udaku rooms, Chat, Shops and the matching admin pages, all in §16) · 1.4 (2026-10-27, BRS §6.2: Sign in with Google §4.6, private accounts §8.2a, follow requests §8.5, Activity §9, Settings §11, delete account for a Google-only account §10.4) · 1.3 (R1 scope change 2026-10-16, BRS §6.1: carousels and video in §5–§6, replies §7.2, hashtags §7.5, a post on screen the moment it is shared §5) · 1.2 (Phase 2 API review: change password, removed-post badge, admin onboarding by temporary password) |
+| **Version** | 1.7 (2026-11-01: §16.1 as built in K1.3 — sections not built yet say "Coming soon") · 1.6 (2026-11-01: the answers to Q-K1…Q-K8 in §16 — reactions, verified mark, 3-day payout hold, delivery fee per shop order, no commission) · 1.5 (2026-10-31, BRS §6.3: the app becomes **Kidili** — new navigation, Stories, The Ocean, Udaku rooms, Chat, Shops and the matching admin pages, all in §16) · 1.4 (2026-10-27, BRS §6.2: Sign in with Google §4.6, private accounts §8.2a, follow requests §8.5, Activity §9, Settings §11, delete account for a Google-only account §10.4) · 1.3 (R1 scope change 2026-10-16, BRS §6.1: carousels and video in §5–§6, replies §7.2, hashtags §7.5, a post on screen the moment it is shared §5) · 1.2 (Phase 2 API review: change password, removed-post badge, admin onboarding by temporary password) |
 | **Status** | **Approved** — 2026-10-11 |
 | **Date** | 2026-10-09 |
 | **Scope** | Release 1 mobile app (Android & iOS) and admin portal (web, §15). R2 Reels flow sketched in §14. |
@@ -505,6 +505,13 @@ also shows the **cart** with its item count.
 **Home top tabs (BR-BN-03):** Posts · Stories · The Ocean · Shops. The choice is remembered
 while the app is open; a cold start opens Posts. On The Ocean the tabs and the bottom bar turn
 dark so the video fills the screen.
+
+**As built in K1.3:** until its stage ships, a section that is not built yet (Stories, The Ocean,
+Shops on Home; the Udaku and Chat tabs) shows a "Coming soon" panel with one line on what it will
+be, and in the Create menu only **Post** is live; the other four rows say "Coming soon" and are
+disabled. Udaku's dot and Chat's count arrive with K4 and K5. Search, Activity and New post are
+pushed screens with a back button (their links, `/search`, `/activity`, `/create`, are unchanged).
+Signing out puts Home back on Posts.
 
 ### 16.2 Posts (the home feed) — *Main*, *Post and comments*, *New post*
 

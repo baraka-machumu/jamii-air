@@ -5,14 +5,15 @@ import Welcome from '@/app/(auth)/index';
 import LogIn from '@/app/(auth)/login';
 import SignUp from '@/app/(auth)/signup';
 import TabsLayout from '@/app/(tabs)/_layout';
-import Activity from '@/app/(tabs)/activity';
-import Create from '@/app/(tabs)/create';
+import Chat from '@/app/(tabs)/chat';
 import Home from '@/app/(tabs)/index';
 import Profile from '@/app/(tabs)/profile';
-import Search from '@/app/(tabs)/search';
+import Udaku from '@/app/(tabs)/udaku';
 import RootLayout from '@/app/_layout';
+import Activity from '@/app/activity';
 import Caption from '@/app/compose/caption';
 import Crop from '@/app/compose/crop';
+import Create from '@/app/create';
 import EditProfile from '@/app/edit-profile';
 import FollowRequests from '@/app/follow-requests';
 import Onboarding from '@/app/onboarding/index';
@@ -25,6 +26,7 @@ import TagScreen from '@/app/t/[tag]';
 import BlockedAccounts from '@/app/settings/blocked';
 import DeleteAccount from '@/app/settings/delete-account';
 import ChangePassword from '@/app/settings/password';
+import Search from '@/app/search';
 import UserProfile from '@/app/u/[username]/index';
 import FollowListScreen from '@/app/u/[username]/[list]';
 
@@ -37,10 +39,12 @@ export const routes = {
   '(auth)/forgot-password': ForgotPassword,
   '(tabs)/_layout': TabsLayout,
   '(tabs)/index': Home,
-  '(tabs)/search': Search,
-  '(tabs)/create': Create,
-  '(tabs)/activity': Activity,
+  '(tabs)/udaku': Udaku,
+  '(tabs)/chat': Chat,
   '(tabs)/profile': Profile,
+  search: Search,
+  activity: Activity,
+  create: Create,
   'edit-profile': EditProfile,
   'follow-requests': FollowRequests,
   'settings/index': Settings,

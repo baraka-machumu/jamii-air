@@ -79,16 +79,17 @@ describe('every control has a name', () => {
     expect(namelessControls()).toEqual([]);
   });
 
-  it('on the home feed, where the controls are icons: tabs, ⋯, like, comment, share', async () => {
+  it('on the home feed, where the controls are icons: header, tabs, ⋯, like, comment, share', async () => {
     await tokenStore.set('refresh-0-xxxxxxxxxxxxxxxx');
     useSession.setState({ status: 'signedIn', accessToken: 'access-0', user: { id: 'u1', username: 'amina' }, onboarding: false });
     renderRouter(routes, { initialUrl: '/' });
     await waitFor(() => expect(screen.getByText(/Caption 1/)).toBeTruthy());
 
     expect(namelessControls()).toEqual([]);
-    // The tab bar is icon-only (Swahili labels would not fit), so its labels carry the whole bar.
     expect(screen.getByLabelText('Home')).toBeTruthy();
-    expect(screen.getByLabelText('Activity, 3')).toBeTruthy();
+    expect(screen.getByLabelText('Create')).toBeTruthy();
+    expect(screen.getByLabelText('Search')).toBeTruthy();
+    expect(screen.getByLabelText('Notifications, 3 new')).toBeTruthy();
     expect(screen.getByLabelText('Like')).toBeTruthy();
     expect(screen.getByLabelText('More options')).toBeTruthy();
   });
@@ -141,11 +142,11 @@ describe('every tab stays visible against the background', () => {
     expect(ringColor()).toBe(palettes.light.textMuted);
   });
 
-  it('darkens the ring to the text colour when Profile is the open tab', async () => {
+  it('turns the ring terracotta when Profile is the open tab, like the other tabs', async () => {
     await signIn();
     renderRouter(routes, { initialUrl: '/profile' });
     await waitFor(() => expect(screen.getByTestId('tab-profile')).toBeTruthy());
 
-    expect(ringColor()).toBe(palettes.light.text);
+    expect(ringColor()).toBe(palettes.light.primary);
   });
 });

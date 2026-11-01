@@ -57,10 +57,43 @@
   },
   "tabs": {
     "home": "Nyumbani",
+    "udaku": "Udaku",
+    "create": "Unda",
+    "chat": "Gumzo",
+    "profile": "Wasifu",
     "search": "Tafuta",
-    "create": "Chapisha picha",
-    "activity": "Shughuli",
-    "profile": "Wasifu wako"
+    "activity": "Shughuli"
+  },
+  "home": {
+    "sections": "Sehemu za Nyumbani",
+    "posts": "Machapisho",
+    "stories": "Hadithi",
+    "ocean": "The Ocean",
+    "shops": "Maduka",
+    "notifications": "Arifa",
+    "notificationsUnread": "Arifa, {{count}} mpya"
+  },
+  "soon": {
+    "title": "Inakuja hivi karibuni",
+    "stories": "Hadithi za watu unaowafuata, zinapotea baada ya saa 24.",
+    "ocean": "Video fupi za wima kutoka kwa kila mtu, moja baada ya nyingine.",
+    "shops": "Nunua kutoka kwa wauzaji walioidhinishwa na ulipe kwa pesa za simu.",
+    "udaku": "Vyumba ambamo mwenyeji anaweka habari na wanachama wanajibu.",
+    "chat": "Ujumbe wa moja kwa moja na watu unaowajua."
+  },
+  "createMenu": {
+    "title": "Unda",
+    "post": "Chapisho",
+    "postBody": "Picha au video kwa Nyumbani",
+    "story": "Hadithi",
+    "storyBody": "Inapotea baada ya saa 24",
+    "ocean": "Video ya The Ocean",
+    "oceanBody": "Video fupi ya wima kwa The Ocean",
+    "udaku": "Habari ya Udaku",
+    "udakuBody": "Weka kwenye chumba chako, au anzisha chumba",
+    "sell": "Uza bidhaa",
+    "sellBody": "Wauzaji walioidhinishwa huuza kwenye Maduka",
+    "soon": "Inakuja hivi karibuni"
   },
   "settings": {
     "language": "Lugha",
@@ -273,7 +306,8 @@
     "videoTooLongTitle": "Video ni ndefu mno",
     "videoTooLongBody": "Video inaweza kuwa hadi sekunde {{seconds}}. Ifupishe na ujaribu tena.",
     "videoTooBigTitle": "Video ni kubwa mno",
-    "videoTooBigBody": "Video inaweza kuwa hadi MB {{megabytes}}. Rekodi fupi, au chagua faili ndogo."
+    "videoTooBigBody": "Video inaweza kuwa hadi MB {{megabytes}}. Rekodi fupi, au chagua faili ndogo.",
+    "newPost": "Chapisho jipya"
   },
   "feed": {
     "postBy": "Chapisho la {{username}}",

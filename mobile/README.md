@@ -89,8 +89,8 @@ Add packages with `npx expo install <package>` so versions match the SDK.
 
 | Path | What |
 |---|---|
-| `src/app/` | Routes (Expo Router). Every file is a screen; `_layout.tsx` files are navigators. `(auth)` = signed-out screens, `(tabs)` = the five tabs, `onboarding` = first session after sign-up; pushed screens (`edit-profile`, `settings/…`) sit beside the tabs. `Stack.Protected` keeps the groups apart. Keep non-route code (and tests) out of this folder. |
-| `src/components/` | Shared UI: `Text` (type scale), `Button`, `Screen`, `Header`, `Icon`, `Logo`, `TabBar`, `Segmented`, `Avatar`, `ListRow`; form parts `TextField`, `Checkbox`, `DateField`, `FormScreen` |
+| `src/app/` | Routes (Expo Router). Every file is a screen; `_layout.tsx` files are navigators. `(auth)` = signed-out screens, `(tabs)` = Home · Udaku · Chat · Profile (the + between them is drawn by `TabBar` and opens `CreateMenu`; Search, Activity and New post (`create`) are pushed screens since K1.3), `onboarding` = first session after sign-up; pushed screens (`edit-profile`, `settings/…`) sit beside the tabs. `Stack.Protected` keeps the groups apart. Keep non-route code (and tests) out of this folder. |
+| `src/components/` | Shared UI: `Text` (type scale), `Button`, `Screen`, `Header`, `Icon`, `Logo`, `TabBar`, `CreateMenu`, `TopTabs` (Home's top tabs), `ComingSoon` (sections whose stage is not built), `Segmented`, `Avatar`, `ListRow`; form parts `TextField`, `Checkbox`, `DateField`, `FormScreen` |
 | `src/api/posts.ts` | Feed, post, grid queries and delete; `PostCard`, `PostGrid`, `ProfilePosts` render them |
 | `src/posting/` | The post being made: crop geometry (`crop.ts`), the saved draft (`store.ts`), sharing with resume / retry (`run.ts`) |
 | `src/people/` | Follow / unfollow, optimistic, shared by every screen (`follow.ts`); recent searches (`recentSearches.ts`); `useDebounced` |
@@ -100,7 +100,7 @@ Add packages with `npx expo install <package>` so versions match the SDK.
 | `store-listing.md` | Draft store texts, English and Swahili |
 | `src/i18n/` | English and Swahili strings (`en.json`, `sw.json`; same keys, enforced by a test) |
 | `src/auth/` | The session: refresh token in secure storage (`tokenStore.ts`), one refresh at a time, restore at launch, log out (`session.ts`); form checks that mirror the API (`validation.ts`) |
-| `src/stores/` | Zustand: `session` (who is signed in, onboarding) and `settings` (language, theme; saved on the phone with AsyncStorage) |
+| `src/stores/` | Zustand: `session` (who is signed in, onboarding), `home` (Home's open top tab, not saved) and `settings` (language, theme; saved on the phone with AsyncStorage) |
 | `src/api/` | Typed API client (`client.ts`), errors and their messages (`errors.ts`), TanStack Query client (retry rules from App Flow §13), and the generated `openapi.json` / `schema.d.ts` |
 | `src/__tests__/`, `src/test/` | Tests that render the router; shared test helpers (routes, a stubbed API, an in-memory token store) |
 

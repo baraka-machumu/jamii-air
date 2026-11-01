@@ -1,4 +1,8 @@
-// Home feed (App Flow §5; BR-FD-01, 02, 07): you and the people you follow, newest first.
+// Home (App Flow §16.1): the Kidili wordmark with Search and the bell (Activity, with a dot while
+// anything is unread), then the top tabs Posts · Stories · The Ocean · Shops. Only Posts is built;
+// the other three say "Coming soon" until their stage (K2, K3, K6).
+//
+// Posts is the home feed (App Flow §5; BR-FD-01, 02, 07): you and the people you follow, newest first.
 // FlashList; each photo's space is reserved from its size (no jumps), blurhash until it loads.
 // More loads near the end; pull to refresh; tapping Home again scrolls to the top. States: 3
 // skeleton cards, empty (Find people / Share your first photo), error (Try again), and on a failed
@@ -8,21 +12,72 @@ import { FlashList, type FlashListRef, type ViewToken } from '@shopify/flash-lis
 import { useRouter, useScrollToTop } from 'expo-router';
 import { useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { RefreshControl, StyleSheet, View } from 'react-native';
+import { Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 import { errorMessage } from '@/api/errors';
+import { useUnreadCount } from '@/api/notifications';
 import { type Post, useFeed } from '@/api/posts';
 import { Button } from '@/components/Button';
+import { ComingSoon } from '@/components/ComingSoon';
+import { Icon, type IconName } from '@/components/Icon';
 import { Wordmark } from '@/components/Logo';
 import { PostCard, PostSkeleton } from '@/components/PostCard';
 import { PostingCard } from '@/components/PostingCard';
 import { Screen } from '@/components/Screen';
 import { Text } from '@/components/Text';
 import { showToast } from '@/components/Toast';
+import { TopTabs } from '@/components/TopTabs';
 import { useActiveVideo } from '@/media/activeVideo';
 import { usePublished } from '@/posting/published';
+import { type HomeSection, useHomeSection } from '@/stores/home';
 import { useTheme } from '@/theme/ThemeProvider';
+import { touchTarget } from '@/theme/tokens';
+
+const SOON: Record<Exclude<HomeSection, 'posts'>, IconName> = { stories: 'story', ocean: 'ocean', shops: 'bag' };
 
 export default function HomeTab() {
+  const { t } = useTranslation();
+  const { space } = useTheme();
+  const section = useHomeSection((s) => s.section);
+  const setSection = useHomeSection((s) => s.setSection);
+  const sections: HomeSection[] = ['posts', 'stories', 'ocean', 'shops'];
+
+  return (
+    <Screen padded={false}>
+      <HomeHeader />
+      <View style={{ paddingHorizontal: space.md, paddingBottom: space.sm }}>
+        <TopTabs label={t('home.sections')} value={section} onChange={setSection}
+          options={sections.map((value) => ({ value, label: t(`home.${value}`) }))} />
+      </View>
+      {section === 'posts' ? <PostsFeed /> : <ComingSoon icon={SOON[section]} body={t(`soon.${section}`)} />}
+    </Screen>
+  );
+}
+
+function HomeHeader() {
+  const { t } = useTranslation();
+  const router = useRouter();
+  const { colors, space } = useTheme();
+  const unread = useUnreadCount(true).data ?? 0;
+  const button = (icon: IconName, label: string, onPress: () => void, dot = false) => (
+    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={label} hitSlop={4}
+      testID={`home-${icon}`} style={styles.headerButton}>
+      <Icon name={icon} color={colors.text} />
+      {dot && <View testID="bell-dot" style={[styles.dot, { backgroundColor: colors.primary, borderColor: colors.bg }]} />}
+    </Pressable>
+  );
+  return (
+    <View style={[styles.header, { paddingLeft: space.md, paddingRight: space.xs }]}>
+      <Wordmark color={colors.brand} ink={colors.onBrand} />
+      <View style={styles.headerActions}>
+        {button('search', t('tabs.search'), () => router.push('/search'))}
+        {button('bell', unread > 0 ? t('home.notificationsUnread', { count: unread }) : t('home.notifications'),
+          () => router.push('/activity'), unread > 0)}
+      </View>
+    </View>
+  );
+}
+
+function PostsFeed() {
   const { t } = useTranslation();
   const router = useRouter();
   const { colors, space } = useTheme();
@@ -48,14 +103,7 @@ export default function HomeTab() {
     if (refreshFailed) showToast(t('feed.refreshFailed'));
   }, [refreshFailed, t]);
 
-  const header = (
-    <View style={{ gap: space.sm, paddingBottom: space.sm }}>
-      <View style={[styles.brand, { paddingHorizontal: space.md }]}>
-        <Wordmark color={colors.brand} ink={colors.onBrand} />
-      </View>
-      <View style={{ paddingHorizontal: space.md }}><PostingCard /></View>
-    </View>
-  );
+  const header = <View style={{ paddingHorizontal: space.md, paddingBottom: space.sm }}><PostingCard /></View>;
 
   let body;
   if (feed.isPending) {
@@ -86,8 +134,8 @@ export default function HomeTab() {
           <View style={[styles.center, { padding: space.lg, gap: space.sm }]}>
             <Text variant="bodyStrong" style={styles.textCenter}>{t('feed.emptyTitle')}</Text>
             <Text muted style={styles.textCenter}>{t('feed.emptyBody')}</Text>
-            <Button label={t('feed.findPeople')} onPress={() => router.navigate('/search')} />
-            <Button kind="secondary" label={t('feed.shareFirst')} onPress={() => router.navigate('/create')} />
+            <Button label={t('feed.findPeople')} onPress={() => router.push('/search')} />
+            <Button kind="secondary" label={t('feed.shareFirst')} onPress={() => router.push('/create')} />
           </View>
         }
         ListFooterComponent={posts.length === 0 ? null : feed.isFetchingNextPage ? <PostSkeleton /> : !feed.hasNextPage ? (
@@ -101,7 +149,7 @@ export default function HomeTab() {
     );
   }
 
-  return <Screen padded={false}>{body}</Screen>;
+  return body;
 }
 
 // A video stops once less than this much of its post is on screen: scrolled past, not just nudged.
@@ -118,7 +166,10 @@ function Separator() {
 
 const styles = StyleSheet.create({
   fill: { flex: 1 },
-  brand: { minHeight: 48, justifyContent: 'center' },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 56 },
+  headerActions: { flexDirection: 'row' },
+  headerButton: { width: touchTarget, height: touchTarget, alignItems: 'center', justifyContent: 'center' },
+  dot: { position: 'absolute', top: 10, right: 11, width: 10, height: 10, borderRadius: 5, borderWidth: 2 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'stretch', gap: 12 },
   textCenter: { textAlign: 'center' },
 });

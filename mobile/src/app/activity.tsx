@@ -1,7 +1,7 @@
-// Activity (App Flow §9; BR-NT-01…04): likes, comments and follows, grouped New (unread when the
+// Activity (App Flow §9; BR-NT-01…04), opened from the bell in Home's header (§16.1): likes, comments and follows, grouped New (unread when the
 // tab opened) and Earlier. "amina liked your post" (+ photo), "baraka commented: 'nice!'" (+ photo),
 // "neema started following you" (+ Follow back). Each visit reads the list again, and after 1 s
-// marks everything read (the badge goes to 0); the grouping stays until the next visit or refresh.
+// marks everything read (the bell's dot clears); the grouping stays until the next visit or refresh.
 // A row opens the post (like, comment) or the profile (follow); a post that is gone says so.
 // A private account (§8.5) also gets "neema asked to follow you" (→ Follow requests), a
 // "Follow requests · n" row above the list while anyone is waiting, and "accepted your follow
@@ -19,6 +19,7 @@ import { markAllRead, type Notification, notificationPath, PERSON_TYPES, useNoti
 import { Avatar } from '@/components/Avatar';
 import { Button } from '@/components/Button';
 import { FollowButton } from '@/components/FollowButton';
+import { Header } from '@/components/Header';
 import { Screen } from '@/components/Screen';
 import { Spinner } from '@/components/Spinner';
 import { Text } from '@/components/Text';
@@ -31,7 +32,7 @@ export const MARK_READ_AFTER_MS = 1_000;
 
 type Row = { kind: 'header'; title: string } | { kind: 'item'; item: Notification };
 
-export default function ActivityTab() {
+export default function ActivityScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -105,8 +106,8 @@ export default function ActivityTab() {
   }
 
   return (
-    <Screen padded={false}>
-      <Text variant="title" accessibilityRole="header" style={[styles.title, { paddingHorizontal: space.md }]}>{t('tabs.activity')}</Text>
+    <Screen padded={false} edges={['top', 'bottom']}>
+      <View style={{ paddingHorizontal: space.md }}><Header title={t('tabs.activity')} /></View>
       {body}
     </Screen>
   );
@@ -164,7 +165,6 @@ export function activityText(item: Pick<Notification, 'type' | 'commentExcerpt'>
 
 const styles = StyleSheet.create({
   requests: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 52, borderBottomWidth: StyleSheet.hairlineWidth },
-  title: { fontSize: 22, paddingVertical: 12 },
   center: { flex: 1, justifyContent: 'center', gap: 12 },
   textCenter: { textAlign: 'center' },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 8, minHeight: 60 },

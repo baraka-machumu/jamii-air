@@ -6,13 +6,14 @@ import { unreadKey, useUnreadCount } from '@/api/notifications';
 import { TabBar } from '@/components/TabBar';
 
 /**
- * The five tabs (App Flow §2): Home · Search · Create · Activity · Profile. Activity carries the
- * unread badge (App Flow §9): read when the tabs open, whenever the app comes to the foreground,
- * on a push (src/notifications/push.ts) and after Activity marks everything read.
+ * The Kidili tabs (App Flow §16.1): Home · Udaku · Chat · Profile, with the + between Udaku and
+ * Chat drawn by the TabBar. Search and Activity open from Home's header. The unread count behind
+ * the bell (App Flow §9) is read when the tabs open, whenever the app comes to the foreground, on a
+ * push (src/notifications/push.ts) and after Activity marks everything read.
  */
 export default function TabsLayout() {
   const queryClient = useQueryClient();
-  const unread = useUnreadCount(true);
+  useUnreadCount(true);
 
   useEffect(() => {
     const sub = AppState.addEventListener('change', (state) => {
@@ -22,11 +23,10 @@ export default function TabsLayout() {
   }, [queryClient]);
 
   return (
-    <Tabs screenOptions={{ headerShown: false }} tabBar={(props) => <TabBar {...props} badge={unread.data} />}>
+    <Tabs screenOptions={{ headerShown: false }} tabBar={(props) => <TabBar {...props} />}>
       <Tabs.Screen name="index" />
-      <Tabs.Screen name="search" />
-      <Tabs.Screen name="create" />
-      <Tabs.Screen name="activity" />
+      <Tabs.Screen name="udaku" />
+      <Tabs.Screen name="chat" />
       <Tabs.Screen name="profile" />
     </Tabs>
   );

@@ -28,6 +28,7 @@ import { useFollowStore } from '@/people/follow';
 import { useRecentSearches } from '@/people/recentSearches';
 import { runPosting } from '@/posting/run';
 import { usePosting } from '@/posting/store';
+import { useHomeSection } from '@/stores/home';
 import { useSession } from '@/stores/session';
 import { useSettings } from '@/stores/settings';
 import { ThemeProvider, useTheme } from '@/theme/ThemeProvider';
@@ -75,6 +76,7 @@ export default function RootLayout() {
     resetLikes();
     useRecentSearches.getState().clear();
     usePosting.getState().discard();
+    useHomeSection.setState({ section: 'posts' });
   }, [status, queryClient]);
 
   // A post that was processing when the app closed: keep checking it (App Flow §6.1).
@@ -114,6 +116,9 @@ function RootStack() {
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: theme.colors.bg } }}>
         <Stack.Protected guard={signedIn && !onboarding}>
           <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="search" />
+          <Stack.Screen name="activity" />
+          <Stack.Screen name="create" />
           <Stack.Screen name="edit-profile" />
           <Stack.Screen name="settings/index" />
           <Stack.Screen name="settings/password" />

@@ -75,10 +75,17 @@ beforeEach(async () => {
 
 const tapResponse = (id: string, data: object) => ({ actionIdentifier: 'default', notification: { request: { identifier: id, content: { title: 'Kidili', body: 'x', data } } } });
 
-describe('Tab badge (§9)', () => {
-  it('shows the unread count on Activity', async () => {
+describe("The bell in Home's header (§9, §16.1)", () => {
+  it('shows a dot and says how many are new', async () => {
     renderRouter(routes, { initialUrl: '/' });
-    expect(await screen.findByLabelText('Activity, 2')).toBeTruthy();
+    expect(await screen.findByLabelText('Notifications, 2 new')).toBeTruthy();
+    expect(screen.getByTestId('bell-dot')).toBeTruthy();
+  });
+
+  it('opens Activity', async () => {
+    renderRouter(routes, { initialUrl: '/' });
+    fireEvent.press(await screen.findByLabelText('Notifications, 2 new'));
+    expect(await screen.findByText('Earlier')).toBeTruthy();
   });
 });
 
@@ -94,14 +101,17 @@ describe('Activity (§9)', () => {
     expect(screen.getByText('Follow back')).toBeTruthy();
   });
 
-  it('marks everything read after 1 s and clears the badge', async () => {
-    renderRouter(routes, { initialUrl: '/activity' });
-    expect(await screen.findByLabelText('Activity, 2')).toBeTruthy();
+  it("marks everything read after 1 s and clears the bell's dot", async () => {
+    renderRouter(routes, { initialUrl: '/' });
+    fireEvent.press(await screen.findByLabelText('Notifications, 2 new'));
+    expect(await screen.findByText('Earlier')).toBeTruthy();
     expect(sent('POST', '/api/v1/notifications/read')).toHaveLength(0);
     await act(async () => { jest.advanceTimersByTime(1_000); });
     await waitFor(() => expect(sent('POST', '/api/v1/notifications/read')).toHaveLength(1));
     expect(sent('POST', '/api/v1/notifications/read')[0]!.body).toEqual({ all: true });
-    expect(await screen.findByLabelText('Activity')).toBeTruthy();
+    fireEvent.press(screen.getByLabelText('Back'));
+    expect(await screen.findByLabelText('Notifications')).toBeTruthy();
+    expect(screen.queryByTestId('bell-dot')).toBeNull();
   });
 
   it('opens the post of a like', async () => {
@@ -189,11 +199,11 @@ describe('Push handling (§9.1)', () => {
 
   it('in the foreground: a toast instead of a banner, and the badge is read again', async () => {
     renderRouter(routes, { initialUrl: '/' });
-    await screen.findByLabelText('Activity, 2');
+    await screen.findByLabelText('Notifications, 2 new');
     unread = 3;
     act(() => push().received.forEach((l) => l({ request: { identifier: 'r1', content: { title: 'Kidili', body: 'juma liked your post.', data: { type: 'LIKE', postId: 'p1' } } } })));
     expect(await screen.findByText('juma liked your post.')).toBeTruthy();
-    expect(await screen.findByLabelText('Activity, 3')).toBeTruthy();
+    expect(await screen.findByLabelText('Notifications, 3 new')).toBeTruthy();
   });
 
   it('a tapped push opens its post (background)', async () => {

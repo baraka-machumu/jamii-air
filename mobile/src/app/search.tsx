@@ -1,4 +1,4 @@
-// Search (App Flow §8.1; BR-PR-03): the field focuses when the tab opens; 300 ms after typing stops
+// Search (App Flow §8.1; BR-PR-03), opened from Home's header (§16.1): the field focuses when it opens; 300 ms after typing stops
 // the API is asked (the previous request is cancelled). An empty field shows Recent searches:
 // the accounts opened from here, saved on the phone, at most 10, clearable.
 import { useFocusEffect, useRouter } from 'expo-router';
@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { FlatList, Keyboard, Pressable, StyleSheet, type TextInput, View } from 'react-native';
 import { errorMessage } from '@/api/errors';
 import { type UserSummary, useUserSearch } from '@/api/people';
+import { BackButton } from '@/components/BackButton';
 import { Button } from '@/components/Button';
 import { Icon } from '@/components/Icon';
 import { Screen } from '@/components/Screen';
@@ -19,7 +20,7 @@ import { useDebounced } from '@/people/useDebounced';
 import { useTheme } from '@/theme/ThemeProvider';
 import { touchTarget } from '@/theme/tokens';
 
-export default function SearchTab() {
+export default function SearchScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { colors, space } = useTheme();
@@ -30,7 +31,7 @@ export default function SearchTab() {
   const recent = useRecentSearches();
 
   useFocusEffect(useCallback(() => {
-    const timer = setTimeout(() => input.current?.focus(), 250); // after the tab transition
+    const timer = setTimeout(() => input.current?.focus(), 250); // after the push transition
     return () => clearTimeout(timer);
   }, []));
 
@@ -47,8 +48,8 @@ export default function SearchTab() {
 
   if (!text.trim()) {
     return (
-      <Screen>
-        <View style={{ paddingTop: space.xs }}>{field}</View>
+      <Screen edges={['top', 'bottom']}>
+        <View style={[styles.top, { paddingTop: space.xs }]}><BackButton /><View style={styles.field}>{field}</View></View>
         {recent.accounts.length > 0 ? (
           <FlatList data={recent.accounts} keyExtractor={(a) => a.id} keyboardShouldPersistTaps="handled"
             ListHeaderComponent={
@@ -74,8 +75,8 @@ export default function SearchTab() {
 
   const typing = text.trim() !== query;
   return (
-    <Screen>
-      <View style={{ paddingTop: space.xs }}>{field}</View>
+    <Screen edges={['top', 'bottom']}>
+      <View style={[styles.top, { paddingTop: space.xs }]}><BackButton /><View style={styles.field}>{field}</View></View>
       {search.isError && !typing ? (
         <View style={styles.center}>
           <Text muted style={styles.textCenter}>{errorMessage(search.error, t)}</Text>
@@ -95,6 +96,8 @@ export default function SearchTab() {
 }
 
 const styles = StyleSheet.create({
+  top: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  field: { flex: 1 },
   center: { flex: 1, justifyContent: 'center', gap: 16, paddingBottom: 80 },
   textCenter: { textAlign: 'center' },
   recentHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },

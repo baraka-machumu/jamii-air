@@ -1,4 +1,4 @@
-// Create (App Flow §6): choose photos from the library (the system picker: no photo-library
+// New post (App Flow §6), from Post in the Create menu (§16.5): choose photos from the library (the system picker: no photo-library
 // permission needed on Android), take one, or pick or record a video. Up to ten photos make a
 // carousel (BR-CT-09); a video is one file of at most 60 s (BR-CT-07). An unfinished post comes
 // first: Continue / Discard, or its progress card while it is being shared.
@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { Alert, StyleSheet, View } from 'react-native';
 import { errorMessage } from '@/api/errors';
 import { Button } from '@/components/Button';
+import { Header } from '@/components/Header';
 import { Icon } from '@/components/Icon';
 import { PostingCard } from '@/components/PostingCard';
 import { Screen } from '@/components/Screen';
@@ -19,7 +20,7 @@ import { discardPosting } from '@/posting/run';
 import { MAX_PHOTOS, usePosting } from '@/posting/store';
 import { useTheme } from '@/theme/ThemeProvider';
 
-export default function CreateTab() {
+export default function CreateScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { colors, space } = useTheme();
@@ -67,8 +68,8 @@ export default function CreateTab() {
   };
 
   return (
-    <Screen>
-      <Text variant="title" accessibilityRole="header" style={{ marginTop: space.md }}>{t('tabs.create')}</Text>
+    <Screen edges={['top', 'bottom']}>
+      <Header title={t('create.newPost')} />
       {draft && draft.phase !== 'editing' ? (
         <View style={[styles.body, { gap: space.md }]}>
           <PostingCard />

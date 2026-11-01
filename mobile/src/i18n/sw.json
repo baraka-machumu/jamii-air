@@ -206,7 +206,8 @@
     "bio": "Maelezo mafupi",
     "discardTitle": "Uachane na mabadiliko yako?",
     "keepEditing": "Endelea kuhariri",
-    "discard": "Achana nayo"
+    "discard": "Achana nayo",
+    "menu": "Menyu"
   },
   "media": {
     "profilePhoto": "Picha ya wasifu",
@@ -481,5 +482,17 @@
     "makePublicBodyWaiting": "Kila mtu ataweza kuona picha na video zako, na watu {{count}} wanaosubiri watakubaliwa.",
     "makePublic": "Fanya ya wazi",
     "switchFailed": "Imeshindikana kubadilisha akaunti yako"
+  },
+  "saved": {
+    "title": "Vilivyohifadhiwa",
+    "save": "Hifadhi",
+    "unsave": "Ondoa kwenye Vilivyohifadhiwa",
+    "added": "Imehifadhiwa. Utaipata kwenye Vilivyohifadhiwa katika wasifu wako.",
+    "saveFailed": "Imeshindikana kuhifadhi chapisho. Jaribu tena.",
+    "unsaveFailed": "Imeshindikana kuiondoa kwenye Vilivyohifadhiwa. Jaribu tena.",
+    "menuBody": "Machapisho uliyohifadhi. Ni wewe tu unayeyaona.",
+    "emptyTitle": "Bado hujahifadhi chochote",
+    "emptyBody": "Gusa alama ya kuhifadhi kwenye chapisho ili kulihifadhi hapa. Ni wewe tu unayeona ulichohifadhi.",
+    "loadFailed": "Imeshindikana kupakia Vilivyohifadhiwa"
   }
 }

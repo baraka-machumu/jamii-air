@@ -1156,6 +1156,54 @@
         ]
       }
     },
+    "/api/v1/me/saved": {
+      "get": {
+        "operationId": "PostsController_saved",
+        "parameters": [
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "description": "nextCursor of the previous page",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GridPage"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Your Saved posts, most recently saved first; only those you can still see (BR-FD-13)",
+        "tags": [
+          "posts"
+        ]
+      }
+    },
     "/api/v1/posts/{id}/like": {
       "put": {
         "operationId": "EngagementController_like",
@@ -1221,6 +1269,76 @@
           }
         ],
         "summary": "Unlike (idempotent)",
+        "tags": [
+          "engagement"
+        ]
+      }
+    },
+    "/api/v1/posts/{id}/save": {
+      "put": {
+        "operationId": "EngagementController_save",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SaveState"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Save to your Saved posts (idempotent; only you see it)",
+        "tags": [
+          "engagement"
+        ]
+      },
+      "delete": {
+        "operationId": "EngagementController_unsave",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SaveState"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove from your Saved posts (idempotent)",
         "tags": [
           "engagement"
         ]
@@ -3884,6 +4002,10 @@
           "likedByMe": {
             "type": "boolean"
           },
+          "savedByMe": {
+            "type": "boolean",
+            "description": "In your Saved posts (BR-FD-13). Only you ever see this"
+          },
           "isMine": {
             "type": "boolean"
           },
@@ -3913,6 +4035,7 @@
           "likeCount",
           "commentCount",
           "likedByMe",
+          "savedByMe",
           "isMine",
           "author",
           "media",
@@ -4064,6 +4187,17 @@
         "required": [
           "liked",
           "likeCount"
+        ]
+      },
+      "SaveState": {
+        "type": "object",
+        "properties": {
+          "saved": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "saved"
         ]
       },
       "Comment": {

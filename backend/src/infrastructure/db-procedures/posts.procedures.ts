@@ -5,6 +5,7 @@ import { getHomeFeed } from '../../generated/prisma/sql/getHomeFeed.js';
 import { getPost } from '../../generated/prisma/sql/getPost.js';
 import { getHashtagPosts } from '../../generated/prisma/sql/getHashtagPosts.js';
 import { getProfilePosts } from '../../generated/prisma/sql/getProfilePosts.js';
+import { getSavedPosts } from '../../generated/prisma/sql/getSavedPosts.js';
 import { updatePostCaption } from '../../generated/prisma/sql/updatePostCaption.js';
 import type { Cursor } from '../../common/pagination/cursor.js';
 import { ProcedureRunner } from './procedure-runner.js';
@@ -13,6 +14,7 @@ export type PostRow = getPost.Result;
 export type FeedRow = getHomeFeed.Result;
 export type GridRow = getProfilePosts.Result;
 export type TagRow = getHashtagPosts.Result;
+export type SavedRow = getSavedPosts.Result;
 
 /** Posts and feeds (Schema §7.4, §8.1). */
 @Injectable()
@@ -46,6 +48,11 @@ export class PostsProcedures {
 
   getProfilePosts(viewerId: string, username: string, cursor: Cursor | undefined, limit: number): Promise<GridRow[]> {
     return this.db.rows('fn_get_profile_posts', getProfilePosts(viewerId, username, cursor?.time ?? null, cursor?.id ?? null, limit));
+  }
+
+  /** The viewer's own Saved grid (BR-FD-13), paged on saved_at. */
+  getSavedPosts(viewerId: string, cursor: Cursor | undefined, limit: number): Promise<SavedRow[]> {
+    return this.db.rows('fn_get_saved_posts', getSavedPosts(viewerId, cursor?.time ?? null, cursor?.id ?? null, limit));
   }
 
   getHashtagPosts(viewerId: string, tag: string, cursor: Cursor | undefined, limit: number): Promise<TagRow[]> {

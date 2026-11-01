@@ -86,6 +86,7 @@ name: Core loop
 # --- Log out and back in (App Flow §4.5, §3) ---
 - tapOn:
     id: "tab-profile"
+- tapOn: "Menu"
 - tapOn: "Settings"
 - scrollUntilVisible:
     element: "Log out"

@@ -1,4 +1,4 @@
-// /api/v1/posts, /api/v1/feed and the profile grid (TRD §5.1). All routes need a user access token.
+// /api/v1/posts, /api/v1/feed, the profile grid and Saved (TRD §5.1). All routes need a user access token.
 import { Body, Controller, Delete, Get, HttpCode, Param, ParseUUIDPipe, Patch, Post as HttpPost, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiHeader, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
@@ -70,5 +70,12 @@ export class PostsController {
   @ApiResponse({ status: 200, type: GridPage })
   profileGrid(@CurrentUser() user: AuthUser, @Param('username') username: string, @Query() page: PageQuery) {
     return this.posts.profileGrid(user.id, username, page.cursor, page.limit);
+  }
+
+  @Get('me/saved')
+  @ApiOperation({ summary: 'Your Saved posts, most recently saved first; only those you can still see (BR-FD-13)' })
+  @ApiResponse({ status: 200, type: GridPage })
+  saved(@CurrentUser() user: AuthUser, @Query() page: PageQuery) {
+    return this.posts.savedGrid(user.id, page.cursor, page.limit);
   }
 }

@@ -4,14 +4,16 @@ import { deleteComment } from '../../generated/prisma/sql/deleteComment.js';
 import { getCommentReplies } from '../../generated/prisma/sql/getCommentReplies.js';
 import { getPostComments } from '../../generated/prisma/sql/getPostComments.js';
 import { likePost } from '../../generated/prisma/sql/likePost.js';
+import { savePost } from '../../generated/prisma/sql/savePost.js';
 import { unlikePost } from '../../generated/prisma/sql/unlikePost.js';
+import { unsavePost } from '../../generated/prisma/sql/unsavePost.js';
 import type { Cursor } from '../../common/pagination/cursor.js';
 import { ProcedureRunner } from './procedure-runner.js';
 
 export type CommentRow = getPostComments.Result;
 export type ReplyRow = getCommentReplies.Result;
 
-/** Likes and comments (Schema §7.5). notificationId: a new notification to push after commit. */
+/** Likes, saves and comments (Schema §7.5, BR-FD-13). notificationId: a new notification to push after commit. */
 @Injectable()
 export class EngagementProcedures {
   constructor(private readonly db: ProcedureRunner) {}
@@ -24,6 +26,14 @@ export class EngagementProcedures {
   async unlikePost(viewerId: string, postId: string) {
     const row = await this.db.one('fn_unlike_post', unlikePost(viewerId, postId));
     return { likeCount: row.like_count ?? 0 };
+  }
+
+  async savePost(viewerId: string, postId: string): Promise<void> {
+    await this.db.one('fn_save_post', savePost(viewerId, postId));
+  }
+
+  async unsavePost(viewerId: string, postId: string): Promise<void> {
+    await this.db.one('fn_unsave_post', unsavePost(viewerId, postId));
   }
 
   getComments(viewerId: string, postId: string, cursor: Cursor | undefined, limit: number): Promise<CommentRow[]> {

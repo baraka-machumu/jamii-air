@@ -451,6 +451,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/me/saved": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Your Saved posts, most recently saved first; only those you can still see (BR-FD-13) */
+        get: operations["PostsController_saved"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/posts/{id}/like": {
         parameters: {
             query?: never;
@@ -464,6 +481,24 @@ export interface paths {
         post?: never;
         /** Unlike (idempotent) */
         delete: operations["EngagementController_unlike"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/posts/{id}/save": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Save to your Saved posts (idempotent; only you see it) */
+        put: operations["EngagementController_save"];
+        post?: never;
+        /** Remove from your Saved posts (idempotent) */
+        delete: operations["EngagementController_unsave"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1348,6 +1383,8 @@ export interface components {
             likeCount: number;
             commentCount: number;
             likedByMe: boolean;
+            /** @description In your Saved posts (BR-FD-13). Only you ever see this */
+            savedByMe: boolean;
             isMine: boolean;
             author: components["schemas"]["PostAuthor"];
             /** @description In carousel order */
@@ -1397,6 +1434,9 @@ export interface components {
         LikeState: {
             liked: boolean;
             likeCount: number;
+        };
+        SaveState: {
+            saved: boolean;
         };
         Comment: {
             id: string;
@@ -2647,6 +2687,29 @@ export interface operations {
             };
         };
     };
+    PostsController_saved: {
+        parameters: {
+            query?: {
+                /** @description nextCursor of the previous page */
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GridPage"];
+                };
+            };
+        };
+    };
     EngagementController_like: {
         parameters: {
             query?: never;
@@ -2685,6 +2748,48 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LikeState"];
+                };
+            };
+        };
+    };
+    EngagementController_save: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SaveState"];
+                };
+            };
+        };
+    };
+    EngagementController_unsave: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SaveState"];
                 };
             };
         };

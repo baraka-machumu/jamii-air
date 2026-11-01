@@ -22,6 +22,7 @@ import NotificationsStep from '@/app/onboarding/notifications';
 import FindPeople from '@/app/onboarding/people';
 import Settings from '@/app/settings/index';
 import TagScreen from '@/app/t/[tag]';
+import Saved from '@/app/saved';
 import BlockedAccounts from '@/app/settings/blocked';
 import DeleteAccount from '@/app/settings/delete-account';
 import ChangePassword from '@/app/settings/password';
@@ -59,4 +60,5 @@ export const routes = {
   'p/[id]/index': PostDetail,
   'p/[id]/comments': Comments,
   't/[tag]': TagScreen,
+  saved: Saved,
 };

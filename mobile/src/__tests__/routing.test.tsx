@@ -32,6 +32,7 @@ describe('routing', () => {
     expect(await screen.findByText('Your feed is empty')).toBeTruthy();
 
     fireEvent.press(screen.getByTestId('tab-profile'));
+    fireEvent.press(await screen.findByLabelText('Menu'));
     fireEvent.press(await screen.findByLabelText('Settings'));
     const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
     fireEvent.press(await screen.findByLabelText('Log out'));

@@ -179,8 +179,16 @@ describe('admin (e2e)', () => {
     const postId = await publishPost(app, author, 'Spam spam spam');
     const report = (await as(app, reporter).post('/api/v1/reports').send({ targetType: 'POST', targetId: postId, reason: 'SPAM' }).expect(201)).body;
 
-    const queue = (await a.get('/api/v1/admin/reports?type=POST&limit=50').expect(200)).body;
-    expect(queue.items.some((r: { reportId: string }) => r.reportId === report.id)).toBe(true);
+    // The queue is oldest first, and a reused local database holds open reports from earlier runs:
+    // page through it rather than expect the new one on the first page.
+    let inQueue = false;
+    for (let cursor: string | null = ''; cursor !== null && !inQueue;) {
+      const queue: { items: { reportId: string }[]; nextCursor: string | null } =
+        (await a.get(`/api/v1/admin/reports?type=POST&limit=50${cursor ? `&cursor=${cursor}` : ''}`).expect(200)).body;
+      inQueue = queue.items.some((r) => r.reportId === report.id);
+      cursor = queue.nextCursor;
+    }
+    expect(inQueue).toBe(true);
     const detail = (await a.get(`/api/v1/admin/reports/${report.id}`).expect(200)).body;
     expect(detail).toMatchObject({ reportId: report.id, status: 'REVIEWING', reporterUsername: reporter.username, reportedUsername: author.username });
     expect(JSON.stringify(detail)).toMatch(/thumbUrl/);

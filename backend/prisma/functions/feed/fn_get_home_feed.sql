@@ -1,6 +1,7 @@
 -- GET /feed (BR-FD-01/02, TRD §10; reference implementation Schema §8.1). Fan-out on read:
 -- PUBLISHED posts of followed users and the viewer's own, author ACTIVE, no block either way,
--- newest first. One round trip, already joined with author, media variants and liked_by_me.
+-- newest first. One round trip, already joined with author, media variants, liked_by_me and saved_by_me
+-- (BR-FD-13).
 -- Returns limit + 1 rows; the API builds nextCursor from the extra row.
 --
 -- The viewer ALSO sees their own posts that are still PROCESSING (BR-FD-12), which is how a post
@@ -21,7 +22,7 @@ CREATE OR REPLACE FUNCTION fn_get_home_feed(
 RETURNS TABLE (
   post_id uuid, created_at timestamptz, type post_type, status post_status, caption varchar,
   like_count int, comment_count int, liked_by_me boolean, author_id uuid, author_username citext,
-  author_display_name varchar, author_avatar_key text, media jsonb)
+  author_display_name varchar, author_avatar_key text, media jsonb, saved_by_me boolean)
 LANGUAGE plpgsql STABLE SECURITY DEFINER
 SET search_path = public, pg_temp
 AS $$
@@ -63,7 +64,8 @@ BEGIN
   SELECT pg.id, pg.created_at, pg.type, pg.status, pg.caption, pg.like_count, pg.comment_count,
          EXISTS (SELECT 1 FROM likes l WHERE l.user_id = p_viewer_id AND l.post_id = pg.id),
          u.id, u.username, u.display_name, av.object_key,
-         m.media
+         m.media,
+         EXISTS (SELECT 1 FROM saved_posts s WHERE s.user_id = p_viewer_id AND s.post_id = pg.id)
   FROM page pg
   JOIN users u ON u.id = pg.author_id
   LEFT JOIN media_variants av ON av.media_id = u.avatar_media_id AND av.variant = 'AVATAR_S'

@@ -20,6 +20,7 @@ import { closeSheet, SheetHost } from '@/components/Sheet';
 import { Toast } from '@/components/Toast';
 import { UpdateRequired } from '@/components/UpdateRequired';
 import { resetLikes } from '@/engagement/likes';
+import { resetSaves } from '@/engagement/saves';
 import i18n, { resolveLanguage } from '@/i18n';
 import { rememberLink, usePendingLink } from '@/links/pendingLink';
 import { useActiveVideo } from '@/media/activeVideo';
@@ -74,6 +75,7 @@ export default function RootLayout() {
     // Another account may sign in on this phone next: forget this one's follows and searches.
     useFollowStore.setState({ chosen: {}, pending: {} });
     resetLikes();
+    resetSaves();
     useRecentSearches.getState().clear();
     usePosting.getState().discard();
     useHomeSection.setState({ section: 'posts' });
@@ -125,6 +127,7 @@ function RootStack() {
           <Stack.Screen name="settings/blocked" />
           <Stack.Screen name="settings/delete-account" />
           <Stack.Screen name="follow-requests" />
+          <Stack.Screen name="saved" />
           <Stack.Screen name="u/[username]/index" />
           <Stack.Screen name="u/[username]/[list]" />
           <Stack.Screen name="compose/crop" />

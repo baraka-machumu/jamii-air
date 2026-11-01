@@ -1,4 +1,4 @@
-// Likes and comments (Plan task 2.9). Rules (visibility, blocks, counters, notifications) live in
+// Likes, saves (BR-FD-13) and comments (Plan task 2.9). Rules (visibility, blocks, counters, notifications) live in
 // the procedures; this layer shapes responses and enqueues pushes after commit (SP-09, NT-01).
 import { Injectable } from '@nestjs/common';
 import { idempotency } from '../../common/idempotency/idempotency-key.js';
@@ -8,7 +8,7 @@ import {
 } from '../../infrastructure/db-procedures/engagement.procedures.js';
 import { NotificationJobs } from '../../infrastructure/queue/queue.module.js';
 import { MediaUrls } from '../../infrastructure/storage/media-urls.js';
-import type { Comment, CreatedComment, DeletedComment, LikeState, Reply } from './engagement.dto.js';
+import type { Comment, CreatedComment, DeletedComment, LikeState, Reply, SaveState } from './engagement.dto.js';
 
 @Injectable()
 export class EngagementService {
@@ -27,6 +27,16 @@ export class EngagementService {
   async unlike(viewerId: string, postId: string): Promise<LikeState> {
     const row = await this.procedures.unlikePost(viewerId, postId);
     return { liked: false, likeCount: row.likeCount };
+  }
+
+  async save(viewerId: string, postId: string): Promise<SaveState> {
+    await this.procedures.savePost(viewerId, postId);
+    return { saved: true };
+  }
+
+  async unsave(viewerId: string, postId: string): Promise<SaveState> {
+    await this.procedures.unsavePost(viewerId, postId);
+    return { saved: false };
   }
 
   /** A post's top-level comments, newest first. Replies are fetched per comment. */

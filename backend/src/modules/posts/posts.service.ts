@@ -5,7 +5,7 @@ import { Injectable } from '@nestjs/common';
 import { idempotency } from '../../common/idempotency/idempotency-key.js';
 import { clampLimit, decodeCursor, type Page, toPage } from '../../common/pagination/cursor.js';
 import {
-  type FeedRow, type GridRow, type PostRow, PostsProcedures, type TagRow,
+  type FeedRow, type GridRow, type PostRow, PostsProcedures, type SavedRow, type TagRow,
 } from '../../infrastructure/db-procedures/posts.procedures.js';
 import { MediaJobs } from '../../infrastructure/queue/queue.module.js';
 import { MediaUrls } from '../../infrastructure/storage/media-urls.js';
@@ -75,6 +75,13 @@ export class PostsService {
     return toPage(rows, size, (r) => ({ time: r.created_at!, id: r.post_id! }), (r) => this.toGridItem(r));
   }
 
+  /** The viewer's Saved posts (BR-FD-13): most recently saved first, so the cursor is saved_at. */
+  async savedGrid(viewerId: string, cursor?: string, limit?: number): Promise<Page<GridItem>> {
+    const size = clampLimit(limit);
+    const rows = await this.procedures.getSavedPosts(viewerId, decodeCursor(cursor), size);
+    return toPage(rows, size, (r) => ({ time: r.saved_at!, id: r.post_id! }), (r) => this.toGridItem(r));
+  }
+
   /**
    * One tag's posts (BR-FD-11). postCount comes back on every row, so an empty page — an unknown
    * tag, or one whose posts are all gone — reports 0.
@@ -90,7 +97,7 @@ export class PostsService {
     };
   }
 
-  private toGridItem(r: GridRow | TagRow): GridItem {
+  private toGridItem(r: GridRow | TagRow | SavedRow): GridItem {
     return {
       id: r.post_id!, status: r.status!, type: r.type!, thumbUrl: this.urls.of(r.thumb_key),
       blurhash: r.blurhash, mediaCount: r.media_count ?? 0, createdAt: r.created_at!.toISOString(),
@@ -111,6 +118,7 @@ export class PostsService {
       likeCount: r.like_count ?? 0,
       commentCount: r.comment_count ?? 0,
       likedByMe: r.liked_by_me ?? false,
+      savedByMe: r.saved_by_me ?? false,
       isMine: detail?.is_mine ?? r.author_id === viewerId,
       author: {
         id: r.author_id!, username: r.author_username!, displayName: r.author_display_name,

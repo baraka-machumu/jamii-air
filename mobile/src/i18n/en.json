@@ -206,7 +206,8 @@
     "bio": "Bio",
     "discardTitle": "Discard your changes?",
     "keepEditing": "Keep editing",
-    "discard": "Discard"
+    "discard": "Discard",
+    "menu": "Menu"
   },
   "media": {
     "profilePhoto": "Profile photo",
@@ -481,5 +482,17 @@
     "makePublicBodyWaiting": "Anyone will be able to see your photos and videos, and the {{count}} people waiting will be accepted.",
     "makePublic": "Make public",
     "switchFailed": "Couldn't change your account"
+  },
+  "saved": {
+    "title": "Saved",
+    "save": "Save",
+    "unsave": "Remove from Saved",
+    "added": "Saved. Find it in Saved on your profile.",
+    "saveFailed": "Couldn't save the post. Try again.",
+    "unsaveFailed": "Couldn't remove it from Saved. Try again.",
+    "menuBody": "Posts you saved. Only you can see them.",
+    "emptyTitle": "Nothing saved yet",
+    "emptyBody": "Tap the bookmark on a post to keep it here. Only you can see what you save.",
+    "loadFailed": "Couldn't load Saved"
   }
 }

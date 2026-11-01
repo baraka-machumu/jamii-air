@@ -69,6 +69,9 @@ describe('API responses match the OpenAPI spec (e2e)', () => {
     ok('CommentPage', (await as(app, me).get(`/api/v1/posts/${postId}/comments`).expect(200)).body);
     ok('DeletedComment', (await as(app, fan).delete(`/api/v1/comments/${comment.id}`).expect(200)).body);
     ok('LikeState', (await as(app, fan).delete(`/api/v1/posts/${postId}/like`).expect(200)).body);
+    ok('SaveState', (await as(app, fan).put(`/api/v1/posts/${postId}/save`).expect(200)).body);
+    ok('GridPage', (await as(app, fan).get('/api/v1/me/saved').expect(200)).body);
+    ok('SaveState', (await as(app, fan).delete(`/api/v1/posts/${postId}/save`).expect(200)).body);
 
     ok('NotificationPage', (await as(app, me).get('/api/v1/notifications').expect(200)).body);
     ok('UnreadCount', (await as(app, me).get('/api/v1/notifications/unread-count').expect(200)).body);

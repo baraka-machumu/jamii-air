@@ -1,8 +1,9 @@
 // The post card (App Flow §5; Design Brief §6 Content): avatar + username → profile · ⋯ · the
-// media (full-bleed, its aspect ratio reserved, blurhash until loaded; double-tap likes) · ❤️ 💬 ↗ ·
+// media (full-bleed, its aspect ratio reserved, blurhash until loaded; double-tap likes) · ❤️ 💬 ↗ … 🔖 ·
 // likes · caption (2 lines, "more", hashtags tappable) · "View all N comments" · time. A single tap
 // opens the post once the double-tap window has passed. Memoised: the feed re-renders a card only
-// when its post changes, and the like state comes from a per-post store entry (src/engagement/likes.ts).
+// when its post changes, and the like and save states come from per-post store entries
+// (src/engagement/likes.ts, saves.ts). Save (BR-FD-13) sits at the right of the actions.
 //
 // The media may be one photo, a carousel of up to ten (BR-CT-09) or a video (BR-CT-07); PostMedia
 // handles all three. Double-tap-to-like is kept for photos only: on a video the second tap would
@@ -15,6 +16,7 @@ import type { Post } from '@/api/posts';
 import { formatCount } from '@/i18n/format';
 import { formatRelative } from '@/i18n/time';
 import { useLikeState, useLikeToggle } from '@/engagement/likes';
+import { useSavedState, useSaveToggle } from '@/engagement/saves';
 import { sharePost } from '@/engagement/share';
 import { useIsFollowing } from '@/people/follow';
 import { usePostMenu } from '@/posting/usePostMenu';
@@ -48,6 +50,8 @@ function PostCardView({ post, onOpen, onDeleted, followsAuthor = true }: {
   const following = useIsFollowing(post.author.id, followsAuthor);
   const like = useLikeState(post);
   const toggleLike = useLikeToggle();
+  const saved = useSavedState(post);
+  const toggleSave = useSaveToggle();
   const burst = useRef<HeartBurstHandle>(null);
   const lastTap = useRef(0);
   const singleTap = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -101,6 +105,11 @@ function PostCardView({ post, onOpen, onDeleted, followsAuthor = true }: {
           </Pressable>
           <Pressable onPress={() => void sharePost(post, t)} accessibilityRole="button" accessibilityLabel={t('share.share')} hitSlop={4} style={styles.action}>
             <Icon name="share" size={26} color={colors.text} />
+          </Pressable>
+          <View style={styles.flex} />
+          <Pressable onPress={() => toggleSave(post)} accessibilityRole="button" accessibilityLabel={t(saved ? 'saved.unsave' : 'saved.save')}
+            accessibilityState={{ selected: saved }} hitSlop={4} testID={`save-${post.id}`} style={styles.action}>
+            <Icon name="bookmark" size={26} color={colors.text} filled={saved} />
           </Pressable>
         </View>
       )}

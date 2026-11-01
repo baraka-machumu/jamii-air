@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Document** | 05 — Backend Schema |
-| **Version** | 1.7 (2026-11-01: §20 draft follows the answers to Q-K1…Q-K8 — reactions enum, verified flags, delivery fee per shop, no commission) · 1.6 (2026-10-31, BRS §6.3 Kidili: **planned** tables for the Ocean, Stories, Udaku rooms, Chat and Shops in §20, not built yet) · 1.5 (increment A 2026-10-27, BRS §6.2: private accounts — `users.is_private`, `follow_requests`, the visibility rule; see §19) · 1.4 (R1 scope change 2026-10-16: video, carousels, replies, hashtags, own processing posts in the feed; see §18) · 1.3 (Phase 2 API review: `fn_change_password` and five changed procedures; see §17) |
+| **Version** | 1.8 (2026-11-01: Kidili K1.5 saved posts built — `saved_posts`, three new procedures, `saved_by_me` on the feed and post detail; see §21) · 1.7 (2026-11-01: §20 draft follows the answers to Q-K1…Q-K8 — reactions enum, verified flags, delivery fee per shop, no commission) · 1.6 (2026-10-31, BRS §6.3 Kidili: **planned** tables for the Ocean, Stories, Udaku rooms, Chat and Shops in §20, not built yet) · 1.5 (increment A 2026-10-27, BRS §6.2: private accounts — `users.is_private`, `follow_requests`, the visibility rule; see §19) · 1.4 (R1 scope change 2026-10-16: video, carousels, replies, hashtags, own processing posts in the feed; see §18) · 1.3 (Phase 2 API review: `fn_change_password` and five changed procedures; see §17) |
 | **Status** | **Approved** — 2026-10-11 |
 | **Date** | 2026-10-09 |
 | **Scope** | PostgreSQL schema (Prisma), stored procedures, grants, object storage layout, Redis, retention |
@@ -48,6 +48,8 @@ erDiagram
     media_assets ||--o| post_media : "attached as"
     posts ||--o{ comments : has
     posts ||--o{ likes : receives
+    users ||--o{ saved_posts : saves
+    posts ||--o{ saved_posts : "saved in"
     admin_users ||--o{ admin_sessions : has
     admin_users ||--o{ invite_codes : creates
     admin_users ||--o{ moderation_actions : performs
@@ -70,6 +72,7 @@ erDiagram
 | `media_assets` · `media_variants` | Uploads and sized derivatives | media procedures |
 | `posts` · `post_media` | Posts (1–10 photos, or one video; reel in R2) and their ordered media | post procedures |
 | `likes` · `comments` | Engagement; a comment with `parent_id` is a reply (one level) | engagement procedures |
+| `saved_posts` | A user's saved posts (BR-FD-13); only they see them, no counter | engagement and feed procedures |
 | `hashtags` · `post_hashtags` | Tags parsed from captions, and which posts carry them | `fn__sync_post_hashtags` (from `fn_create_post`, `fn_update_post_caption`) |
 | `notifications` | Activity feed | engagement/social procedures |
 | `reports` | User reports | `fn_submit_report`, admin procedures |
@@ -751,18 +754,20 @@ Full rules are in [TRD §6](02-technical-requirements-document.md). In short:
 | `fn_create_post(viewer, media_ids uuid[], caption, idempotency_key, request_hash)` | W | post row incl. `type` + `media_to_process uuid[]`, `replayed boolean`. 1–10 photos or one video (`MEDIA_KINDS_MIXED`); syncs hashtags |
 | `fn_complete_media_processing(media_id, width, height, blurhash, variants jsonb, duration_ms = NULL)` | W | `post_id, post_published boolean, author_id`; publishes when **every** item is READY |
 | `fn_fail_media_processing(media_id, reason)` | W | `post_id, author_id` |
-| `fn_get_post(viewer, post_id)` | R | feed-item shape |
+| `fn_get_post(viewer, post_id)` | R | feed-item shape (incl. `saved_by_me`) |
 | `fn_update_post_caption(viewer, post_id, caption)` | W | post row; re-syncs hashtags |
 | `fn_delete_post(viewer, post_id)` | W | `deleted` — queues object deletion rows |
-| `fn_get_home_feed(viewer, cursor)` | R | feed items incl. `type`, `status` (§8.1); also the viewer's **own PROCESSING** posts (BR-FD-12) |
+| `fn_get_home_feed(viewer, cursor)` | R | feed items incl. `type`, `status`, `saved_by_me` (§8.1); also the viewer's **own PROCESSING** posts (BR-FD-12) |
 | `fn_get_profile_posts(viewer, username, cursor)` | R | id, status, type, thumb key, media_count, created_at (own grid: also PROCESSING, FAILED, HIDDEN) |
 | `fn_get_hashtag_posts(viewer, tag, cursor)` | R | grid tiles for one tag + `tag`, `post_count`; not limited to follows; `TAG_INVALID` |
+| `fn_get_saved_posts(viewer, cursor)` | R | the viewer's own saved posts as grid tiles + `saved_at`, most recently saved first; only those still visible (§21) |
 
 ### 7.5 Engagement & notifications
 
 | Function | R/W | Returns |
 |---|---|---|
 | `fn_like_post(viewer, post_id)` · `fn_unlike_post(…)` | W | `liked, like_count, notification_id` |
+| `fn_save_post(viewer, post_id)` · `fn_unsave_post(…)` | W | `saved`; save needs a visible post (JA404), unsave never checks (§21) |
 | `fn_add_comment(viewer, post_id, body, parent_id, idempotency_key, request_hash)` | W | comment row + `parent_id`, `parent_reply_count`, `notification_id` (COMMENT or REPLY), `replayed`. A reply to a reply is re-pointed at its parent |
 | `fn_delete_comment(viewer, comment_id)` | W | `deleted`, `comment_count`, `parent_reply_count`; a top-level comment takes its thread |
 | `fn_get_post_comments(viewer, post_id, cursor)` | R | **top-level** comment rows with author and `reply_count` |
@@ -1240,7 +1245,6 @@ keys, `timestamptz`, `citext` where case-insensitive, writes only through `fn_*`
 | Stage | Table | Key columns (draft) | Notes |
 |---|---|---|---|
 | K2 Ocean | `post_views` | `post_id`, `viewer_id`, `viewed_at`; PK (post, viewer) | One view per person; `posts.view_count` kept by the procedure |
-| K1/K2 | `saved_posts` | `user_id`, `post_id`, `saved_at`; PK (user, post) | BR-FD-13 (Could) |
 | K3 Stories | `stories` | `id`, `author_id`, `media_asset_id`, `text_overlay` (jsonb), `product_id` null, `created_at`, `expires_at`, `hidden_at` | Index (author, expires_at); every read filters `expires_at > now()` |
 | | `story_views` | `story_id`, `viewer_id`, `viewed_at`, `liked` | PK (story, viewer) |
 | K4 Udaku | `rooms` | `id`, `host_id`, `name`, `about`, `topic` (enum), `avatar_asset_id`, `is_listed`, `is_verified`, `member_count`, `closed_at`, `closed_reason` | Unique name per host; `is_verified` set only by an admin procedure (BR-UD-11), as is a new `users.is_verified` |
@@ -1269,3 +1273,25 @@ keys, `timestamptz`, `citext` where case-insensitive, writes only through `fn_*`
 the room; messages are visible only to the conversation's two members; a seller's products are
 hidden when `sellers.suspended_at` is set or the seller's account is suspended. Blocking applies to
 every new table (stories, rooms, chat, shops).
+
+## 21. Changes in version 1.8 (Kidili K1.5 of 2026-11-01, BRS §6.3)
+
+Saved posts (BR-FD-13), built from the §20 draft row, which is removed. One migration,
+`k_saved_posts`; the procedure tests are in `test/db/engagement.db-spec.ts` ("saved posts") and
+the API's in `test/saved.e2e-spec.ts`.
+
+| Migration | What it does |
+|---|---|
+| `k_saved_posts` | `saved_posts` (PK user + post, `saved_at`; cascades with the user and the post; index (user, saved_at DESC, post_id DESC) for the grid, and by post for the cascade; no grant: procedures only). New `fn_save_post`, `fn_unsave_post`, `fn_get_saved_posts`. `fn_get_home_feed` and `fn_get_post` gain `saved_by_me` and are dropped first. |
+
+**Private by design.** Nobody but the saver can tell: no counter on `posts`, no notification,
+and only `GET /me/saved` exists — there is no route to anyone else's list.
+
+**Visibility.** Saving goes through `fn__assert_post_visible`, like a like. The Saved grid
+applies the hashtag grid's rule at read time (PUBLISHED, author ACTIVE, no block either way,
+`fn__can_see_content`) instead of deleting rows, so a post that comes back — unhidden, author
+reinstated, followed again — is in the list again. Unsave does not check visibility: it only
+removes the caller's own row and always answers `saved = false`, so it says nothing about the post.
+
+**Paging** is on `(saved_at, post_id)`, most recently saved first, with the usual `fn__cursor`.
+

@@ -25,6 +25,11 @@ export class LikeState {
   @ApiProperty() likeCount!: number;
 }
 
+/** Saving is private (BR-FD-13): no count, so nothing but the viewer's own state. */
+export class SaveState {
+  @ApiProperty() saved!: boolean;
+}
+
 export class Comment {
   @ApiProperty() id!: string;
   @ApiProperty() body!: string;

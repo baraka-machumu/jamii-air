@@ -186,6 +186,7 @@ model User {
   posts          Post[]
   comments       Comment[]
   likes          Like[]
+  savedPosts     SavedPost[]
   refreshTokens  RefreshToken[]
   resetCodes     PasswordResetCode[]
   devices        DevicePushToken[]
@@ -389,6 +390,7 @@ model Post {
   hashtags      PostHashtag[]
   comments      Comment[]
   likes         Like[]
+  savedBy       SavedPost[]
   notifications Notification[]
   reports       Report[]
   modActions    ModerationAction[]
@@ -451,6 +453,22 @@ model Like {
   @@index([postId, createdAt(sort: Desc)])
   @@index([createdAt])
   @@map("likes")
+}
+
+// Saved posts (BR-FD-13, Kidili K1.5): only the saver ever sees them. No counter on posts: nobody
+// is shown how often a post was saved.
+model SavedPost {
+  userId  String   @map("user_id") @db.Uuid
+  postId  String   @map("post_id") @db.Uuid
+  savedAt DateTime @default(now()) @map("saved_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@id([userId, postId])
+  @@index([userId, savedAt(sort: Desc), postId(sort: Desc)]) // the Saved grid, newest first
+  @@index([postId]) // cascade on post purge
+  @@map("saved_posts")
 }
 
 model Comment {

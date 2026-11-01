@@ -3,5 +3,5 @@
 -- @param {String} $2:postId
 SELECT post_id, status::text AS status, type::text AS type, created_at, caption, like_count,
        comment_count, liked_by_me, is_mine, author_id, author_username::text AS author_username,
-       author_display_name, author_avatar_key, media
+       author_display_name, author_avatar_key, media, saved_by_me
 FROM fn_get_post($1::uuid, $2::uuid);

@@ -1,5 +1,5 @@
 // My profile (App Flow §8.3, §16.10): photo, counts, name, @username, bio; Edit profile and Share
-// profile side by side; + (the Create menu) and ☰ Settings in the header.
+// profile side by side; + (the Create menu) and ☰ (the profile menu: Saved, Settings) in the header.
 // The counts open the follower lists; below, the posts grid (with processing / failed posts).
 // A private account with people waiting shows "Follow requests · n" under Edit profile (§8.5).
 import { useRouter } from 'expo-router';
@@ -10,6 +10,7 @@ import { useMe } from '@/api/me';
 import { useProfile } from '@/api/people';
 import { Button } from '@/components/Button';
 import { openCreateMenu } from '@/components/CreateMenu';
+import { openProfileMenu } from '@/components/ProfileMenu';
 import { Icon } from '@/components/Icon';
 import { ProfileHeader } from '@/components/ProfileHeader';
 import { ProfilePosts } from '@/components/ProfilePosts';
@@ -34,7 +35,7 @@ export default function MyProfile() {
         hitSlop={4} style={styles.icon}>
         <Icon name="create" color={colors.text} />
       </Pressable>
-      <Pressable onPress={() => router.push('/settings')} accessibilityRole="button" accessibilityLabel={t('settings.title')}
+      <Pressable onPress={openProfileMenu} accessibilityRole="button" accessibilityLabel={t('profile.menu')} testID="profile-menu"
         hitSlop={4} style={styles.icon}>
         <Icon name="menu" color={colors.text} />
       </Pressable>

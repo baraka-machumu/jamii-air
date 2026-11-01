@@ -1,4 +1,5 @@
--- GET /posts/:id (post detail, shared links). Feed-item shape plus status and is_mine.
+-- GET /posts/:id (post detail, shared links). Feed-item shape (saved_by_me included, BR-FD-13)
+-- plus status and is_mine.
 -- Others see PUBLISHED posts only (fn__assert_post_visible); the author also sees their own
 -- PROCESSING and FAILED posts. Hidden and deleted posts are JA404 for everyone.
 -- `media` is as in fn_get_home_feed, and additionally carries each item's own status, which is
@@ -8,7 +9,7 @@ RETURNS TABLE (
   post_id uuid, status post_status, type post_type, created_at timestamptz, caption varchar,
   like_count int, comment_count int, liked_by_me boolean, is_mine boolean,
   author_id uuid, author_username citext, author_display_name varchar, author_avatar_key text,
-  media jsonb)
+  media jsonb, saved_by_me boolean)
 LANGUAGE plpgsql STABLE SECURITY DEFINER
 SET search_path = public, pg_temp
 AS $$
@@ -38,7 +39,8 @@ BEGIN
           LEFT JOIN media_variants tv ON tv.media_id = ma.id AND tv.variant = 'THUMB'
           LEFT JOIN media_variants pv ON pv.media_id = ma.id AND pv.variant = 'POSTER'
           LEFT JOIN media_variants vv ON vv.media_id = ma.id AND vv.variant = 'VIDEO_720'
-          WHERE pm.post_id = p.id)
+          WHERE pm.post_id = p.id),
+         EXISTS (SELECT 1 FROM saved_posts s WHERE s.user_id = p_viewer_id AND s.post_id = p.id)
   FROM posts p
   JOIN users u ON u.id = p.author_id
   LEFT JOIN media_variants av ON av.media_id = u.avatar_media_id AND av.variant = 'AVATAR_S'

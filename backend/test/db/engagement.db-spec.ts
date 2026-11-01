@@ -1,4 +1,4 @@
-// E4 Feed & engagement (Plan tasks 1.7, 1.8) and E5 Notifications (1.9).
+// E4 Feed & engagement (Plan tasks 1.7, 1.8), E5 Notifications (1.9) and saved posts (K1.5).
 import {
   app, block, createPost, createUser, expectJa, follow, hash, one, owner, q, randomId, setAvatar,
   setUserStatus, uniq,
@@ -47,6 +47,52 @@ describe('likes', () => {
     await expectJa(app.query('SELECT * FROM fn_like_post($1, $2)', [blocked.id, post]), 'JA404', 'POST_NOT_FOUND');
     await setUserStatus(author.id, 'SUSPENDED');
     await expectJa(app.query('SELECT * FROM fn_like_post($1, $2)', [fan.id, post]), 'JA404', 'POST_NOT_FOUND');
+  });
+});
+
+describe('saved posts (BR-FD-13)', () => {
+  const save = (viewer: string, post: string) => one('SELECT * FROM fn_save_post($1, $2)', [viewer, post]);
+  const unsave = (viewer: string, post: string) => one('SELECT * FROM fn_unsave_post($1, $2)', [viewer, post]);
+  const saved = async (viewer: string) => (await q('SELECT * FROM fn_get_saved_posts($1, NULL, NULL, 50)', [viewer])).map((r) => r.post_id);
+
+  it('saves idempotently, privately, and shows saved_by_me to the saver only', async () => {
+    const [author, fan] = [await createUser(), await createUser()];
+    const post = await createPost(author.id);
+    await follow(fan.id, author.id);
+    expect(await save(fan.id, post)).toEqual({ saved: true });
+    expect(await save(fan.id, post)).toEqual({ saved: true });
+    expect(await one('SELECT count(*)::int AS n FROM saved_posts WHERE post_id = $1', [post], owner)).toEqual({ n: 1 });
+    // Nobody is notified: saving is not engagement the author sees.
+    expect(await one('SELECT count(*)::int AS n FROM notifications WHERE post_id = $1', [post], owner)).toEqual({ n: 0 });
+
+    expect(await one('SELECT saved_by_me FROM fn_get_post($1, $2)', [fan.id, post])).toEqual({ saved_by_me: true });
+    expect(await one('SELECT saved_by_me FROM fn_get_post($1, $2)', [author.id, post])).toEqual({ saved_by_me: false });
+    expect(await one('SELECT saved_by_me FROM fn_get_home_feed($1, NULL, NULL, 20) WHERE post_id = $2', [fan.id, post]))
+      .toEqual({ saved_by_me: true });
+
+    expect(await unsave(fan.id, post)).toEqual({ saved: false });
+    expect(await unsave(fan.id, post)).toEqual({ saved: false });
+    expect(await saved(fan.id)).toEqual([]);
+  });
+
+  it('refuses posts the viewer may not see, and hides saved ones that stop being visible', async () => {
+    const [author, fan] = [await createUser(), await createUser()];
+    const processing = await createPost(author.id, { publish: false });
+    await expectJa(app.query('SELECT * FROM fn_save_post($1, $2)', [fan.id, processing]), 'JA404', 'POST_NOT_FOUND');
+    await expectJa(app.query('SELECT * FROM fn_save_post($1, $2)', [fan.id, randomId()]), 'JA404', 'POST_NOT_FOUND');
+
+    const post = await createPost(author.id);
+    await save(fan.id, post);
+    await setUserStatus(author.id, 'SUSPENDED');
+    expect(await saved(fan.id)).toEqual([]);
+    await setUserStatus(author.id, 'ACTIVE');
+    expect(await saved(fan.id)).toEqual([post]); // the row was kept
+    await block(fan.id, author.id);
+    expect(await saved(fan.id)).toEqual([]);
+  });
+
+  it('has no table grant: only the procedures touch saved_posts', async () => {
+    await expect(app.query('SELECT * FROM saved_posts')).rejects.toThrow(/permission denied/);
   });
 });
 

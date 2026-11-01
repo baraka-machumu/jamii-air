@@ -83,13 +83,15 @@ describe('what a non-follower sees (BR-PR-08)', () => {
 
   it('answers a private post exactly as a deleted one, for reading and for every interaction', async () => {
     const { owner: account, stranger, postId } = await privateAccount();
+    // Started one at a time: a query begun early would reject before it is awaited (unhandled).
     const seen = [
-      app.query('SELECT * FROM fn_get_post($1, $2)', [stranger.id, postId]),
-      app.query('SELECT * FROM fn_like_post($1, $2)', [stranger.id, postId]),
-      app.query('SELECT * FROM fn_get_post_comments($1, $2, NULL, NULL, 20)', [stranger.id, postId]),
-      app.query('SELECT * FROM fn_add_comment($1, $2, $3, NULL, NULL, NULL)', [stranger.id, postId, 'hi']),
+      () => app.query('SELECT * FROM fn_get_post($1, $2)', [stranger.id, postId]),
+      () => app.query('SELECT * FROM fn_like_post($1, $2)', [stranger.id, postId]),
+      () => app.query('SELECT * FROM fn_save_post($1, $2)', [stranger.id, postId]),
+      () => app.query('SELECT * FROM fn_get_post_comments($1, $2, NULL, NULL, 20)', [stranger.id, postId]),
+      () => app.query('SELECT * FROM fn_add_comment($1, $2, $3, NULL, NULL, NULL)', [stranger.id, postId, 'hi']),
     ];
-    for (const attempt of seen) await expectJa(attempt, 'JA404', 'POST_NOT_FOUND');
+    for (const attempt of seen) await expectJa(attempt(), 'JA404', 'POST_NOT_FOUND');
     expect(await one('SELECT post_id FROM fn_get_post($1, $2)', [account.id, postId])).toEqual({ post_id: postId });
   });
 

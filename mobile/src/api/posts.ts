@@ -1,5 +1,5 @@
-// Posts (App Flow §5, §7.4, §8.2): the home feed, a profile's grid, one post, deleting your own,
-// and the helpers that change or drop one post in every cache.
+// Posts (App Flow §5, §7.4, §8.2): the home feed, a profile's grid, your Saved posts (BR-FD-13),
+// one post, deleting your own, and the helpers that change or drop one post in every cache.
 import { type InfiniteData, type QueryClient, useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, call } from './client';
 import { meKey } from './me';
@@ -17,6 +17,7 @@ export const feedKey = ['feed'] as const;
 export const postKey = (id: string) => ['post', id] as const;
 export const gridKey = (username: string) => [...peopleKey, 'grid', username.toLowerCase()] as const;
 export const tagKey = (tag: string) => ['tag', tag.toLowerCase()] as const;
+export const savedKey = ['saved'] as const;
 
 export const FEED_PAGE = 20;
 
@@ -63,6 +64,16 @@ export function useGrid(username: string) {
   });
 }
 
+/** Your Saved posts, most recently saved first (only you ever see them). */
+export function useSaved() {
+  return useInfiniteQuery({
+    queryKey: savedKey,
+    queryFn: ({ pageParam, signal }) => call(api.GET('/api/v1/me/saved', { params: { query: { cursor: pageParam, limit: 30 } }, signal })),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (page) => page.nextCursor ?? undefined,
+  });
+}
+
 /** Change one post wherever it is cached (feed, post detail). Other posts keep their objects, so
  * only that post's card re-renders. */
 export function patchPost(queryClient: QueryClient, id: string, change: (post: Post) => Post): void {
@@ -82,6 +93,9 @@ export function forgetPost(queryClient: QueryClient, id: string): void {
   });
   queryClient.setQueriesData<InfiniteData<GridPage>>({ queryKey: [...peopleKey, 'grid'] }, (grid) => grid && {
     ...grid, pages: grid.pages.map((page) => ({ ...page, items: page.items.filter((item) => item.id !== id) })),
+  });
+  queryClient.setQueryData<InfiniteData<GridPage>>(savedKey, (saved) => saved && {
+    ...saved, pages: saved.pages.map((page) => ({ ...page, items: page.items.filter((item) => item.id !== id) })),
   });
   queryClient.setQueriesData<InfiniteData<TagPage>>({ queryKey: ['tag'] }, (tagged) => tagged && {
     ...tagged, pages: tagged.pages.map((page) => ({ ...page, items: page.items.filter((item) => item.id !== id) })),

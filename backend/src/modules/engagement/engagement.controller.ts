@@ -1,11 +1,11 @@
-// /api/v1/posts/:id/like, /posts/:id/comments and /comments/:id (TRD §5.1). User token required.
+// /api/v1/posts/:id/like, /posts/:id/save, /posts/:id/comments and /comments/:id (TRD §5.1). User token required.
 import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Post, Put, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiHeader, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { type AuthUser, CurrentUser } from '../../common/auth/auth.decorators.js';
 import { PageQuery } from '../users/users.dto.js';
 import {
-  CommentPage, CreateCommentDto, CreatedComment, DeletedComment, LikeState, ReplyPage,
+  CommentPage, CreateCommentDto, CreatedComment, DeletedComment, LikeState, ReplyPage, SaveState,
 } from './engagement.dto.js';
 import { EngagementService } from './engagement.service.js';
 import { IdempotencyKey } from '../../common/http/request-headers.js';
@@ -32,6 +32,22 @@ export class EngagementController {
   @ApiResponse({ status: 200, type: LikeState })
   unlike(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string): Promise<LikeState> {
     return this.engagement.unlike(user.id, id);
+  }
+
+  @Put('posts/:id/save')
+  @Throttle({ default: { limit: 600, ttl: HOUR } })
+  @ApiOperation({ summary: 'Save to your Saved posts (idempotent; only you see it)' })
+  @ApiResponse({ status: 200, type: SaveState })
+  save(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string): Promise<SaveState> {
+    return this.engagement.save(user.id, id);
+  }
+
+  @Delete('posts/:id/save')
+  @Throttle({ default: { limit: 600, ttl: HOUR } })
+  @ApiOperation({ summary: 'Remove from your Saved posts (idempotent)' })
+  @ApiResponse({ status: 200, type: SaveState })
+  unsave(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string): Promise<SaveState> {
+    return this.engagement.unsave(user.id, id);
   }
 
   @Get('posts/:id/comments')

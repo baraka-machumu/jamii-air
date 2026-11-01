@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Document** | 03 — App Flow |
-| **Version** | 1.8 (2026-11-01: §16.2 New post on one screen, as built in K1.4b) · 1.7 (2026-11-01: §16.1 as built in K1.3 — sections not built yet say "Coming soon") · 1.6 (2026-11-01: the answers to Q-K1…Q-K8 in §16 — reactions, verified mark, 3-day payout hold, delivery fee per shop order, no commission) · 1.5 (2026-10-31, BRS §6.3: the app becomes **Kidili** — new navigation, Stories, The Ocean, Udaku rooms, Chat, Shops and the matching admin pages, all in §16) · 1.4 (2026-10-27, BRS §6.2: Sign in with Google §4.6, private accounts §8.2a, follow requests §8.5, Activity §9, Settings §11, delete account for a Google-only account §10.4) · 1.3 (R1 scope change 2026-10-16, BRS §6.1: carousels and video in §5–§6, replies §7.2, hashtags §7.5, a post on screen the moment it is shared §5) · 1.2 (Phase 2 API review: change password, removed-post badge, admin onboarding by temporary password) |
+| **Version** | 1.9 (2026-11-01: §16.2 and §16.10 Save and Saved, as built in K1.5) · 1.8 (2026-11-01: §16.2 New post on one screen, as built in K1.4b) · 1.7 (2026-11-01: §16.1 as built in K1.3 — sections not built yet say "Coming soon") · 1.6 (2026-11-01: the answers to Q-K1…Q-K8 in §16 — reactions, verified mark, 3-day payout hold, delivery fee per shop order, no commission) · 1.5 (2026-10-31, BRS §6.3: the app becomes **Kidili** — new navigation, Stories, The Ocean, Udaku rooms, Chat, Shops and the matching admin pages, all in §16) · 1.4 (2026-10-27, BRS §6.2: Sign in with Google §4.6, private accounts §8.2a, follow requests §8.5, Activity §9, Settings §11, delete account for a Google-only account §10.4) · 1.3 (R1 scope change 2026-10-16, BRS §6.1: carousels and video in §5–§6, replies §7.2, hashtags §7.5, a post on screen the moment it is shared §5) · 1.2 (Phase 2 API review: change password, removed-post badge, admin onboarding by temporary password) |
 | **Status** | **Approved** — 2026-10-11 |
 | **Date** | 2026-10-09 |
 | **Scope** | Release 1 mobile app (Android & iOS) and admin portal (web, §15). R2 Reels flow sketched in §14. |
@@ -521,6 +521,10 @@ Post detail and comments are §7 restyled. **New post** is §6 on one screen: pi
 in the order picked) or a video, crop, caption with a counter, *Tag a product* (approved sellers
 only), *Location*, and *Also add to your story*.
 
+**As built in K1.5:** the bookmark sits at the right of the post's actions. A tap fills it at once
+and saves ("Saved. Find it in Saved on your profile."); a second tap removes it. A failure puts it
+back with a toast. Only the saver ever sees it: no count, and the author is not told (BR-FD-13).
+
 **As built in K1.4b:** New post (`/create`) is one screen: ✕ · *New post* · **Share** in the header;
 the preview of the chosen photo with its position (2/3) and a **Crop** button, or a video's first
 frame with its length; a strip with *Take photo* and *Choose from library* (*Add more photos* once
@@ -656,6 +660,12 @@ Cancel closes it.
 Header as §8.3; a story ring on the avatar when there is a story; **Edit profile** and **Share
 profile**; the shop card for sellers. Tabs **Posts · Ocean · Shop** (Shop only for sellers). The
 menu gains **Saved**, **My orders** and **Start selling** / **My shop**.
+
+**As built in K1.5:** ☰ on My profile opens that menu with **Saved** and **Settings** (My orders
+and My shop join it in K6). Saved (`/saved`) is the profile's 3-column grid of the posts you saved,
+most recently saved first; a post you can no longer see (deleted, hidden, a block, a private
+account you stopped following) is left out and comes back if it becomes visible again. Empty: "Nothing
+saved yet — Tap the bookmark on a post to keep it here. Only you can see what you save."
 
 ### 16.11 Admin portal additions (§15)
 

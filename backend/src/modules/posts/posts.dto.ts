@@ -67,6 +67,7 @@ export class Post {
   @ApiProperty() likeCount!: number;
   @ApiProperty() commentCount!: number;
   @ApiProperty() likedByMe!: boolean;
+  @ApiProperty({ description: 'In your Saved posts (BR-FD-13). Only you ever see this' }) savedByMe!: boolean;
   @ApiProperty() isMine!: boolean;
   @ApiProperty({ type: PostAuthor }) author!: PostAuthor;
   @ApiProperty({ type: [PostMedia], description: 'In carousel order' }) media!: PostMedia[];

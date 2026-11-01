@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Document** | 02 — Technical Requirements Document |
-| **Version** | 1.12 (2026-11-01: §19.4 payout hold 3 days, no commission for now — D-22) · 1.11 (2026-10-31, BRS §6.3 Kidili: technical direction in §19 — real-time chat, stories expiry, the Ocean feed, payments and payouts, seller identity data, ADR-013…016) · 1.10 (increment A 2026-10-27, BRS §6.2: private accounts in §5.1 — follow requests, remove follower, `isPrivate`) · 1.9 (Plan 5.4 security review, [09](09-security-review.md): SE-07 at any depth and inside strings, SE-09 enforced in CI, new SE-11 trusted proxy) · 1.8 (R1 scope change 2026-10-16, BRS §6.1: video posts §9.1, carousels, replies and hashtags in §5.1, MD-01 per kind, FD-05 now server-side) · 1.7 (Phase 3: mobile stack as built, §3: Expo Router, on-device storage, native photo upload, animations with React Native `Animated`, clipboard, push registration; Phase 2: admin sign-in §8.2 and API review endpoints, see [07](07-api-review.md)) |
+| **Version** | 1.13 (2026-11-01: Kidili K1.5 saved posts in §5.1 — `/posts/:id/save`, `/me/saved`, `savedByMe`) · 1.12 (2026-11-01: §19.4 payout hold 3 days, no commission for now — D-22) · 1.11 (2026-10-31, BRS §6.3 Kidili: technical direction in §19 — real-time chat, stories expiry, the Ocean feed, payments and payouts, seller identity data, ADR-013…016) · 1.10 (increment A 2026-10-27, BRS §6.2: private accounts in §5.1 — follow requests, remove follower, `isPrivate`) · 1.9 (Plan 5.4 security review, [09](09-security-review.md): SE-07 at any depth and inside strings, SE-09 enforced in CI, new SE-11 trusted proxy) · 1.8 (R1 scope change 2026-10-16, BRS §6.1: video posts §9.1, carousels, replies and hashtags in §5.1, MD-01 per kind, FD-05 now server-side) · 1.7 (Phase 3: mobile stack as built, §3: Expo Router, on-device storage, native photo upload, animations with React Native `Animated`, clipboard, push registration; Phase 2: admin sign-in §8.2 and API review endpoints, see [07](07-api-review.md)) |
 | **Status** | **Approved** — 2026-10-11 |
 | **Date** | 2026-10-10 |
 | **Scope** | Release 1 (MVP) in detail; R1.1–R4 as forward-compatibility requirements |
@@ -220,6 +220,8 @@ admin/src/
 | GET | `/feed` | 🔒 | Home feed (includes your own PROCESSING posts, FD-05) | `fn_get_home_feed` | 120 / min |
 | GET | `/tags/:tag/posts` | 🔒 | One hashtag's posts as grid tiles, newest first, `{ tag, postCount, items, nextCursor }` (BR-FD-11) | `fn_get_hashtag_posts` | 120 / min |
 | PUT / DELETE | `/posts/:id/like` | 🔒 | Like / unlike | `fn_like_post` · `fn_unlike_post` | 600 / h |
+| PUT / DELETE | `/posts/:id/save` | 🔒 | Save / unsave `{ saved }`; private, no count (BR-FD-13). Every post carries `savedByMe` | `fn_save_post` · `fn_unsave_post` | 600 / h |
+| GET | `/me/saved` | 🔒 | Your Saved posts as grid tiles, most recently saved first; only those you can still see | `fn_get_saved_posts` | — |
 | GET | `/posts/:id/comments` | 🔒 | Top-level comments, each with `replyCount` | `fn_get_post_comments` | — |
 | POST | `/posts/:id/comments` | 🔒 | Add comment, or a reply with `parentId` (one level, BR-FD-08/09) | `fn_add_comment` | 60 / h |
 | GET | `/comments/:id/replies` | 🔒 | The thread under a comment, **oldest first**, paged forwards | `fn_get_comment_replies` | — |
@@ -231,7 +233,7 @@ admin/src/
 | POST | `/reports` | 🔒 | Report user/post/comment | `fn_submit_report` | 20 / day |
 | GET | `/health/live`, `/health/ready` | 🔓 | Liveness / readiness | — | — |
 
-Follow/like/block use **PUT/DELETE** (idempotent) so retries on flaky networks are safe.
+Follow/like/save/block use **PUT/DELETE** (idempotent) so retries on flaky networks are safe.
 
 ### 5.2 Admin endpoint catalogue (R1)
 

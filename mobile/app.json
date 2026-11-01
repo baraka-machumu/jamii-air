@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Jamii Air",
+    "name": "Kidili",
     "slug": "jamii-air",
     "owner": "bmachumu",
     "version": "1.0.1",
@@ -16,7 +16,7 @@
       "package": "tz.jamiiair.app",
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
-        "backgroundColor": "#1E1B4B",
+        "backgroundColor": "#FAF7F2",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -32,18 +32,31 @@
       "expo-font",
       "expo-image",
       [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 120,
+          "resizeMode": "contain",
+          "backgroundColor": "#FAF7F2",
+          "dark": {
+            "image": "./assets/splash-icon.png",
+            "backgroundColor": "#14121A"
+          }
+        }
+      ],
+      [
         "expo-notifications",
         {
           "icon": "./assets/android-icon-monochrome.png",
-          "color": "#C2410C",
+          "color": "#5B2EBF",
           "defaultChannel": "default"
         }
       ],
       [
         "expo-image-picker",
         {
-          "photosPermission": "Jamii Air uses your photos so you can share them and set your profile photo.",
-          "cameraPermission": "Jamii Air uses the camera so you can take photos to share and for your profile."
+          "photosPermission": "Kidili uses your photos so you can share them and set your profile photo.",
+          "cameraPermission": "Kidili uses the camera so you can take photos to share and for your profile."
         }
       ]
     ],

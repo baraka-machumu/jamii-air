@@ -279,12 +279,12 @@ describe('Comments (§7.2)', () => {
 });
 
 describe('Share and copy link (§7.3, §8.2)', () => {
-  it('opens the share sheet with "{username} on Jamii Air: {link}"', async () => {
+  it('opens the share sheet with "{username} on Kidili: {link}"', async () => {
     const share = jest.spyOn(Share, 'share').mockResolvedValue({ action: 'sharedAction' });
     renderRouter(routes, { initialUrl: '/' });
     await screen.findByText(/Caption 1/);
     fireEvent.press(within(juma()).getByLabelText('Share'));
-    expect(share).toHaveBeenCalledWith({ message: 'juma on Jamii Air: https://jamii.test/p/p1' });
+    expect(share).toHaveBeenCalledWith({ message: 'juma on Kidili: https://jamii.test/p/p1' });
     share.mockRestore();
   });
 

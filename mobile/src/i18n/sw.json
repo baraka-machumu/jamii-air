@@ -1,20 +1,20 @@
 {
   "brand": {
-    "name": "jamii air",
-    "line": "Jamii yako, hewani."
+    "name": "Kidili",
+    "line": "Gumzo · Biashara · Duka"
   },
   "welcome": {
-    "title": "Jamii yako, hewani.",
+    "title": "Gumzo · Biashara · Duka",
     "body": "Shiriki picha na marafiki, familia na jamii yako kote Tanzania na Kenya.",
     "createAccount": "Fungua akaunti",
     "logIn": "Ingia",
-    "pilotNote": "Jamii Air ni kwa mwaliko tu wakati wa majaribio, na kwa watu wazima wenye miaka 18 au zaidi."
+    "pilotNote": "Kidili ni kwa mwaliko tu wakati wa majaribio, na kwa watu wazima wenye miaka 18 au zaidi."
   },
   "auth": {
     "logInTitle": "Karibu tena",
     "logInSubtitle": "Ingia kwa jina lako la mtumiaji au barua pepe.",
     "signUpTitle": "Fungua akaunti",
-    "signUpSubtitle": "Jamii Air ni kwa watu wazima wenye miaka 18 au zaidi.",
+    "signUpSubtitle": "Kidili ni kwa watu wazima wenye miaka 18 au zaidi.",
     "inviteCode": "Msimbo wa mwaliko",
     "inviteHelper": "Kutoka kwa mtu aliyekualika kwenye majaribio.",
     "email": "Barua pepe",
@@ -47,7 +47,7 @@
       "emailFormat": "Weka barua pepe sahihi.",
       "usernameFormat": "Tumia herufi 3–30, namba, . au _ (bila nafasi).",
       "passwordLength": "Tumia herufi 8 hadi 128.",
-      "underAge": "Lazima uwe na miaka 18 au zaidi kutumia Jamii Air.",
+      "underAge": "Lazima uwe na miaka 18 au zaidi kutumia Kidili.",
       "dobRequired": "Weka tarehe yako ya kuzaliwa.",
       "required": "Inahitajika.",
       "codeFormat": "Weka tarakimu 6 kutoka kwenye barua pepe.",
@@ -81,7 +81,7 @@
     "currentPassword": "Nenosiri la sasa",
     "passwordChangedTitle": "Nenosiri limebadilishwa",
     "passwordChangedBody": "Umetolewa kwenye vifaa vingine vyote.",
-    "logOutConfirm": "Toka kwenye Jamii Air?",
+    "logOutConfirm": "Toka kwenye Kidili?",
     "notifications": "Arifa",
     "notificationsOn": "Zimewashwa",
     "notificationsOff": "Zimezimwa"
@@ -105,7 +105,7 @@
     "ADMIN_FORBIDDEN": "Huna ruhusa ya kufikia hili.",
     "ADMIN_LOCKED": "Akaunti hii ya msimamizi imefungwa.",
     "ADMIN_NOT_FOUND": "Msimamizi huyo hayupo.",
-    "APP_VERSION_UNSUPPORTED": "Tafadhali sasisha Jamii Air ili kuendelea.",
+    "APP_VERSION_UNSUPPORTED": "Tafadhali sasisha Kidili ili kuendelea.",
     "BLOCKED": "Umeizuia akaunti hii. Iondolee kizuizi kwanza.",
     "CANNOT_BLOCK_SELF": "Huwezi kujizuia mwenyewe.",
     "CANNOT_FOLLOW_SELF": "Huwezi kujifuata mwenyewe.",
@@ -145,7 +145,7 @@
     "RESET_CODE_EXPIRED": "Msimbo huu umeisha muda. Omba mpya.",
     "RESET_CODE_INVALID": "Msimbo huo si sahihi. Angalia barua pepe na ujaribu tena.",
     "RESET_CODE_LOCKED": "Majaribio mengi mno. Omba msimbo mpya.",
-    "SERVICE_UNAVAILABLE": "Jamii Air ina shughuli nyingi sasa. Jaribu tena baadaye.",
+    "SERVICE_UNAVAILABLE": "Kidili ina shughuli nyingi sasa. Jaribu tena baadaye.",
     "SESSION_EXPIRED": "Muda wa kuingia umeisha. Tafadhali ingia tena.",
     "SESSION_INVALID": "Tafadhali ingia tena.",
     "SESSION_REUSE_DETECTED": "Kwa usalama wako, tafadhali ingia tena.",
@@ -153,7 +153,7 @@
     "TIMEOUT": "Imechukua muda mrefu. Angalia muunganisho wako na ujaribu tena.",
     "TOKEN_INVALID": "Tafadhali ingia tena.",
     "UNAUTHORIZED": "Tafadhali ingia tena.",
-    "UNDER_MINIMUM_AGE": "Lazima uwe na miaka 18 au zaidi kutumia Jamii Air.",
+    "UNDER_MINIMUM_AGE": "Lazima uwe na miaka 18 au zaidi kutumia Kidili.",
     "UNKNOWN": "Kuna hitilafu. Tafadhali jaribu tena.",
     "UNSUPPORTED_MEDIA_TYPE": "Aina hiyo ya faili haiwezi kuchapishwa.",
     "UPLOAD_FAILED": "Picha haikupakiwa. Angalia mtandao wako na ujaribu tena.",
@@ -184,7 +184,7 @@
     "addPhoto": "Weka picha",
     "avatarFailed": "Picha yako ya wasifu haikuweza kubadilishwa.",
     "cameraDeniedTitle": "Kamera imezimwa",
-    "cameraDeniedBody": "Ili kupiga picha, ruhusu Jamii Air kutumia kamera kwenye mipangilio ya simu yako.",
+    "cameraDeniedBody": "Ili kupiga picha, ruhusu Kidili kutumia kamera kwenye mipangilio ya simu yako.",
     "openSettings": "Fungua mipangilio",
     "chooseVideo": "Chagua video",
     "recordVideo": "Rekodi video"
@@ -314,8 +314,8 @@
   },
   "share": {
     "share": "Shiriki",
-    "post": "{{username}} kwenye Jamii Air: {{url}}",
-    "profile": "{{username}} kwenye Jamii Air: {{url}}",
+    "post": "{{username}} kwenye Kidili: {{url}}",
+    "profile": "{{username}} kwenye Kidili: {{url}}",
     "copyLink": "Nakili kiungo",
     "copyProfileLink": "Nakili kiungo cha wasifu",
     "shareProfile": "Shiriki wasifu",
@@ -408,7 +408,7 @@
   },
   "update": {
     "title": "Inahitaji kusasishwa",
-    "body": "Toleo hili la Jamii Air halitumiki tena. Sasisha hadi toleo la hivi punde ili kuendelea.",
+    "body": "Toleo hili la Kidili halitumiki tena. Sasisha hadi toleo la hivi punde ili kuendelea.",
     "minVersion": "Toleo {{version}} au jipya zaidi linahitajika.",
     "openStore": "Sasisha sasa",
     "noStoreLink": "Tafadhali sakinisha toleo la hivi punde ili kuendelea."

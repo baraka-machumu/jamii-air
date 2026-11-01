@@ -73,7 +73,7 @@ beforeEach(async () => {
   Object.assign(push(), { permission: 'undetermined', answer: 'granted', lastResponse: null });
 });
 
-const tapResponse = (id: string, data: object) => ({ actionIdentifier: 'default', notification: { request: { identifier: id, content: { title: 'Jamii Air', body: 'x', data } } } });
+const tapResponse = (id: string, data: object) => ({ actionIdentifier: 'default', notification: { request: { identifier: id, content: { title: 'Kidili', body: 'x', data } } } });
 
 describe('Tab badge (§9)', () => {
   it('shows the unread count on Activity', async () => {
@@ -191,7 +191,7 @@ describe('Push handling (§9.1)', () => {
     renderRouter(routes, { initialUrl: '/' });
     await screen.findByLabelText('Activity, 2');
     unread = 3;
-    act(() => push().received.forEach((l) => l({ request: { identifier: 'r1', content: { title: 'Jamii Air', body: 'juma liked your post.', data: { type: 'LIKE', postId: 'p1' } } } })));
+    act(() => push().received.forEach((l) => l({ request: { identifier: 'r1', content: { title: 'Kidili', body: 'juma liked your post.', data: { type: 'LIKE', postId: 'p1' } } } })));
     expect(await screen.findByText('juma liked your post.')).toBeTruthy();
     expect(await screen.findByLabelText('Activity, 3')).toBeTruthy();
   });

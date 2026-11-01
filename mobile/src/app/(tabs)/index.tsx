@@ -51,7 +51,7 @@ export default function HomeTab() {
   const header = (
     <View style={{ gap: space.sm, paddingBottom: space.sm }}>
       <View style={[styles.brand, { paddingHorizontal: space.md }]}>
-        <Wordmark accent={colors.primary} ink={colors.brand} />
+        <Wordmark color={colors.brand} ink={colors.onBrand} />
       </View>
       <View style={{ paddingHorizontal: space.md }}><PostingCard /></View>
     </View>

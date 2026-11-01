@@ -19,7 +19,7 @@ export function UpdateRequired({ url = storeUrl() }: { url?: string | null }) {
   return (
     <Screen edges={['top', 'bottom']}>
       <View style={styles.body} accessibilityRole="alert">
-        <Wordmark accent={colors.primary} ink={colors.brand} />
+        <Wordmark color={colors.brand} ink={colors.onBrand} />
         <Text accessibilityRole="header" style={[styles.title, { fontFamily: displayFont, marginTop: space.lg }]}>
           {t('update.title')}
         </Text>

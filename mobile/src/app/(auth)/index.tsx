@@ -34,7 +34,7 @@ export default function Welcome() {
         })}
       </View>
       <View style={styles.body}>
-        <Wordmark accent={colors.primary} ink={colors.brand} />
+        <Wordmark color={colors.brand} ink={colors.onBrand} />
         <Text accessibilityRole="header" style={[styles.title, { fontFamily: displayFont, marginTop: space.lg }]}>{t('welcome.title')}</Text>
         <Text muted style={{ marginTop: space.xs }}>{t('welcome.body')}</Text>
       </View>

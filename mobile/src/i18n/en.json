@@ -1,20 +1,20 @@
 {
   "brand": {
-    "name": "jamii air",
-    "line": "Your people, on air."
+    "name": "Kidili",
+    "line": "Chat · Business · Shop"
   },
   "welcome": {
-    "title": "Your people, on air.",
+    "title": "Chat · Business · Shop",
     "body": "Share photos with friends, family and your community across Tanzania and Kenya.",
     "createAccount": "Create account",
     "logIn": "Log in",
-    "pilotNote": "Jamii Air is invite-only during the pilot and for adults 18+."
+    "pilotNote": "Kidili is invite-only during the pilot and for adults 18+."
   },
   "auth": {
     "logInTitle": "Karibu tena",
     "logInSubtitle": "Log in with your username or email.",
     "signUpTitle": "Create account",
-    "signUpSubtitle": "Jamii Air is for adults 18 and over.",
+    "signUpSubtitle": "Kidili is for adults 18 and over.",
     "inviteCode": "Invite code",
     "inviteHelper": "From the person who invited you to the pilot.",
     "email": "Email",
@@ -47,7 +47,7 @@
       "emailFormat": "Enter a valid email address.",
       "usernameFormat": "Use 3–30 letters, numbers, . or _ (no spaces).",
       "passwordLength": "Use 8 to 128 characters.",
-      "underAge": "You must be 18 or older to use Jamii Air.",
+      "underAge": "You must be 18 or older to use Kidili.",
       "dobRequired": "Enter your date of birth.",
       "required": "Required.",
       "codeFormat": "Enter the 6 digits from the email.",
@@ -81,7 +81,7 @@
     "currentPassword": "Current password",
     "passwordChangedTitle": "Password changed",
     "passwordChangedBody": "You've been logged out on every other device.",
-    "logOutConfirm": "Log out of Jamii Air?",
+    "logOutConfirm": "Log out of Kidili?",
     "notifications": "Notifications",
     "notificationsOn": "On",
     "notificationsOff": "Off"
@@ -105,7 +105,7 @@
     "ADMIN_FORBIDDEN": "You don't have access to this.",
     "ADMIN_LOCKED": "This admin account is locked.",
     "ADMIN_NOT_FOUND": "That admin doesn't exist.",
-    "APP_VERSION_UNSUPPORTED": "Please update Jamii Air to continue.",
+    "APP_VERSION_UNSUPPORTED": "Please update Kidili to continue.",
     "BLOCKED": "You've blocked this account. Unblock it first.",
     "CANNOT_BLOCK_SELF": "You can't block yourself.",
     "CANNOT_FOLLOW_SELF": "You can't follow yourself.",
@@ -145,7 +145,7 @@
     "RESET_CODE_EXPIRED": "This code has expired. Request a new one.",
     "RESET_CODE_INVALID": "That code isn't right. Check the email and try again.",
     "RESET_CODE_LOCKED": "Too many tries. Request a new code.",
-    "SERVICE_UNAVAILABLE": "Jamii Air is busy right now. Try again soon.",
+    "SERVICE_UNAVAILABLE": "Kidili is busy right now. Try again soon.",
     "SESSION_EXPIRED": "Your session expired. Please log in again.",
     "SESSION_INVALID": "Please log in again.",
     "SESSION_REUSE_DETECTED": "For your safety, please log in again.",
@@ -153,7 +153,7 @@
     "TIMEOUT": "That took too long. Check your connection and try again.",
     "TOKEN_INVALID": "Please log in again.",
     "UNAUTHORIZED": "Please log in again.",
-    "UNDER_MINIMUM_AGE": "You must be 18 or older to use Jamii Air.",
+    "UNDER_MINIMUM_AGE": "You must be 18 or older to use Kidili.",
     "UNKNOWN": "Something went wrong. Please try again.",
     "UNSUPPORTED_MEDIA_TYPE": "That kind of file can't be posted.",
     "UPLOAD_FAILED": "The photo didn't upload. Check your connection and try again.",
@@ -184,7 +184,7 @@
     "addPhoto": "Add a photo",
     "avatarFailed": "Your profile photo couldn't be updated.",
     "cameraDeniedTitle": "Camera access is off",
-    "cameraDeniedBody": "To take a photo, allow Jamii Air to use the camera in your phone's settings.",
+    "cameraDeniedBody": "To take a photo, allow Kidili to use the camera in your phone's settings.",
     "openSettings": "Open settings",
     "chooseVideo": "Choose a video",
     "recordVideo": "Record a video"
@@ -314,8 +314,8 @@
   },
   "share": {
     "share": "Share",
-    "post": "{{username}} on Jamii Air: {{url}}",
-    "profile": "{{username}} on Jamii Air: {{url}}",
+    "post": "{{username}} on Kidili: {{url}}",
+    "profile": "{{username}} on Kidili: {{url}}",
     "copyLink": "Copy link",
     "copyProfileLink": "Copy profile link",
     "shareProfile": "Share profile",
@@ -408,7 +408,7 @@
   },
   "update": {
     "title": "Update required",
-    "body": "This version of Jamii Air is no longer supported. Update to the latest version to continue.",
+    "body": "This version of Kidili is no longer supported. Update to the latest version to continue.",
     "minVersion": "Version {{version}} or newer is needed.",
     "openStore": "Update now",
     "noStoreLink": "Please install the latest build to continue."

@@ -79,12 +79,12 @@ describe('the Update required screen', () => {
   it('replaces the whole app, with no way back to it', async () => {
     stubApi((req) => (req.path === '/api/v1/me' ? json(200, me) : json(200, emptyPage)));
     renderRouter(routes, { initialUrl: '/' });
-    await waitFor(() => expect(screen.getByText('Your people, on air.')).toBeTruthy());
+    await waitFor(() => expect(screen.getByText('Chat · Business · Shop')).toBeTruthy());
 
     act(() => { requireUpdate('2.0.0'); });
 
     await waitFor(() => expect(screen.getByText('Update required')).toBeTruthy());
-    expect(screen.queryByText('Your people, on air.')).toBeNull();
+    expect(screen.queryByText('Chat · Business · Shop')).toBeNull();
     expect(screen.queryByText('Log in')).toBeNull();
   });
 

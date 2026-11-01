@@ -21,9 +21,9 @@ name: Core loop
 - evalScript: ${output.user = 'e2e' + Date.now().toString().slice(-8)}
 
 # --- Sign up (App Flow §4.1) ---
-- assertVisible: "Your people, on air."
+- assertVisible: "Chat · Business · Shop"
 - tapOn: "Create account"
-- assertVisible: "Jamii Air is for adults 18 and over."
+- assertVisible: "Kidili is for adults 18 and over."
 
 - tapOn: "Email"
 - inputText: ${output.user}@example.test
@@ -92,7 +92,7 @@ name: Core loop
 - tapOn: "Log out"
 - tapOn: "Log out"
 
-- assertVisible: "Your people, on air."
+- assertVisible: "Chat · Business · Shop"
 - tapOn: "Log in"
 - tapOn: "Username or email"
 - inputText: ${output.user}

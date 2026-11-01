@@ -1,6 +1,6 @@
 # Jamii Air — Mobile
 
-The Expo (SDK 57) app for Android and iOS. See the [App Flow](../docs/03-app-flow-document.md), the [Design Brief](../docs/04-design-brief.md), the approved designs (link in the [Phase 3 tracker](../docs/backlog/phase-3-mobile.md)) and the [Implementation Plan](../docs/06-implementation-plan.md) §4 Phase 3.
+The Expo (SDK 57) app for Android and iOS, called **Kidili** on the phone since K1.2 ("Jamii Air" stays the code name, D-14). See the [App Flow](../docs/03-app-flow-document.md), the [Design Brief](../docs/04-design-brief.md), the approved designs (link in the [Phase 3 tracker](../docs/backlog/phase-3-mobile.md)) and the [Implementation Plan](../docs/06-implementation-plan.md) §4 Phase 3.
 
 ## Run
 
@@ -96,6 +96,8 @@ Add packages with `npx expo install <package>` so versions match the SDK.
 | `src/people/` | Follow / unfollow, optimistic, shared by every screen (`follow.ts`); recent searches (`recentSearches.ts`); `useDebounced` |
 | `src/media/` | Photos: pick (library / camera, `pickImage.ts`), downscale to JPEG and upload to storage with retries (`upload.ts`, shared with posts in 3.7), the profile photo flow (`useAvatar.ts`) |
 | `src/theme/` | Design tokens (`tokens.ts`, the Kidili palette light and dark, Design Brief §15.3) and `useTheme()` |
+| `assets/`, `scripts/make-icons.py` | App icon, adaptive and monochrome (themed + notification) icons, splash and favicon, all drawn by the script from the Kidili mark (`python scripts/make-icons.py`, needs Pillow). The splash is set in `app.json` (`expo-splash-screen`) |
+| `store-listing.md` | Draft store texts, English and Swahili |
 | `src/i18n/` | English and Swahili strings (`en.json`, `sw.json`; same keys, enforced by a test) |
 | `src/auth/` | The session: refresh token in secure storage (`tokenStore.ts`), one refresh at a time, restore at launch, log out (`session.ts`); form checks that mirror the API (`validation.ts`) |
 | `src/stores/` | Zustand: `session` (who is signed in, onboarding) and `settings` (language, theme; saved on the phone with AsyncStorage) |

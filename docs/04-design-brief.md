@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Document** | 04 — Design Brief |
-| **Version** | 2.1 (2026-11-01: K1.1 built — §15.3 gains the dark palette as built and a darker `like` for the cream) · 2.0 (2026-10-31: **Kidili** — new brand, colours, navigation and screens, §15; screens approved by the owner 2026-10-31) · 1.3 (designs delivered and approved on a Claude design canvas, §12; §5 motion as built) |
+| **Version** | 2.2 (2026-11-01: K1.2 built — §15.2 icons, splash and line as built) · 2.1 (2026-11-01: K1.1 built — §15.3 gains the dark palette as built and a darker `like` for the cream) · 2.0 (2026-10-31: **Kidili** — new brand, colours, navigation and screens, §15; screens approved by the owner 2026-10-31) · 1.3 (designs delivered and approved on a Claude design canvas, §12; §5 motion as built) |
 | **Status** | **Approved** — 2026-10-11 |
 | **Date** | 2026-10-09 |
 | **For** | Whoever produces the designs (the engineer with Claude Code until a designer joins — D-11), mobile and web engineers |
@@ -245,9 +245,14 @@ and takes its *look* from the second image:
 - **Name:** Kidili, written **KIDILI** in the wordmark. "Jamii Air" stays the code name (D-14).
 - **Logo:** a purple speech bubble with a white **K** drawn in three strokes; the wordmark beside it
   in Nunito 900. The existing display face (`Nunito_800ExtraBold`) is already bundled; the 900
-  weight (`wordmarkFont`, loaded since K1.1) is for the wordmark only. Icon, adaptive icon, monochrome notification icon and
-  splash are redrawn from it in K1.
-- **Line:** "Chat · Business · Shop" (from the user design), to be validated like §2.3.
+  weight (`wordmarkFont`, loaded since K1.1) is for the wordmark only.
+- **Icons (K1.2, `mobile/scripts/make-icons.py`):** the app icon is the purple mark on cream, full
+  bleed; the Android adaptive icon is the mark (60 % of the layer, inside the safe zone) on a cream
+  layer; the monochrome icon, used for Android's themed icons and for notifications, is a white
+  bubble with the K cut out. The splash is the mark alone, 120 dp wide, on cream (`#14121A` in dark
+  mode). Notification accent: `brand`.
+- **Line:** "Chat · Business · Shop" / "Gumzo · Biashara · Duka" (from the user design), to be
+  validated like §2.3. Since K1.2 it is the Welcome screen's headline, replacing "Your people, on air".
 
 ### 15.3 Colour (built in K1.1, `mobile/src/theme/tokens.ts`)
 

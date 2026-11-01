@@ -8,7 +8,7 @@ on a real phone: sign up → onboarding → feed → like → comment → log ou
 
 1. Start the local stack and Metro: `scripts\dev-phone.bat` from the repo root (API, worker,
    Postgres, Redis, MinIO; it also restarts the containers if the Wi-Fi address changed).
-2. Have the Jamii Air **dev build** installed on the phone, with the phone attached over USB
+2. Have the Kidili **dev build** installed on the phone, with the phone attached over USB
    (`adb devices` lists it) and the app able to reach the API.
 3. Install Maestro once: `curl -Ls "https://get.maestro.mobile.dev" | bash`
    (Windows: run it in WSL or Git Bash; the CLI needs `adb` on the PATH).

@@ -143,7 +143,7 @@ describe('Sign up (§4.1)', () => {
     reply = () => json(201, session);
     await fill();
     fireEvent.press(screen.getByText('pick minor'));
-    expect(await screen.findByText('You must be 18 or older to use Jamii Air.')).toBeTruthy();
+    expect(await screen.findByText('You must be 18 or older to use Kidili.')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Create account' })).toBeDisabled();
     expect(global.fetch).not.toHaveBeenCalled();
   });

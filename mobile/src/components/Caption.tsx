@@ -22,7 +22,7 @@ export function Caption({ caption, username, onUsernamePress, numberOfLines, onP
       {username ? <Text variant="bodyStrong" onPress={onUsernamePress}>{username} </Text> : null}
       {captionParts(caption).map((part, index) => (part.tag
         ? (
-          <Text key={`${index}-${part.text}`} color={colors.primary} accessibilityRole="link"
+          <Text key={`${index}-${part.text}`} color={colors.brand} accessibilityRole="link"
             onPress={() => openTag(part.tag!)}>
             {part.text}
           </Text>

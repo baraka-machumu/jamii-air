@@ -77,7 +77,7 @@ export function LikeButton({ liked, onPress }: { liked: boolean; onPress: () => 
     <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={liked ? t('feed.unlike') : t('feed.like')}
       accessibilityState={{ selected: liked }} hitSlop={4} style={styles.action}>
       <Animated.View style={{ transform: [{ scale }] }}>
-        <Icon name="heart" color={liked ? colors.like : colors.text} filled={liked} />
+        <Icon name="heart" size={26} color={liked ? colors.like : colors.text} filled={liked} />
       </Animated.View>
     </Pressable>
   );

@@ -12,12 +12,14 @@ import { PostCard } from '@/components/PostCard';
 import { Screen } from '@/components/Screen';
 import { Spinner } from '@/components/Spinner';
 import { Text } from '@/components/Text';
+import { useTheme } from '@/theme/ThemeProvider';
 
 export default function PostDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useTranslation();
   const router = useRouter();
   const post = usePost(id);
+  const { colors } = useTheme();
 
   const gone = post.error instanceof ApiError && post.error.status === 404;
   let body;
@@ -40,14 +42,14 @@ export default function PostDetail() {
 
   return (
     <Screen padded={false}>
-      <View style={styles.bar}><Header title={t('feed.post')} /></View>
+      <View style={[styles.bar, { borderBottomColor: colors.border }]}><Header title={t('feed.post')} /></View>
       {body}
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  bar: { paddingHorizontal: 16 },
+  bar: { paddingHorizontal: 16, borderBottomWidth: StyleSheet.hairlineWidth },
   center: { flex: 1, justifyContent: 'center', gap: 16, padding: 16 },
   textCenter: { textAlign: 'center' },
 });

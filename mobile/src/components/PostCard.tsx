@@ -74,15 +74,16 @@ function PostCardView({ post, onOpen, onDeleted, followsAuthor = true }: {
   };
 
   return (
-    <View accessibilityLabel={t('feed.postBy', { username: author.username })}>
-      <View style={[styles.header, { paddingHorizontal: space.md }]}>
+    <View accessibilityLabel={t('feed.postBy', { username: author.username })}
+      style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border, paddingBottom: space.sm }]}>
+      <View style={[styles.header, { paddingLeft: space.sm, paddingRight: space.xs }]}>
         <Pressable onPress={toProfile} accessibilityRole="button" accessibilityLabel={author.username} style={styles.author}>
-          <Avatar uri={author.avatarUrl} name={author.displayName || author.username} size={32} />
+          <Avatar uri={author.avatarUrl} name={author.displayName || author.username} size={40} />
           <Text variant="bodyStrong" numberOfLines={1} style={styles.flex}>{author.username}</Text>
         </Pressable>
         <Pressable onPress={() => openMenu(post, following)} accessibilityRole="button" accessibilityLabel={t('feed.moreOptions')}
           hitSlop={8} style={styles.more}>
-          <Icon name="more" color={colors.text} />
+          <Icon name="more" color={colors.textMuted} />
         </Pressable>
       </View>
 
@@ -96,15 +97,15 @@ function PostCardView({ post, onOpen, onDeleted, followsAuthor = true }: {
         <View style={[styles.actions, { paddingHorizontal: space.xs }]}>
           <LikeButton liked={like.liked} onPress={() => toggleLike(post)} />
           <Pressable onPress={toComments} accessibilityRole="button" accessibilityLabel={t('comments.title')} hitSlop={4} style={styles.action}>
-            <Icon name="comment" color={colors.text} />
+            <Icon name="comment" size={26} color={colors.text} />
           </Pressable>
           <Pressable onPress={() => void sharePost(post, t)} accessibilityRole="button" accessibilityLabel={t('share.share')} hitSlop={4} style={styles.action}>
-            <Icon name="share" color={colors.text} />
+            <Icon name="share" size={26} color={colors.text} />
           </Pressable>
         </View>
       )}
 
-      <View style={{ paddingHorizontal: space.md, paddingTop: published ? 0 : space.xs, gap: 4 }}>
+      <View style={{ paddingHorizontal: 14, paddingTop: published ? 0 : space.xs, gap: 4 }}>
         {like.count > 0 && (
           <Text variant="bodyStrong">{t('feed.likes', { count: like.count, formatted: formatCount(like.count, i18n.language) })}</Text>
         )}
@@ -130,8 +131,9 @@ export function PostSkeleton() {
   const { colors, space } = useTheme();
   const block = { backgroundColor: colors.surfaceMuted };
   return (
-    <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ marginBottom: space.lg }}>
-      <View style={[styles.header, { paddingHorizontal: space.md }]}>
+    <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants"
+      style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border, marginBottom: 10 }]}>
+      <View style={[styles.header, { paddingHorizontal: space.sm }]}>
         <View style={[block, styles.skeletonAvatar]} />
         <View style={[block, styles.skeletonLine, { width: 120 }]} />
       </View>
@@ -146,11 +148,13 @@ export function PostSkeleton() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
+  /** Kidili card chrome (Design Brief §15.4): white, hairlines above and below; the photo keeps no radius. */
+  card: { borderTopWidth: StyleSheet.hairlineWidth, borderBottomWidth: StyleSheet.hairlineWidth },
   header: { flexDirection: 'row', alignItems: 'center', minHeight: 52, gap: 8 },
   author: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: touchTarget },
   actions: { flexDirection: 'row', alignItems: 'center' },
   action: { width: touchTarget, height: touchTarget, alignItems: 'center', justifyContent: 'center' },
   more: { width: touchTarget, height: touchTarget, alignItems: 'flex-end', justifyContent: 'center' },
-  skeletonAvatar: { width: 32, height: 32, borderRadius: 16 },
+  skeletonAvatar: { width: 40, height: 40, borderRadius: 20 },
   skeletonLine: { height: 12, borderRadius: 6 },
 });

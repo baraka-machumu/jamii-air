@@ -31,6 +31,7 @@ export function useProfile(username: string) {
   return useQuery({
     queryKey: profileKey(username),
     queryFn: ({ signal }) => call(api.GET('/api/v1/users/{username}', { params: { path: { username } }, signal })),
+    enabled: username.length > 0,
   });
 }
 

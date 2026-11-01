@@ -28,7 +28,7 @@ export function FollowButton({ user, following, requested = false, followsMe, co
       : back ? t('people.followBackUser', { username: user.username }) : t('people.followUser', { username: user.username });
   return (
     <Button
-      kind={status === 'none' ? 'primary' : 'secondary'}
+      kind={status === 'none' ? 'brand' : 'secondary'}
       label={label}
       accessibilityLabel={a11y}
       onPress={() => toggle(user, status)}

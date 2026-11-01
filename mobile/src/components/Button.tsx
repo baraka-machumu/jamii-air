@@ -3,7 +3,8 @@ import { useTheme } from '@/theme/ThemeProvider';
 import { maxFontScale, touchTarget } from '@/theme/tokens';
 import { Text } from './Text';
 
-export type ButtonKind = 'primary' | 'secondary' | 'tertiary' | 'destructive';
+/** `brand` is the purple Follow (Design Brief §15.4); `soft` the flat tile buttons on a profile. */
+export type ButtonKind = 'primary' | 'brand' | 'soft' | 'secondary' | 'tertiary' | 'destructive';
 
 export interface ButtonProps extends Omit<PressableProps, 'children'> {
   label: string;
@@ -17,6 +18,8 @@ export function Button({ label, kind = 'primary', loading, disabled, style, ...r
   const inactive = disabled || loading;
   const look = {
     primary: { bg: colors.primary, fg: colors.onPrimary, border: colors.primary },
+    brand: { bg: colors.brand, fg: colors.onBrand, border: colors.brand },
+    soft: { bg: colors.border, fg: colors.text, border: colors.border },
     secondary: { bg: 'transparent', fg: colors.text, border: colors.border },
     tertiary: { bg: 'transparent', fg: colors.primary, border: 'transparent' },
     destructive: { bg: colors.danger, fg: colors.onPrimary, border: colors.danger },

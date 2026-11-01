@@ -211,7 +211,7 @@ export default function Comments() {
             <Text variant="caption" muted style={styles.fill}>{t('comments.replyingTo', { username: replyTo.username })}</Text>
             <Pressable onPress={() => setReplyTo(null)} accessibilityRole="button" hitSlop={8}
               accessibilityLabel={t('comments.cancelReply')}>
-              <Text variant="caption" color={colors.primary}>{t('common.cancel')}</Text>
+              <Text variant="caption" color={colors.brand}>{t('common.cancel')}</Text>
             </Pressable>
           </View>
         ) : null}
@@ -231,7 +231,7 @@ export default function Comments() {
                   accessibilityLabel={replyTo ? t('comments.replyPlaceholder', { username: replyTo.username }) : t('comments.placeholder')}
                   multiline
                   maxLength={MAX_COMMENT}
-                  style={[styles.input, { color: colors.text, backgroundColor: colors.surfaceMuted }]}
+                  style={[styles.input, { color: colors.text, backgroundColor: colors.surface, borderColor: colors.border }]}
                 />
                 {length >= COMMENT_COUNTER_FROM && (
                   <Text variant="caption" color={length >= MAX_COMMENT ? colors.danger : colors.textMuted} style={styles.counter}
@@ -242,7 +242,7 @@ export default function Comments() {
               </View>
               <Pressable onPress={submit} disabled={!draft.trim()} accessibilityRole="button" accessibilityLabel={t('comments.send')}
                 accessibilityState={{ disabled: !draft.trim() }} style={styles.send}>
-                <Text variant="button" color={draft.trim() ? colors.primary : colors.textMuted}>{t('comments.send')}</Text>
+                <Text variant="button" color={draft.trim() ? colors.brand : colors.textMuted}>{t('comments.send')}</Text>
               </Pressable>
             </>
           )}
@@ -309,7 +309,7 @@ const styles = StyleSheet.create({
   pinned: { borderBottomWidth: StyleSheet.hairlineWidth, paddingBottom: 12 },
   inputBar: { flexDirection: 'row', alignItems: 'flex-end', gap: 8, borderTopWidth: StyleSheet.hairlineWidth, paddingVertical: 8 },
   replyBar: { flexDirection: 'row', alignItems: 'center', gap: 8, borderTopWidth: StyleSheet.hairlineWidth, paddingVertical: 6 },
-  input: { minHeight: 40, maxHeight: 120, borderRadius: 20, paddingHorizontal: 14, paddingTop: 10, paddingBottom: 10, fontSize: 15 },
+  input: { minHeight: 42, maxHeight: 120, borderRadius: 21, borderWidth: 1, paddingHorizontal: 16, paddingTop: 10, paddingBottom: 10, fontSize: 15 },
   counter: { alignSelf: 'flex-end', marginTop: 2, marginRight: 4 },
   send: { minHeight: touchTarget, minWidth: touchTarget, justifyContent: 'center', alignItems: 'center' },
 });

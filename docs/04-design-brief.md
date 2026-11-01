@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Document** | 04 — Design Brief |
-| **Version** | 2.2 (2026-11-01: K1.2 built — §15.2 icons, splash and line as built) · 2.1 (2026-11-01: K1.1 built — §15.3 gains the dark palette as built and a darker `like` for the cream) · 2.0 (2026-10-31: **Kidili** — new brand, colours, navigation and screens, §15; screens approved by the owner 2026-10-31) · 1.3 (designs delivered and approved on a Claude design canvas, §12; §5 motion as built) |
+| **Version** | 2.3 (2026-11-01: K1.4a — §15.4 button kinds as built) · 2.2 (2026-11-01: K1.2 built — §15.2 icons, splash and line as built) · 2.1 (2026-11-01: K1.1 built — §15.3 gains the dark palette as built and a darker `like` for the cream) · 2.0 (2026-10-31: **Kidili** — new brand, colours, navigation and screens, §15; screens approved by the owner 2026-10-31) · 1.3 (designs delivered and approved on a Claude design canvas, §12; §5 motion as built) |
 | **Status** | **Approved** — 2026-10-11 |
 | **Date** | 2026-10-09 |
 | **For** | Whoever produces the designs (the engineer with Claude Code until a designer joins — D-11), mobile and web engineers |
@@ -304,6 +304,9 @@ on `primarySoft` or `surfaceMuted` (4.3 and 4.4 : 1): there it is an icon, and l
   white), **product card**, **quantity stepper**, **status pills** (Paid amber, Delivered green,
   Problem red), **mobile-money option rows**, **multi-step header** (Apply to sell).
 - Icons stay Lucide outline (§4.4); Udaku uses the megaphone, The Ocean the waves.
+- **Buttons (as built, K1.4a):** `primary` terracotta for the main action of a screen; `brand`
+  purple for Follow; `soft` (flat `border`-coloured tile, radius 10) for Edit profile and Share
+  profile; `secondary` outline for Following and the rest. Hashtags and comment *Post* are `brand`.
 
 ### 15.5 Screens on the canvas
 

@@ -161,7 +161,7 @@ function stopVideosScrolledAway({ viewableItems }: { viewableItems: ViewToken<Po
 }
 
 function Separator() {
-  return <View style={{ height: 24 }} />;
+  return <View style={{ height: 10 }} />;
 }
 
 const styles = StyleSheet.create({

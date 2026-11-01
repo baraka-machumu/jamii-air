@@ -1,8 +1,9 @@
 // Kidili navigation (Plan K1.3, App Flow §16.1, §16.5; BR-BN-02…04): the bottom bar Home · Udaku ·
 // + · Chat · Profile, the Create menu behind the +, Home's top tabs, and Search and the bell in
 // Home's header.
-import { fireEvent, screen, within } from '@testing-library/react-native';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react-native';
 import { renderRouter } from 'expo-router/testing-library';
+import { Share } from 'react-native';
 import { tokenStore } from '@/auth/tokenStore';
 import { useHomeSection } from '@/stores/home';
 import { useSession } from '@/stores/session';
@@ -17,6 +18,7 @@ beforeEach(async () => {
   stubApi((req) => {
     if (req.path === '/api/v1/me') return json(200, me);
     if (req.path === '/api/v1/notifications/unread-count') return json(200, { count: 0 });
+    if (req.path === '/api/v1/users/amina') return json(200, { ...me, shareUrl: 'https://jamii.test/u/amina' });
     return req.method === 'GET' ? json(200, emptyPage) : json(204);
   });
   await tokenStore.set('refresh-0-xxxxxxxxxxxxxxxx');
@@ -110,5 +112,23 @@ describe("Home's header (BR-BN-04)", () => {
     renderRouter(routes, { initialUrl: '/' });
     expect(await screen.findByLabelText('Notifications')).toBeTruthy();
     expect(screen.queryByTestId('bell-dot')).toBeNull();
+  });
+});
+
+describe('My profile (§16.10)', () => {
+  it('opens the Create menu from its header', async () => {
+    renderRouter(routes, { initialUrl: '/profile' });
+    fireEvent.press(await screen.findByTestId('profile-create'));
+    expect(await screen.findByTestId('create-post')).toBeTruthy();
+  });
+
+  it('shares the profile link beside Edit profile', async () => {
+    const share = jest.spyOn(Share, 'share').mockResolvedValue({ action: 'sharedAction' });
+    renderRouter(routes, { initialUrl: '/profile' });
+    expect(await screen.findByText('Edit profile')).toBeTruthy();
+    const button = await screen.findByRole('button', { name: 'Share profile' });
+    await waitFor(() => expect(button.props.accessibilityState).toMatchObject({ disabled: false }));
+    fireEvent.press(button);
+    expect(share).toHaveBeenCalledWith({ message: 'amina on Kidili: https://jamii.test/u/amina' });
   });
 });

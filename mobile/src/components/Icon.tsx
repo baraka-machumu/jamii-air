@@ -4,7 +4,7 @@ import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
 export type IconName = 'home' | 'search' | 'create' | 'heart' | 'comment' | 'share' | 'more' | 'back'
   | 'close' | 'camera' | 'check' | 'settings' | 'play' | 'video' | 'sound' | 'muted' | 'carousel' | 'reply' | 'lock'
-  | 'bell' | 'udaku' | 'ocean' | 'bag' | 'story' | 'tag' | 'image' | 'plus' | 'bookmark' | 'menu';
+  | 'bell' | 'udaku' | 'ocean' | 'bag' | 'story' | 'tag' | 'image' | 'plus' | 'bookmark' | 'menu' | 'crop';
 
 export function Icon({ name, size = 24, color, filled = false, fillColor, strokeWidth = 2 }: {
   name: IconName;
@@ -46,6 +46,7 @@ export function Icon({ name, size = 24, color, filled = false, fillColor, stroke
       {name === 'image' && (<><Rect x={3} y={3} width={18} height={18} rx={2} {...common} /><Circle cx={9} cy={9} r={2} {...common} /><Path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" {...common} /></>)}
       {name === 'plus' && <Path d="M5 12h14M12 5v14" {...common} />}
       {name === 'bookmark' && <Path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" fill={fill} {...common} />}
+      {name === 'crop' && <Path d="M6 2v14a2 2 0 0 0 2 2h14M18 22V8a2 2 0 0 0-2-2H2" {...common} />}
       {name === 'menu' && <Path d="M4 6h16M4 12h16M4 18h16" {...common} />}
       {name === 'settings' && (<><Path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" {...common} /><Circle cx={12} cy={12} r={3} {...common} /></>)}
     </Svg>

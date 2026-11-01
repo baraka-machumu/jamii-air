@@ -64,6 +64,8 @@ interface PostingState {
   /** Upload progress 0…1 across every file in the draft (not saved). */
   progress: number;
   startPhotos: (sources: Picked[]) => void;
+  /** More photos for the carousel, after the ones already picked (up to MAX_PHOTOS). */
+  addPhotos: (sources: Picked[]) => void;
   startVideo: (video: Omit<DraftVideo, 'mediaId'>) => void;
   update: (changes: Partial<Draft>) => void;
   /** Changes one photo of the carousel, leaving the others alone. */
@@ -99,6 +101,13 @@ export const usePosting = create<PostingState>()(persist(
     startPhotos: (sources) => set({
       draft: { ...blank(), photos: sources.slice(0, MAX_PHOTOS).map((source) => ({ source })) },
       progress: 0,
+    }),
+    addPhotos: (sources) => set((s) => {
+      if (!s.draft || s.draft.video) return s;
+      const room = MAX_PHOTOS - s.draft.photos.length;
+      const added = sources.slice(0, Math.max(0, room)).map((source) => ({ source }));
+      if (added.length === 0) return s;
+      return { draft: { ...s.draft, photos: [...s.draft.photos, ...added], selected: s.draft.photos.length } };
     }),
     startVideo: (video) => set({ draft: { ...blank(), photos: [], video }, progress: 0 }),
     update: (changes) => set((s) => (s.draft ? { draft: { ...s.draft, ...changes } } : s)),

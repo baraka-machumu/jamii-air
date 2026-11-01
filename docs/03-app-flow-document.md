@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Document** | 03 — App Flow |
-| **Version** | 1.7 (2026-11-01: §16.1 as built in K1.3 — sections not built yet say "Coming soon") · 1.6 (2026-11-01: the answers to Q-K1…Q-K8 in §16 — reactions, verified mark, 3-day payout hold, delivery fee per shop order, no commission) · 1.5 (2026-10-31, BRS §6.3: the app becomes **Kidili** — new navigation, Stories, The Ocean, Udaku rooms, Chat, Shops and the matching admin pages, all in §16) · 1.4 (2026-10-27, BRS §6.2: Sign in with Google §4.6, private accounts §8.2a, follow requests §8.5, Activity §9, Settings §11, delete account for a Google-only account §10.4) · 1.3 (R1 scope change 2026-10-16, BRS §6.1: carousels and video in §5–§6, replies §7.2, hashtags §7.5, a post on screen the moment it is shared §5) · 1.2 (Phase 2 API review: change password, removed-post badge, admin onboarding by temporary password) |
+| **Version** | 1.8 (2026-11-01: §16.2 New post on one screen, as built in K1.4b) · 1.7 (2026-11-01: §16.1 as built in K1.3 — sections not built yet say "Coming soon") · 1.6 (2026-11-01: the answers to Q-K1…Q-K8 in §16 — reactions, verified mark, 3-day payout hold, delivery fee per shop order, no commission) · 1.5 (2026-10-31, BRS §6.3: the app becomes **Kidili** — new navigation, Stories, The Ocean, Udaku rooms, Chat, Shops and the matching admin pages, all in §16) · 1.4 (2026-10-27, BRS §6.2: Sign in with Google §4.6, private accounts §8.2a, follow requests §8.5, Activity §9, Settings §11, delete account for a Google-only account §10.4) · 1.3 (R1 scope change 2026-10-16, BRS §6.1: carousels and video in §5–§6, replies §7.2, hashtags §7.5, a post on screen the moment it is shared §5) · 1.2 (Phase 2 API review: change password, removed-post badge, admin onboarding by temporary password) |
 | **Status** | **Approved** — 2026-10-11 |
 | **Date** | 2026-10-09 |
 | **Scope** | Release 1 mobile app (Android & iOS) and admin portal (web, §15). R2 Reels flow sketched in §14. |
@@ -520,6 +520,17 @@ a story, a product tag on photos from approved sellers (BR-SH-06), and **Save** 
 Post detail and comments are §7 restyled. **New post** is §6 on one screen: pick photos (numbered
 in the order picked) or a video, crop, caption with a counter, *Tag a product* (approved sellers
 only), *Location*, and *Also add to your story*.
+
+**As built in K1.4b:** New post (`/create`) is one screen: ✕ · *New post* · **Share** in the header;
+the preview of the chosen photo with its position (2/3) and a **Crop** button, or a video's first
+frame with its length; a strip with *Take photo* and *Choose from library* (*Add more photos* once
+some are picked, up to ten) and, before anything is picked, *Choose a video* and *Record a video*;
+the picked photos numbered in order (tap to show, ✕ to remove); and the caption with "N characters
+left". Crop (§6) is a step that comes back with every photo cropped; Share crops, at the saved or
+centred position, any photo not cropped yet. The old Caption screen is gone. An unfinished post is
+shown again as it was (the old *Continue / Discard* prompt is gone); ✕ asks *Discard this post?*.
+*Tag a product* arrives with K6b and *Also add to your story* with K3. *Location* is **not built**:
+no requirement covers a place on a post (and BR-CT-06 strips photo locations) — question Q-K9.
 
 ### 16.3 Stories (BR-ST-01…08) — *Home · Stories*, *Story viewer*
 

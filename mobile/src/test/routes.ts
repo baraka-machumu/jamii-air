@@ -11,7 +11,6 @@ import Profile from '@/app/(tabs)/profile';
 import Udaku from '@/app/(tabs)/udaku';
 import RootLayout from '@/app/_layout';
 import Activity from '@/app/activity';
-import Caption from '@/app/compose/caption';
 import Crop from '@/app/compose/crop';
 import Create from '@/app/create';
 import EditProfile from '@/app/edit-profile';
@@ -57,7 +56,6 @@ export const routes = {
   'u/[username]/index': UserProfile,
   'u/[username]/[list]': FollowListScreen,
   'compose/crop': Crop,
-  'compose/caption': Caption,
   'p/[id]/index': PostDetail,
   'p/[id]/comments': Comments,
   't/[tag]': TagScreen,

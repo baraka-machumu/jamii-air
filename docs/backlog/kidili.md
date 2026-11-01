@@ -40,7 +40,7 @@ commits reviewed, and the stage's device checks below. Priority inside a stage i
 | K1.1 Kidili tokens light + dark, AA test | K1 | M | mobile | Review | K.0.b | `a8b198f` | Design Brief 2.1 §15.3: dark palette as built; `brandDeep` → `brand`, new `surfaceMuted`, `primarySoft`, `brandSoft`, `onBrand`, `radius.lg`; `like` darkened to `#D91C47` (4.4 : 1 on the cream failed). `tokens.test.ts`: 24 pairs per mode (AA text, 3 : 1 icons). Nunito 900 loaded for the wordmark |
 | K1.2 Logo, icon, splash, `name: "Kidili"`, store texts | K1 | M | mobile | Review | K1.1 | `71660fa` | App ID and scheme unchanged (D-14). The icons were still Expo's template: all redrawn from the mark by `mobile/scripts/make-icons.py`; splash via `expo-splash-screen` (added, native: ships in the K1.7 APK). Every "Jamii Air" string in English and Swahili now says Kidili; Welcome headline is the line "Chat · Business · Shop". Store texts drafted in `mobile/store-listing.md` (no store account yet, 08 D4) |
 | K1.3 New tab layout, Home top tabs, header Search + bell | K1 | M | mobile | Review | K1.1 | `ad2f861` | App Flow 1.7 §16.1 "as built". Bottom bar with labels and the centre + (opens the Create menu: Post live, the other four "Coming soon", which K1.4 was going to do); Udaku and Chat tabs, and Stories / Ocean / Shops on Home, show a "Coming soon" panel. Search, Activity and New post became pushed screens, same URLs. Bell with an unread dot replaces the Activity tab's badge. `navigation.test.tsx` (8 tests) |
-| K1.4 Restyle feed, post detail, comments, New post, profile, Create menu | K1 | M | mobile | In progress | K1.3 | K1.4a: this commit | The Create menu itself was built in K1.3; items switch on stage by stage. **K1.4a** (this commit): post cards in white with hairlines and a 10 px gap, 40 px avatars, 26 px actions; Follow and hashtags in purple (`Button` kinds `brand` and `soft`); post detail and comment input restyled; My profile with + and ☰ in the header and Edit profile · Share profile side by side. **K1.4b** next: New post on one screen |
+| K1.4 Restyle feed, post detail, comments, New post, profile, Create menu | K1 | M | mobile | Review | K1.3 | K1.4a `aeafcee`, K1.4b this commit | The Create menu itself was built in K1.3; items switch on stage by stage. **K1.4a** (this commit): post cards in white with hairlines and a 10 px gap, 40 px avatars, 26 px actions; Follow and hashtags in purple (`Button` kinds `brand` and `soft`); post detail and comment input restyled; My profile with + and ☰ in the header and Edit profile · Share profile side by side. **K1.4b** (this commit): New post on one screen — App Flow 1.8 §16.2 "as built"; the Caption screen is gone, Crop returns to New post, Share crops what is left; `create.test.tsx` rewritten (9 tests). *Location* left out pending Q-K9 |
 | K1.5 Saved posts | K1 | C | db · api · mobile | To do | K1.4 | — | BR-FD-13; first to cut |
 | K1.6 Kidili in pushes, share page, emails; portal name and colours | K1 | M | api · admin | To do | K1.1 | — | |
 | K1.7 New `preview` APK, UAT deploy, device checks K1 | K1 | M | deploy | To do | K1.1–K1.6 | — | Native: name and icon |
@@ -84,6 +84,12 @@ commits reviewed, and the stage's device checks below. Priority inside a stage i
 | Q-K6 | Who gets the verified mark on rooms and accounts? | ✅ Only when an admin sets it in the portal | BR-UD-11 (new), App Flow §16.6 / §16.11, Schema §20, K4 |
 | Q-K7 | Which reactions do Udaku rooms offer? | ✅ Love, fire, laugh, wow, sad, clap | BR-UD-04, App Flow §16.6, Schema §20, K4 |
 | Q-K8 | Can someone send more than one message before a request is accepted? | ✅ No, only one | BR-CH-04, App Flow §16.7, K5 |
+
+## Open questions raised while building
+
+| # | Question | Proposed answer | Blocks |
+|---|---|---|---|
+| Q-K9 | The canvas's New post has a **Location** row, but no requirement covers a place on a post, and BR-CT-06 strips photo locations. Add one? | Leave it out for now. If wanted later: a typed place name (no GPS), shown under the username, as a new BR in §6.3 | Nothing: New post works without it |
 
 ## Pending (no work until decided)
 

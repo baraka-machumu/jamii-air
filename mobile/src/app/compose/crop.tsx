@@ -1,7 +1,7 @@
 // Crop (App Flow §6): square, 4:5 portrait or original; drag the photo to choose what is in the
 // frame. One shape applies to the whole post, so a carousel's pages line up (BR-CT-09); the strip
 // below switches between the photos, each keeping its own position, and a photo can be removed
-// here. Next crops and downscales every photo once (JPEG 85, ≤ 2048 px) and opens the caption.
+// here. Done crops and downscales every photo (src/posting/prepare.ts) and returns to New post.
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -14,8 +14,8 @@ import { Icon } from '@/components/Icon';
 import { Screen } from '@/components/Screen';
 import { Segmented } from '@/components/Segmented';
 import { Text } from '@/components/Text';
-import { prepareImage } from '@/media/upload';
-import { type AspectChoice, aspectOf, centredOffset, clampOffset, coverScale, cropRect, frameOf, type Offset } from '@/posting/crop';
+import { type AspectChoice, aspectOf, centredOffset, clampOffset, coverScale, frameOf, type Offset } from '@/posting/crop';
+import { cropPhotos } from '@/posting/prepare';
 import { usePosting } from '@/posting/store';
 import { useTheme } from '@/theme/ThemeProvider';
 
@@ -64,11 +64,12 @@ function CropEditor() {
     position.setValue(start);
   }, [start, position]);
 
-  const save = (next: Offset) => updatePhoto(geometry.current.index, { offset: next });
+  // A moved photo's old crop is stale: Done (or Share) makes it again.
+  const save = (next: Offset) => updatePhoto(geometry.current.index, { offset: next, image: undefined });
 
   const recentre = (choice: AspectChoice) => {
     // A new shape invalidates every saved position, so they all go back to centred.
-    draft.photos.forEach((_, i) => updatePhoto(i, { offset: undefined }));
+    draft.photos.forEach((_, i) => updatePhoto(i, { offset: undefined, image: undefined }));
     update({ aspect: choice });
   };
 
@@ -89,21 +90,12 @@ function CropEditor() {
     },
   }));
 
-  const next = async () => {
+  const done = async () => {
     setBusy(true);
     try {
       // Every photo is cropped to the shared shape at its own saved position.
-      for (const [i, item] of draft.photos.entries()) {
-        const itsFrame = frameOf(screenWidth, aspectOf(draft.aspect, item.source));
-        const itsScale = coverScale(item.source, itsFrame);
-        const at = clampOffset(item.offset ?? centredOffset(item.source, itsFrame, itsScale), item.source, itsFrame, itsScale);
-        const prepared = await prepareImage(
-          item.source.uri, item.source.width, item.source.height, undefined,
-          cropRect(at, item.source, itsFrame, itsScale),
-        );
-        updatePhoto(i, { image: prepared });
-      }
-      router.push('/compose/caption');
+      await cropPhotos(screenWidth, { all: true });
+      router.back();
     } catch (error) {
       Alert.alert(t('create.cantOpen'), errorMessage(error, t));
     } finally {
@@ -119,7 +111,7 @@ function CropEditor() {
   return (
     <Screen edges={['top', 'bottom']} padded={false}>
       <View style={{ paddingHorizontal: space.md }}>
-        <Header title={t('create.cropTitle')} right={<Button kind="tertiary" label={t('create.next')} onPress={() => void next()} loading={busy} style={styles.headerButton} />} />
+        <Header title={t('create.cropTitle')} right={<Button kind="tertiary" label={t('create.done')} onPress={() => void done()} loading={busy} style={styles.headerButton} />} />
       </View>
       <View style={styles.stage}>
         <View {...pan.panHandlers} accessibilityLabel={t('create.cropHint')} accessibilityHint={t('create.cropHint')}
@@ -144,7 +136,7 @@ function CropEditor() {
                 <Pressable onPress={() => update({ selected: i })} accessibilityRole="button"
                   accessibilityState={{ selected: i === index }}
                   accessibilityLabel={t('create.photoAt', { position: i + 1, total: draft.photos.length })}
-                  style={[styles.thumb, { borderRadius: radius.sm, borderColor: i === index ? colors.primary : 'transparent' }]}>
+                  style={[styles.thumb, { borderRadius: radius.sm, borderColor: i === index ? colors.brand : 'transparent' }]}>
                   <Image source={{ uri: item.source.uri }} style={styles.fill} contentFit="cover" />
                 </Pressable>
                 <Pressable onPress={() => drop(i)} hitSlop={6} accessibilityRole="button"

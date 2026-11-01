@@ -128,7 +128,6 @@ function RootStack() {
           <Stack.Screen name="u/[username]/index" />
           <Stack.Screen name="u/[username]/[list]" />
           <Stack.Screen name="compose/crop" />
-          <Stack.Screen name="compose/caption" />
           <Stack.Screen name="p/[id]/index" />
           <Stack.Screen name="p/[id]/comments" />
         </Stack.Protected>

@@ -1,6 +1,7 @@
-// Task 3.7, the Create flow against a stubbed API (App Flow §6): pick → crop → caption → Share →
-// Home with the posting card; a failure offers Retry; an unfinished draft is offered on return.
-import { fireEvent, screen, waitFor } from '@testing-library/react-native';
+// Task 3.7 and K1.4b, New post against a stubbed API (App Flow §6, §16.2): pick, caption and Share
+// on one screen (Crop is a step that comes back) → Home with the posting card; a failure offers
+// Retry; an unfinished draft is shown again.
+import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
 import { renderRouter } from 'expo-router/testing-library';
 import { Alert } from 'react-native';
 import { tokenStore } from '@/auth/tokenStore';
@@ -76,21 +77,29 @@ beforeEach(async () => {
 const toCaption = async () => {
   renderRouter(routes, { initialUrl: '/create' });
   fireEvent.press(await screen.findByRole('button', { name: 'Choose from library' }));
-  fireEvent.press(await screen.findByRole('button', { name: 'Next' }));
   fireEvent.changeText(await screen.findByLabelText('Caption'), 'Sokoni');
 };
 
-describe('Create (§6)', () => {
-  it('turns HEIC into an upright JPEG, crops square by default, and shares', async () => {
+describe('New post on one screen (§6, §16.2)', () => {
+  it('turns HEIC into an upright JPEG, and shares', async () => {
     await toCaption();
     const draft = usePosting.getState().draft!;
     expect(draft.photos).toHaveLength(1);
     expect(draft.photos[0]!.source.uri).toMatch(/\.jpg$/);
-    expect(draft.photos[0]!.image).toMatchObject({ width: 1536, height: 1536 }); // 2048 × 1536 source, square crop
+    expect(screen.getByText('2,194 characters left')).toBeTruthy();
     fireEvent.press(screen.getByRole('button', { name: 'Share' }));
     expect(await screen.findByText('Your feed is empty')).toBeTruthy(); // Home, visible
     expect(requests.find((r) => r.path === '/api/v1/posts')!.body).toEqual({ mediaIds: ['media-1'], caption: 'Sokoni' });
     expect(usePosting.getState().draft).toBeNull();
+  });
+
+  it('crops square by default when Share is pressed without visiting Crop', async () => {
+    await toCaption();
+    expect(usePosting.getState().draft!.photos[0]!.image).toBeUndefined();
+    createReply = () => apiError(500, 'INTERNAL_ERROR'); // keeps the draft, to look at it
+    fireEvent.press(screen.getByRole('button', { name: 'Share' }));
+    await screen.findByText("Couldn't post");
+    expect(usePosting.getState().draft!.photos[0]!.image).toMatchObject({ width: 1536, height: 1536 }); // 2048 × 1536 source
   });
 
   it('shows "Couldn\'t post" with Retry on Home when sharing fails', async () => {
@@ -106,21 +115,23 @@ describe('Create (§6)', () => {
     expect(screen.queryByText("Couldn't post")).toBeNull();
   });
 
-  it('crops every photo of a carousel and posts them in the picked order (BR-CT-09)', async () => {
+  it('numbers a carousel in the picked order, crops it, and posts it in that order (BR-CT-09)', async () => {
     mockPicked = [photo('one'), photo('two'), photo('three')];
     renderRouter(routes, { initialUrl: '/create' });
     fireEvent.press(await screen.findByRole('button', { name: 'Choose from library' }));
 
-    // The crop screen shows which photo is being cropped, and the strip switches between them.
-    expect(await screen.findByText('Photo 1 of 3')).toBeTruthy();
+    // The strip numbers them; picking one shows it in the preview.
+    expect(await screen.findByRole('button', { name: 'Photo 3 of 3' })).toBeTruthy();
+    expect(screen.getByText('1/3')).toBeTruthy();
     fireEvent.press(screen.getByRole('button', { name: 'Photo 2 of 3' }));
-    expect(await screen.findByText('Photo 2 of 3')).toBeTruthy();
+    expect(await screen.findByText('2/3')).toBeTruthy();
 
-    fireEvent.press(screen.getByRole('button', { name: 'Next' }));
+    // Crop is a step that comes back here, every photo cropped.
+    fireEvent.press(screen.getByRole('button', { name: 'Crop' }));
+    expect(await screen.findByText('Photo 2 of 3')).toBeTruthy();
+    fireEvent.press(screen.getByRole('button', { name: 'Done' }));
     fireEvent.changeText(await screen.findByLabelText('Caption'), 'Three of them');
-    const draft = usePosting.getState().draft!;
-    expect(draft.photos).toHaveLength(3);
-    expect(draft.photos.every((item) => item.image)).toBe(true);
+    await waitFor(() => expect(usePosting.getState().draft!.photos.every((item) => item.image)).toBe(true));
 
     fireEvent.press(screen.getByRole('button', { name: 'Share' }));
     await screen.findByText('Your feed is empty');
@@ -128,29 +139,34 @@ describe('Create (§6)', () => {
       .toEqual({ mediaIds: ['media-1', 'media-1', 'media-1'], caption: 'Three of them' });
   });
 
-  it('removes a photo from the carousel before posting', async () => {
+  it('adds more photos after the ones picked, and removes one', async () => {
     mockPicked = [photo('one'), photo('two')];
     renderRouter(routes, { initialUrl: '/create' });
     fireEvent.press(await screen.findByRole('button', { name: 'Choose from library' }));
-    expect(await screen.findByText('Photo 1 of 2')).toBeTruthy();
+    expect(await screen.findByText('1/2')).toBeTruthy();
 
-    fireEvent.press(screen.getByRole('button', { name: 'Remove photo 2' }));
-    expect(usePosting.getState().draft!.photos).toHaveLength(1);
-    // One photo left: no position line, since there is nothing to switch between.
-    expect(screen.queryByText('Photo 1 of 1')).toBeNull();
+    mockPicked = [photo('three')];
+    fireEvent.press(screen.getByRole('button', { name: 'Add more photos' }));
+    expect(await screen.findByRole('button', { name: 'Photo 3 of 3' })).toBeTruthy();
+    expect(screen.getByText('3/3')).toBeTruthy(); // the new one is shown
+
+    fireEvent.press(screen.getByRole('button', { name: 'Remove photo 1' }));
+    expect(usePosting.getState().draft!.photos).toHaveLength(2);
+    expect(await screen.findByRole('button', { name: 'Photo 2 of 2' })).toBeTruthy();
   });
 
-  it('sends a picked video straight to the caption, with no crop step (BR-CT-07)', async () => {
+  it('takes a video with no crop step (BR-CT-07)', async () => {
     mockPicked = [{ uri: 'file:///clip.mp4', width: 720, height: 1280, duration: 42_000, mimeType: 'video/mp4' }];
     renderRouter(routes, { initialUrl: '/create' });
     fireEvent.press(await screen.findByRole('button', { name: 'Choose a video' }));
 
-    // Straight past the crop screen: the caption field is what comes up.
     fireEvent.changeText(await screen.findByLabelText('Caption'), 'Clip');
     expect(usePosting.getState().draft).toMatchObject({
       photos: [], video: { uri: 'file:///clip.mp4', durationMs: 42_000, mimeType: 'video/mp4' },
     });
     expect(screen.getByText('0:42')).toBeTruthy(); // its length, on the preview
+    expect(screen.queryByRole('button', { name: 'Crop' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Take photo' })).toBeNull(); // photos and a video don't mix
 
     fireEvent.press(screen.getByRole('button', { name: 'Share' }));
     await screen.findByText('Your feed is empty');
@@ -200,11 +216,16 @@ describe('Create (§6)', () => {
     expect(screen.queryByText('Your feed is empty')).toBeNull();
   });
 
-  it('offers an unfinished post when coming back to Create', async () => {
+  it('shows an unfinished post again, and the close button discards it', async () => {
     usePosting.getState().startPhotos([{ uri: 'file:///s.jpg', width: 2048, height: 1536 }]);
     renderRouter(routes, { initialUrl: '/create' });
-    expect(await screen.findByText('You have an unfinished post')).toBeTruthy();
-    fireEvent.press(screen.getByRole('button', { name: 'Continue' }));
-    expect(await screen.findByRole('button', { name: 'Next' })).toBeTruthy();
+    expect(await screen.findByText('1/1')).toBeTruthy();
+    expect(screen.getByLabelText('Caption')).toBeTruthy();
+
+    fireEvent.press(screen.getByRole('button', { name: 'Discard' }));
+    const alert = (Alert.alert as jest.Mock).mock.calls.at(-1)!;
+    expect(alert[0]).toBe('Discard this post?');
+    act(() => alert[2].find((b: { text: string }) => b.text === 'Discard').onPress());
+    expect(usePosting.getState().draft).toBeNull();
   });
 });

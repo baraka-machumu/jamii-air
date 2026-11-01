@@ -27,7 +27,7 @@ Host layout, all under `/home/jamii-air` (**not** `/`, see "Disk" below):
 
 ## Three things about this host that the stack has to work around
 
-**1. Disk — `/` is 95% full.** The root filesystem is 50 GB with ~3 GB free and is shared with four
+**1. Disk — `/` is 95–98% full.** The root filesystem is 50 GB with ~3 GB free and is shared with four
 other projects; `/home` is 42 GB and nearly empty. So **all state bind-mounts to `/home/jamii-air/data`**
 and nothing is left in Docker named volumes. Do not `docker build` on this host: it would put a
 builder image and npm cache on `/`. Build locally and ship the image (below). The owner has asked
@@ -106,7 +106,36 @@ PUT the photo to the presigned URL → create post → worker published it (blur
 variants) → feed → share landing page. The `.webp` variant is readable without auth (200) and the
 original is **not** (403), which is the intended policy.
 
-## Redeploying (done five times: 2026-10-15, 2026-10-16, 2026-10-19, 2026-10-22, 2026-10-27)
+## Redeploying (done six times: 2026-10-15, 2026-10-16, 2026-10-19, 2026-10-22, 2026-10-27, 2026-11-01)
+
+The 2026-11-01 run shipped Kidili K1.5 and K1.6 (saved posts; Kidili in pushes, emails, the share
+page and the portal). **`/` had only 1.2 GB free (98%)** — other projects grew; ours logs a few MB.
+The fresh image shared no layers with the running one (`node:24-alpine` had moved on), so a full
+`docker load` meant ~830 MB of layers plus its temporary unpacked copy on `/`: too close to
+filling the disk. Backend `package*.json` and the `Dockerfile` had not changed since 2026-10-27,
+so only `dist/` was new, and the image was updated **as a delta on the host**:
+
+```bash
+# locally: take dist out of the freshly built image (≈ 350 KB gzipped) and ship it
+cid=$(docker create jamii-air-api:uat) && docker cp $cid:/app/dist ./dist-out/ && docker rm $cid
+tar -czf api-dist.tgz -C dist-out dist && pscp ... api-dist.tgz root@HOST:/home/jamii-air/
+# on the host: keep the old tag as rollback (no extra space: same layers), then
+docker tag jamii-air-api:uat jamii-air-api:uat-prev-YYYYMMDD
+docker run --name jamii-api-delta --user root --entrypoint sh --security-opt seccomp=unconfined   jamii-air-api:uat -c 'rm -rf /app/dist && mkdir /app/dist'
+docker cp build-dist/dist/. jamii-api-delta:/app/dist
+docker commit --change 'USER node' --change 'ENTRYPOINT ["docker-entrypoint.sh"]'   --change 'CMD ["node", "dist/main.js"]' jamii-api-delta jamii-air-api:uat
+docker rm jamii-api-delta
+```
+
+One 3 MB layer; `docker image inspect` showed the same user, entrypoint, command, workdir and
+healthcheck as before. **Use it only when the dependencies and the Dockerfile are unchanged**;
+otherwise ship the full image and make room first. Rollback: `docker tag
+jamii-air-api:uat-prev-20261027 jamii-air-api:uat && docker compose up -d`. The migration
+`k_saved_posts` ran over the tunnel (the old API kept working: the two changed procedures only
+gained a column), and `db:drift-check` passed (105 functions). `MAIL_FROM` in the host `.env` was
+`Jamii Air <onboarding@resend.dev>` — Resend is live — and now reads `Kidili <…>` (backup
+`.env.bak-20261101`, likewise `docker-compose.yml.bak-20261101`). Portal: three stale assets
+removed. `/` ended at 1.1 GB free. The app half is the K1.7 `preview` APK, installed after this.
 
 The 2026-10-27 run shipped private accounts (increment A, epic P): API image, the two migrations
 `a_private_enums` and `a_private_accounts` over the tunnel, and the portal. Every changed procedure
@@ -170,4 +199,4 @@ It answers from the image that is actually running, so it catches a build that d
 - **Share links** are `http://41.59.227.223:4011/p/…`, so Android App Links cannot verify
   (that needs the https domain, task 3.9.f). `jamiiair://` deep links still work.
 - **No backups** of `/home/jamii-air/data` (Plan 5.2) and no Sentry/PostHog (Plan 5.0).
-- `/` on the host is at 95%. Watch it: if it fills, it takes the other four projects down with us.
+- `/` on the host is at 98% (1.1 GB free on 2026-11-01). Watch it: if it fills, it takes the other four projects down with us.

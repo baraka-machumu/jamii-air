@@ -34,7 +34,7 @@ export default function NotificationsStep() {
     <Screen edges={['top', 'bottom']}>
       <Header title="" />
       <View style={[styles.body, { gap: space.md }]}>
-        <View style={[styles.icon, { backgroundColor: colors.surface }]}>
+        <View style={[styles.icon, { backgroundColor: colors.surfaceMuted }]}>
           <Icon name="heart" size={48} color={colors.like} filled />
         </View>
         <Text accessibilityRole="header" style={[styles.title, { fontFamily: displayFont }]}>{t('onboarding.notificationsTitle')}</Text>

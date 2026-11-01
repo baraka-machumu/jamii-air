@@ -13,7 +13,7 @@ export function Segmented<T extends string>({ label, options, value, onChange }:
   return (
     <View style={styles.wrap}>
       <Text>{label}</Text>
-      <View accessibilityRole="radiogroup" accessibilityLabel={label} style={[styles.track, { backgroundColor: colors.surface }]}>
+      <View accessibilityRole="radiogroup" accessibilityLabel={label} style={[styles.track, { backgroundColor: colors.surfaceMuted }]}>
         {options.map((o) => {
           const on = o.value === value;
           return (

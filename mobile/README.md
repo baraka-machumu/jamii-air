@@ -95,7 +95,7 @@ Add packages with `npx expo install <package>` so versions match the SDK.
 | `src/posting/` | The post being made: crop geometry (`crop.ts`), the saved draft (`store.ts`), sharing with resume / retry (`run.ts`) |
 | `src/people/` | Follow / unfollow, optimistic, shared by every screen (`follow.ts`); recent searches (`recentSearches.ts`); `useDebounced` |
 | `src/media/` | Photos: pick (library / camera, `pickImage.ts`), downscale to JPEG and upload to storage with retries (`upload.ts`, shared with posts in 3.7), the profile photo flow (`useAvatar.ts`) |
-| `src/theme/` | Design tokens (`tokens.ts`, light and dark, Design Brief §4) and `useTheme()` |
+| `src/theme/` | Design tokens (`tokens.ts`, the Kidili palette light and dark, Design Brief §15.3) and `useTheme()` |
 | `src/i18n/` | English and Swahili strings (`en.json`, `sw.json`; same keys, enforced by a test) |
 | `src/auth/` | The session: refresh token in secure storage (`tokenStore.ts`), one refresh at a time, restore at launch, log out (`session.ts`); form checks that mirror the API (`validation.ts`) |
 | `src/stores/` | Zustand: `session` (who is signed in, onboarding) and `settings` (language, theme; saved on the phone with AsyncStorage) |

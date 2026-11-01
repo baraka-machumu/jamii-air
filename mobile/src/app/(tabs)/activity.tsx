@@ -122,7 +122,7 @@ const ActivityRow = memo(function ActivityRow({ item, onOpen, onProfile }: {
   const { actor } = item;
   const action = activityText(item, t);
 
-  const thumb = { borderRadius: radius.sm, backgroundColor: colors.surface };
+  const thumb = { borderRadius: radius.sm, backgroundColor: colors.surfaceMuted };
   const time = formatRelative(item.createdAt, i18n.language);
 
   return (

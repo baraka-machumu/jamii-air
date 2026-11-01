@@ -15,13 +15,13 @@ import { displayFont } from '@/theme/tokens';
 export default function Welcome() {
   const { t, i18n } = useTranslation();
   const router = useRouter();
-  const { colors, radius, space, scheme } = useTheme();
+  const { colors, radius, space } = useTheme();
   const setLanguage = useSettings((s) => s.setLanguage);
   const notice = useSession((s) => s.notice);
 
   return (
     <Screen edges={['top', 'bottom']}>
-      <View style={[styles.lang, { backgroundColor: colors.surface }]} accessibilityRole="radiogroup">
+      <View style={[styles.lang, { backgroundColor: colors.surfaceMuted }]} accessibilityRole="radiogroup">
         {(['en', 'sw'] as const).map((code) => {
           const on = i18n.language === code;
           return (
@@ -34,13 +34,13 @@ export default function Welcome() {
         })}
       </View>
       <View style={styles.body}>
-        <Wordmark accent={colors.primary} ink={scheme === 'dark' ? colors.text : colors.brandDeep} />
+        <Wordmark accent={colors.primary} ink={colors.brand} />
         <Text accessibilityRole="header" style={[styles.title, { fontFamily: displayFont, marginTop: space.lg }]}>{t('welcome.title')}</Text>
         <Text muted style={{ marginTop: space.xs }}>{t('welcome.body')}</Text>
       </View>
       {notice && (
         <View accessibilityRole="alert" accessibilityLiveRegion="polite"
-          style={[styles.notice, { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.md, padding: space.sm, marginBottom: space.md }]}>
+          style={[styles.notice, { backgroundColor: colors.surfaceMuted, borderColor: colors.border, borderRadius: radius.md, padding: space.sm, marginBottom: space.md }]}>
           <Text variant="bodyStrong">{notice.kind === 'suspended' ? t('safety.suspendedTitle') : t('safety.deletedTitle')}</Text>
           <Text muted>{notice.kind === 'suspended' ? t('errors.ACCOUNT_SUSPENDED') : t('safety.deletedBody', {
             date: new Date(notice.deletionDueAt).toLocaleDateString(i18n.language, { day: 'numeric', month: 'long', year: 'numeric' }),

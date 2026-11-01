@@ -86,7 +86,7 @@ function ReportSheet({ target }: { target: ReportTarget }) {
       </View>
       <TextInput value={details} onChangeText={setDetails} maxLength={MAX_REPORT_DETAILS} multiline
         placeholder={t('safety.detailsPlaceholder')} placeholderTextColor={colors.textMuted} accessibilityLabel={t('safety.detailsPlaceholder')}
-        style={[styles.details, { color: colors.text, backgroundColor: colors.surface, borderRadius: radius.sm, marginTop: space.sm }]} />
+        style={[styles.details, { color: colors.text, backgroundColor: colors.surfaceMuted, borderRadius: radius.sm, marginTop: space.sm }]} />
       {details.length >= COUNTER_FROM && (
         <Text variant="caption" muted style={styles.counter}>{t('comments.counter', { length: details.length, max: MAX_REPORT_DETAILS })}</Text>
       )}

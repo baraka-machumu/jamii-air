@@ -33,7 +33,7 @@ function ThumbView({ item, index }: { item: GridItem; index: number }) {
         : item.mediaCount > 1 ? t('feed.openCarousel', { count: item.mediaCount })
         : t('feed.openPost'))}
       style={{ flex: 1, aspectRatio: 1, marginLeft: column === 0 ? 0 : GRID_GAP / 2, marginRight: column === GRID_COLUMNS - 1 ? 0 : GRID_GAP / 2, marginBottom: GRID_GAP }}>
-      <View style={[styles.fill, { backgroundColor: colors.surface }]}>
+      <View style={[styles.fill, { backgroundColor: colors.surfaceMuted }]}>
         {item.thumbUrl ? (
           <Image source={{ uri: item.thumbUrl }} placeholder={item.blurhash ? { blurhash: item.blurhash } : undefined}
             recyclingKey={item.id} contentFit="cover" transition={100} style={styles.fill} accessibilityIgnoresInvertColors />

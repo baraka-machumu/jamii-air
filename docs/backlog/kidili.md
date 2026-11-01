@@ -19,7 +19,7 @@ database → backend → mobile → admin → UAT and device checks — and is s
 | Priority | Stage | Epic | Requirements | State |
 |---|---|---|---|---|
 | — | K.0 | Docs and design | BRS §6.3 | **Review** — docs written; canvas approved 2026-10-31; questions answered 2026-11-01 |
-| **P1** | K1 | Kidili brand & navigation | BR-BN-01…05, BR-FD-13 | To do — **next** |
+| **P1** | K1 | Kidili brand & navigation | BR-BN-01…05, BR-FD-13 | **In progress** |
 | **P2** | K2 | The Ocean | BR-OC-01…06 | To do |
 | **P3** | K3 | Stories | BR-ST-01…08 | To do |
 | **P4** | K4 | Udaku rooms | BR-UD-01…11 | To do |
@@ -37,7 +37,7 @@ commits reviewed, and the stage's device checks below. Priority inside a stage i
 |---|---|---|---|---|---|---|---|
 | K.0 Docs | K.0 | M | docs | Review | — | `9454400` | BRS 1.4 (§6.3, D-14…D-21, §8.9–§8.14, NFR-09…11), TRD 1.11 (§19), App Flow 1.5 (§16), Design Brief 2.0 (§15), Schema 1.6 (§20 draft), Plan 1.24, this tracker, 00 Index 2.0, 08 C5/D6. Answers written in BRS 1.5, App Flow 1.6, TRD 1.12, Schema 1.7, Plan 1.25 (this commit) |
 | K.0.b Canvas sign-off + Q-K1…Q-K8 | K.0 | M | owner | **Done** | K.0 | this commit | ✅ Canvas approved 2026-10-31. ✅ Questions answered 2026-11-01: the proposed answers, except Q-K4 — no commission **for now**, decided later (D-22) |
-| K1.1 Kidili tokens light + dark, AA test | K1 | M | mobile | To do | K.0.b | — | Design Brief §15.3; `tokens.test.ts` checks every pair |
+| K1.1 Kidili tokens light + dark, AA test | K1 | M | mobile | Review | K.0.b | this commit | Design Brief 2.1 §15.3: dark palette as built; `brandDeep` → `brand`, new `surfaceMuted`, `primarySoft`, `brandSoft`, `onBrand`, `radius.lg`; `like` darkened to `#D91C47` (4.4 : 1 on the cream failed). `tokens.test.ts`: 24 pairs per mode (AA text, 3 : 1 icons). Nunito 900 loaded for the wordmark |
 | K1.2 Logo, icon, splash, `name: "Kidili"`, store texts | K1 | M | mobile | To do | K1.1 | — | App ID and scheme unchanged (D-14) |
 | K1.3 New tab layout, Home top tabs, header Search + bell | K1 | M | mobile | To do | K1.1 | — | Stories / Ocean / Shops tabs show "coming soon" until their stage |
 | K1.4 Restyle feed, post detail, comments, New post, profile, Create menu | K1 | M | mobile | To do | K1.3 | — | Create menu items switch on stage by stage |
@@ -156,3 +156,4 @@ To be ticked on the reference Android against UAT, stage by stage.
 | — | Design first: every stage starts by drawing any screen not yet on the canvas | 2026-10-31 | Owner |
 | — | Stage order P1–P6 as above: cheapest and most reusable first; payments last because they wait on D-21. The owner can reorder (for example Shops K6a–K6c before Chat) | 2026-10-31 | Engineer, proposed |
 | — | Terracotta darkened from the user design's `#C0603A` to `#B4502A` for AA contrast | 2026-10-31 | Engineer |
+| — | `like` darkened from `#E11D48` to `#D91C47`: the old red is 4.4 : 1 on the cream background | 2026-11-01 | Engineer |

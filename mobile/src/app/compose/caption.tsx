@@ -51,7 +51,7 @@ export default function Caption() {
           {previews.length === 1 ? (
             <View style={styles.row}>
               <View style={styles.single}>
-                <Image source={{ uri: first.uri }} style={[styles.preview, { aspectRatio: first.width / first.height, backgroundColor: colors.surface }]}
+                <Image source={{ uri: first.uri }} style={[styles.preview, { aspectRatio: first.width / first.height, backgroundColor: colors.surfaceMuted }]}
                   accessibilityLabel={t('create.preview')} />
                 {draft.video ? (
                   <View style={[styles.badge, { backgroundColor: overlay.scrim }]}>
@@ -67,7 +67,7 @@ export default function Caption() {
                 {previews.map((item, index) => (
                   <Image key={item.uri} source={{ uri: item.uri }} contentFit="cover"
                     accessibilityLabel={t('create.photoAt', { position: index + 1, total: previews.length })}
-                    style={[styles.strip, { backgroundColor: colors.surface }]} />
+                    style={[styles.strip, { backgroundColor: colors.surfaceMuted }]} />
                 ))}
               </ScrollView>
             </View>

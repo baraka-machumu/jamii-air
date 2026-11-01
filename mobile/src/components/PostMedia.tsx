@@ -131,7 +131,7 @@ const Page = memo(function Page({ item, width, height, post, onPress, disabled, 
       accessibilityLabel={label} style={{ width, height }}>
       <Image source={load ? { uri: item.url } : null} placeholder={item.blurhash ? { blurhash: item.blurhash } : undefined}
         placeholderContentFit="cover" recyclingKey={item.id} transition={150} contentFit="cover" accessibilityIgnoresInvertColors
-        style={{ width, height, backgroundColor: colors.surface }} />
+        style={{ width, height, backgroundColor: colors.surfaceMuted }} />
     </Pressable>
   );
 });
@@ -140,7 +140,7 @@ function Pending({ height, status, width }: { height: number; status: string; wi
   const { t } = useTranslation();
   const { colors } = useTheme();
   return (
-    <View style={[styles.pending, { height, width: width ?? '100%', backgroundColor: colors.surface }]}>
+    <View style={[styles.pending, { height, width: width ?? '100%', backgroundColor: colors.surfaceMuted }]}>
       <Text muted>{status === 'FAILED' ? t('create.failed') : t('create.processing')}</Text>
     </View>
   );
@@ -197,7 +197,7 @@ const VideoPage = memo(function VideoPage({ item, postId, width, height, load, o
   }
 
   return (
-    <View style={[styles.videoBox, { width, height, backgroundColor: colors.surface }]}>
+    <View style={[styles.videoBox, { width, height, backgroundColor: colors.surfaceMuted }]}>
       {item.posterUrl ? (
         <Image source={load ? { uri: item.posterUrl } : null} placeholder={item.blurhash ? { blurhash: item.blurhash } : undefined}
           recyclingKey={item.id} transition={150} contentFit="contain" accessibilityIgnoresInvertColors

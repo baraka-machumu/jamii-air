@@ -5,7 +5,7 @@
 // profile link that arrived while signed out opens once the user is in (App Flow §12); so does the
 // target of a tapped push (src/notifications/push.ts), in every app state. A build the API no
 // longer supports gets the blocking Update required screen instead of the router (§3.3).
-import { Nunito_800ExtraBold, useFonts } from '@expo-google-fonts/nunito';
+import { Nunito_800ExtraBold, Nunito_900Black, useFonts } from '@expo-google-fonts/nunito';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { type Href, Stack, usePathname, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -34,7 +34,7 @@ import { ThemeProvider, useTheme } from '@/theme/ThemeProvider';
 
 export default function RootLayout() {
   const [queryClient] = useState(createQueryClient);
-  const [fontsLoaded] = useFonts({ Nunito_800ExtraBold });
+  const [fontsLoaded] = useFonts({ Nunito_800ExtraBold, Nunito_900Black });
   const language = useSettings((s) => s.language);
 
   const status = useSession((s) => s.status);

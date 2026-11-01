@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Document** | 04 — Design Brief |
-| **Version** | 2.0 (2026-10-31: **Kidili** — new brand, colours, navigation and screens, §15; screens approved by the owner 2026-10-31) · 1.3 (designs delivered and approved on a Claude design canvas, §12; §5 motion as built) |
+| **Version** | 2.1 (2026-11-01: K1.1 built — §15.3 gains the dark palette as built and a darker `like` for the cream) · 2.0 (2026-10-31: **Kidili** — new brand, colours, navigation and screens, §15; screens approved by the owner 2026-10-31) · 1.3 (designs delivered and approved on a Claude design canvas, §12; §5 motion as built) |
 | **Status** | **Approved** — 2026-10-11 |
 | **Date** | 2026-10-09 |
 | **For** | Whoever produces the designs (the engineer with Claude Code until a designer joins — D-11), mobile and web engineers |
@@ -245,11 +245,11 @@ and takes its *look* from the second image:
 - **Name:** Kidili, written **KIDILI** in the wordmark. "Jamii Air" stays the code name (D-14).
 - **Logo:** a purple speech bubble with a white **K** drawn in three strokes; the wordmark beside it
   in Nunito 900. The existing display face (`Nunito_800ExtraBold`) is already bundled; the 900
-  weight is added for the wordmark only. Icon, adaptive icon, monochrome notification icon and
+  weight (`wordmarkFont`, loaded since K1.1) is for the wordmark only. Icon, adaptive icon, monochrome notification icon and
   splash are redrawn from it in K1.
 - **Line:** "Chat · Business · Shop" (from the user design), to be validated like §2.3.
 
-### 15.3 Colour (light; dark derived and tested in K1)
+### 15.3 Colour (built in K1.1, `mobile/src/theme/tokens.ts`)
 
 | Token | Kidili light | Was | Use | Contrast |
 |---|---|---|---|---|
@@ -262,12 +262,29 @@ and takes its *look* from the second image:
 | `brand` (was `brandDeep`) | `#5B2EBF` *(Kidili purple)* | `#1E1B4B` | Logo, wordmark, story rings, own chat bubbles, links, unread counts | white on it 8.1 |
 | `primarySoft`, `brandSoft` *(new)* | `#F8E9E1`, `#EEE8FB` | — | Tinted chips and icon tiles | non-text |
 | `accent` | `#0F766E` | same | Online, success highlights | 5.5 |
-| `success` / `like` / `danger` | `#15803D` / `#E11D48` / `#B91C1C` | same | As §4.1 | as §4.1 |
+| `success` / `danger` | `#15803D` / `#B91C1C` | same | As §4.1 | 4.7 / 6.1 on `bg` |
+| `like` | `#D91C47` | `#E11D48` | Liked heart | 4.7 on `bg` (`#E11D48` is 4.4 on the cream and fails) |
 | `border` | `#ECE6DC` | `#E5E7EB` | Hairlines, card borders | non-text |
 
-Dark mode keeps the structure: near-black warm ground, `brand` lightened (e.g. `#C9B8F5`, 10.3 on
-`#14121A`) and `primary` lightened (e.g. `#F08A5D`, 7.5). The token test (`tokens.test.ts`) keeps
-checking every text pair, in both modes, before K1 is done (BR-BN-05).
+`onPrimary` and `onBrand` are white. Placeholders, chips, search fields and the segmented track
+use `surfaceMuted`; bordered inputs, cards and sheets use `surface`. `brandDeep` is gone: the
+wordmark and initials avatars use `brand` in both modes.
+
+**Dark (as built):**
+
+| Token | Dark | Contrast |
+|---|---|---|
+| `bg` / `surface` / `surfaceMuted` | `#14121A` / `#1E1B25` / `#27232F` | — |
+| `text` / `textMuted` | `#F3EFE9` / `#A9A1B3` | 16.2 / 7.5 on `bg` |
+| `primary` (on it `#14121A`) | `#F08A5D` | 7.5 |
+| `brand` (on it `#14121A`) | `#C9B8F5` | 10.3 |
+| `primarySoft` / `brandSoft` | `#3A241B` / `#2A2340` | non-text |
+| `accent` / `like` / `danger` / `success` | `#2DD4BF` / `#FB7185` / `#F87171` / `#4ADE80` | 10.0 / 6.9 / 6.7 / 10.7 |
+| `border` | `#2E2A36` | non-text |
+
+`tokens.test.ts` checks every text pair at 4.5 : 1 (on `bg`, `surface`, `surfaceMuted` and the
+soft chips) and icon-on-tile pairs at 3 : 1, in both modes (BR-BN-05). Terracotta text is not used
+on `primarySoft` or `surfaceMuted` (4.3 and 4.4 : 1): there it is an icon, and labels use `text`.
 
 ### 15.4 Shape and components added
 

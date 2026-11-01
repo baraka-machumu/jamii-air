@@ -123,7 +123,7 @@ function CropEditor() {
       </View>
       <View style={styles.stage}>
         <View {...pan.panHandlers} accessibilityLabel={t('create.cropHint')} accessibilityHint={t('create.cropHint')}
-          style={[styles.frame, { width: frame.width, height: frame.height, backgroundColor: colors.surface }]}>
+          style={[styles.frame, { width: frame.width, height: frame.height, backgroundColor: colors.surfaceMuted }]}>
           <Animated.View style={{ width: image.width * scale, height: image.height * scale, transform: position.getTranslateTransform() }}>
             <Image source={{ uri: image.uri }} style={styles.fill} contentFit="fill" />
           </Animated.View>

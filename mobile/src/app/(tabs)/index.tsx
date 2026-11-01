@@ -25,7 +25,7 @@ import { useTheme } from '@/theme/ThemeProvider';
 export default function HomeTab() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { colors, space, scheme } = useTheme();
+  const { colors, space } = useTheme();
   const feed = useFeed();
   const list = useRef<FlashListRef<Post>>(null);
   useScrollToTop(list);
@@ -51,7 +51,7 @@ export default function HomeTab() {
   const header = (
     <View style={{ gap: space.sm, paddingBottom: space.sm }}>
       <View style={[styles.brand, { paddingHorizontal: space.md }]}>
-        <Wordmark accent={colors.primary} ink={scheme === 'dark' ? colors.text : colors.brandDeep} />
+        <Wordmark accent={colors.primary} ink={colors.brand} />
       </View>
       <View style={{ paddingHorizontal: space.md }}><PostingCard /></View>
     </View>

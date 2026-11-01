@@ -45,7 +45,7 @@ export function TabBar({ state, navigation, insets, badge }: TabBarProps & { bad
               // `surface` disc on `bg` — about 1.1:1, invisible in both themes and short of the
               // 3:1 WCAG asks of a control (3.12.c).
               <View style={[styles.avatar, { borderColor: color }]}>
-                <View style={[styles.avatarInner, { backgroundColor: colors.surface }]} />
+                <View style={[styles.avatarInner, { backgroundColor: colors.surfaceMuted }]} />
               </View>
             ) : (
               <Icon name={tab.icon} color={color} filled={focused} size={tab.icon === 'create' ? 28 : 26}

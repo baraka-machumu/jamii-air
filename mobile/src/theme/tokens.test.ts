@@ -15,18 +15,40 @@ function contrast(a: string, b: string): number {
 describe.each<ColorScheme>(['light', 'dark'])('%s palette', (scheme) => {
   const c = palettes[scheme];
 
+  // Text, and anything read as text (a link, a count, a coloured label), needs 4.5 : 1.
   it.each([
     ['text on bg', c.text, c.bg],
     ['text on surface', c.text, c.surface],
+    ['text on muted surface (chips, chat)', c.text, c.surfaceMuted],
     ['muted text on bg', c.textMuted, c.bg],
+    ['muted text on surface', c.textMuted, c.surface],
+    ['muted text on muted surface', c.textMuted, c.surfaceMuted],
     ['button label on primary', c.onPrimary, c.primary],
     ['primary link on bg', c.primary, c.bg],
+    ['primary (active tab) on surface', c.primary, c.surface],
+    ['label on brand (own bubble, unread count)', c.onBrand, c.brand],
+    ['brand link on bg', c.brand, c.bg],
+    ['brand on surface', c.brand, c.surface],
+    ['brand label on brand-soft chip', c.brand, c.brandSoft],
+    ['text on primary-soft chip', c.text, c.primarySoft],
     ['accent ("Following") on bg', c.accent, c.bg],
     ['liked heart on bg', c.like, c.bg],
+    ['liked heart on surface', c.like, c.surface],
     ['danger on bg', c.danger, c.bg],
+    ['danger on surface', c.danger, c.surface],
     ['success on bg', c.success, c.bg],
   ])('%s meets WCAG AA (4.5 : 1)', (_name, fg, bg) => {
     expect(contrast(fg, bg)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  // Icons and shapes need 3 : 1 (WCAG 1.4.11): an icon on its tinted tile, the + disc on the bar.
+  it.each([
+    ['primary icon on primary-soft tile', c.primary, c.primarySoft],
+    ['brand icon on brand-soft tile', c.brand, c.brandSoft],
+    ['centre + disc on surface', c.primary, c.surface],
+    ['story ring on bg', c.brand, c.bg],
+  ])('%s meets 3 : 1', (_name, fg, bg) => {
+    expect(contrast(fg, bg)).toBeGreaterThanOrEqual(3);
   });
 });
 
@@ -40,7 +62,8 @@ describe('theme', () => {
   });
 
   it('builds a theme from the palette of the scheme', () => {
-    expect(buildTheme('dark').colors.bg).toBe('#0E0E12');
-    expect(buildTheme('light').colors.primary).toBe('#C2410C');
+    expect(buildTheme('dark').colors.bg).toBe('#14121A');
+    expect(buildTheme('light').colors.primary).toBe('#B4502A');
+    expect(buildTheme('light').colors.brand).toBe('#5B2EBF');
   });
 });

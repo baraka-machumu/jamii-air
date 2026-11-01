@@ -207,7 +207,7 @@ export default function Comments() {
         <View style={styles.fill}>{list}</View>
 
         {replyTo && !cannotComment ? (
-          <View style={[styles.replyBar, { borderColor: colors.border, backgroundColor: colors.surface, paddingHorizontal: space.md }]}>
+          <View style={[styles.replyBar, { borderColor: colors.border, backgroundColor: colors.surfaceMuted, paddingHorizontal: space.md }]}>
             <Text variant="caption" muted style={styles.fill}>{t('comments.replyingTo', { username: replyTo.username })}</Text>
             <Pressable onPress={() => setReplyTo(null)} accessibilityRole="button" hitSlop={8}
               accessibilityLabel={t('comments.cancelReply')}>
@@ -231,7 +231,7 @@ export default function Comments() {
                   accessibilityLabel={replyTo ? t('comments.replyPlaceholder', { username: replyTo.username }) : t('comments.placeholder')}
                   multiline
                   maxLength={MAX_COMMENT}
-                  style={[styles.input, { color: colors.text, backgroundColor: colors.surface }]}
+                  style={[styles.input, { color: colors.text, backgroundColor: colors.surfaceMuted }]}
                 />
                 {length >= COMMENT_COUNTER_FROM && (
                   <Text variant="caption" color={length >= MAX_COMMENT ? colors.danger : colors.textMuted} style={styles.counter}

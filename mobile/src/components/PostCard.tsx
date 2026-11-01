@@ -128,7 +128,7 @@ export const PostCard = memo(PostCardView, (a, b) => a.post === b.post && a.onOp
 /** First-load placeholder (App Flow §5: 3 skeleton cards). */
 export function PostSkeleton() {
   const { colors, space } = useTheme();
-  const block = { backgroundColor: colors.surface };
+  const block = { backgroundColor: colors.surfaceMuted };
   return (
     <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ marginBottom: space.lg }}>
       <View style={[styles.header, { paddingHorizontal: space.md }]}>

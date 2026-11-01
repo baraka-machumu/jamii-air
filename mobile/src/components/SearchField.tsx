@@ -10,7 +10,7 @@ export function SearchField({ value, onChangeText, ref, ...rest }: TextInputProp
   const { t } = useTranslation();
   const { colors, radius, type } = useTheme();
   return (
-    <View style={[styles.box, { backgroundColor: colors.surface, borderRadius: radius.sm }]}>
+    <View style={[styles.box, { backgroundColor: colors.surfaceMuted, borderRadius: radius.sm }]}>
       <Icon name="search" size={20} color={colors.textMuted} />
       <TextInput ref={ref} value={value} onChangeText={onChangeText} placeholderTextColor={colors.textMuted}
         style={[type.body, styles.input, { color: colors.text }]} autoCapitalize="none" autoCorrect={false}

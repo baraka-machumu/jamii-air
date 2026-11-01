@@ -1,16 +1,27 @@
-// Design tokens (Design Brief §4, approved screen designs). The one source of colour, type,
-// spacing and shape for the app: components read them through useTheme(), never as literals.
+// Design tokens (Design Brief §4, with the Kidili palette of §15.3). The one source of colour,
+// type, spacing and shape for the app: components read them through useTheme(), never as literals.
 
 export type ColorScheme = 'light' | 'dark';
 
 export interface Palette {
+  /** Screen background (Kidili cream in light). */
   bg: string;
+  /** Cards, sheets, bars and inputs: they sit on `bg`. */
   surface: string;
+  /** Chips, placeholders, chat and room backgrounds. */
+  surfaceMuted: string;
   text: string;
   textMuted: string;
+  /** Kidili terracotta: buttons, the active tab, the centre +. */
   primary: string;
   onPrimary: string;
-  brandDeep: string;
+  /** Tinted tile or chip behind a `primary` icon (non-text). */
+  primarySoft: string;
+  /** Kidili purple: logo, wordmark, story rings, own chat bubbles, links, unread counts. */
+  brand: string;
+  onBrand: string;
+  /** Tinted tile or chip behind a `brand` icon or label. */
+  brandSoft: string;
   accent: string;
   like: string;
   danger: string;
@@ -18,39 +29,46 @@ export interface Palette {
   border: string;
 }
 
-/** Every text / background pair is WCAG 2.1 AA (≥ 4.5 : 1); tests/tokens.test.ts checks it. */
+/** Every text / background pair is WCAG 2.1 AA (≥ 4.5 : 1); tokens.test.ts checks it (BR-BN-05). */
 export const palettes: Record<ColorScheme, Palette> = {
   light: {
-    bg: '#FFFFFF',
-    surface: '#F3F4F6',
-    text: '#111827',
-    textMuted: '#6B7280',
-    primary: '#C2410C', // Jamii Terracotta
+    bg: '#FAF7F2',
+    surface: '#FFFFFF',
+    surfaceMuted: '#F3EEE6',
+    text: '#1E1A16',
+    textMuted: '#6B6259',
+    primary: '#B4502A', // Kidili terracotta, darkened from #C0603A for AA
     onPrimary: '#FFFFFF',
-    brandDeep: '#1E1B4B', // Evening Indigo
+    primarySoft: '#F8E9E1',
+    brand: '#5B2EBF', // Kidili purple
+    onBrand: '#FFFFFF',
+    brandSoft: '#EEE8FB',
     accent: '#0F766E', // Lake Teal
-    like: '#E11D48',
+    like: '#D91C47', // darker than #E11D48, which is 4.4 : 1 on the cream
     danger: '#B91C1C',
     success: '#15803D',
-    border: '#E5E7EB',
+    border: '#ECE6DC',
   },
   dark: {
-    bg: '#0E0E12',
-    surface: '#18181F',
-    text: '#F3F4F6',
-    textMuted: '#9CA3AF',
-    primary: '#FF7A45',
-    onPrimary: '#0E0E12',
-    brandDeep: '#1E1B4B',
+    bg: '#14121A',
+    surface: '#1E1B25',
+    surfaceMuted: '#27232F',
+    text: '#F3EFE9',
+    textMuted: '#A9A1B3',
+    primary: '#F08A5D',
+    onPrimary: '#14121A',
+    primarySoft: '#3A241B',
+    brand: '#C9B8F5',
+    onBrand: '#14121A',
+    brandSoft: '#2A2340',
     accent: '#2DD4BF',
     like: '#FB7185',
     danger: '#F87171',
     success: '#4ADE80',
-    border: '#2A2A33',
+    border: '#2E2A36',
   },
 };
 
-/** 4-pt grid; screen side padding is `md`. */
 /**
  * Chrome drawn ON TOP of media — the carousel counter, a video's play button and duration
  * (BR-CT-07/09). Media is a photo or video, not a theme surface, so these do not change with the
@@ -63,13 +81,19 @@ export const overlay = {
   behindVideo: '#000000',
 } as const;
 
+/** 4-pt grid; screen side padding is `md`. */
 export const space = { xxs: 4, xs: 8, sm: 12, md: 16, lg: 24, xl: 32 } as const;
 
-/** 8 inputs and small cards · 12 sheets and dialogs · full avatars and pills · photos have none. */
-export const radius = { sm: 8, md: 12, full: 999 } as const;
+/**
+ * 8 inputs · 12 sheets and dialogs · 16 Kidili cards (§15.4) · full avatars and pills · photos in
+ * the feed have none.
+ */
+export const radius = { sm: 8, md: 12, lg: 16, full: 999 } as const;
 
-/** Display face for the logo and onboarding headlines only; UI text uses the system font. */
+/** Display face for onboarding headlines only; UI text uses the system font. */
 export const displayFont = 'Nunito_800ExtraBold';
+/** The KIDILI wordmark's weight (Design Brief §15.2); used nowhere else. */
+export const wordmarkFont = 'Nunito_900Black';
 
 export const type = {
   display: { fontSize: 28, lineHeight: 34, fontFamily: displayFont },

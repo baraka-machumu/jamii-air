@@ -13,13 +13,13 @@ import { displayFont } from '@/theme/tokens';
 
 export function UpdateRequired({ url = storeUrl() }: { url?: string | null }) {
   const { t } = useTranslation();
-  const { colors, space, scheme } = useTheme();
+  const { colors, space } = useTheme();
   const minVersion = useUpdateRequired((s) => s.minVersion);
 
   return (
     <Screen edges={['top', 'bottom']}>
       <View style={styles.body} accessibilityRole="alert">
-        <Wordmark accent={colors.primary} ink={scheme === 'dark' ? colors.text : colors.brandDeep} />
+        <Wordmark accent={colors.primary} ink={colors.brand} />
         <Text accessibilityRole="header" style={[styles.title, { fontFamily: displayFont, marginTop: space.lg }]}>
           {t('update.title')}
         </Text>

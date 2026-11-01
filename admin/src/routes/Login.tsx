@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { errorMessage } from '@/api/errors';
 import { enrollCode, type LoginStep, login, verifyCode } from '@/auth/session';
 import { Field } from '@/components/Field';
+import { KidiliMark } from '@/components/KidiliMark';
 import { QrCode } from '@/components/QrCode';
 import { Button } from '@/components/ui/button';
 import { useSession } from '@/stores/session';
@@ -16,9 +17,12 @@ export default function Login() {
   const [step, setStep] = useState<LoginStep | null>(null);
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-sm flex-col justify-center gap-6 p-6">
-      <div>
-        <h1 className="text-xl font-semibold text-brand-deep">Jamii Air Admin</h1>
-        <p className="text-muted-foreground">Moderation portal</p>
+      <div className="flex items-center gap-3">
+        <KidiliMark className="size-10 shrink-0" />
+        <div>
+          <h1 className="text-xl font-semibold text-brand-deep dark:text-foreground">Kidili Admin</h1>
+          <p className="text-muted-foreground">Moderation portal</p>
+        </div>
       </div>
 
       {/* The notice survives into the second step, but it is about the session that ended. */}

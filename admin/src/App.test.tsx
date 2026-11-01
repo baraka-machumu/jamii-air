@@ -21,7 +21,7 @@ describe('before signing in', () => {
 
   it('sends every address to Login', () => {
     renderAt(<App />, '/users/u1');
-    expect(screen.getByRole('heading', { name: 'Jamii Air Admin' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Kidili Admin' })).toBeInTheDocument();
   });
 
   it('says so when the session expired rather than looking like a fresh visit', () => {
@@ -84,6 +84,6 @@ describe('once signed in', () => {
     fireEvent.pointerDown(screen.getByRole('button', { name: 'Account: Moda' }), { button: 0, pointerType: 'mouse' });
     fireEvent.click(screen.getByRole('menuitem', { name: 'Log out' }));
     expect(useSession.getState().status).toBe('signedOut');
-    expect(screen.getByRole('heading', { name: 'Jamii Air Admin' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Kidili Admin' })).toBeInTheDocument();
   });
 });

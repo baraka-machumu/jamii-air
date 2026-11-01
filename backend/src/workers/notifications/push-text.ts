@@ -29,5 +29,5 @@ export function pushLanguage(deviceLocale: string | null, accountLocale: string 
 }
 
 export function pushText(type: NotificationType, username: string, lang: Lang): { title: string; body: string } {
-  return { title: 'Jamii Air', body: TEXT[lang][type](username) };
+  return { title: 'Kidili', body: TEXT[lang][type](username) };
 }

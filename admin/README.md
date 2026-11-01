@@ -1,4 +1,4 @@
-# Jamii Air — Admin portal
+# Jamii Air — Admin portal (Kidili Admin)
 
 The moderation web app for 1–3 team members: React + Vite + TypeScript, Tailwind + shadcn/ui.
 Built in Phase 4 of the [implementation plan](../docs/06-implementation-plan.md); the screens and

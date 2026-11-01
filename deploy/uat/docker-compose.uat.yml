@@ -44,7 +44,7 @@ x-app-env: &app-env
   SMTP_USER: ${SMTP_USER:-}
   SMTP_PASSWORD: ${SMTP_PASSWORD:-}
   SMTP_SECURE: ${SMTP_SECURE:-false}
-  MAIL_FROM: ${MAIL_FROM:-Jamii Air (UAT) <no-reply@jamii-air.uat>}
+  MAIL_FROM: ${MAIL_FROM:-Kidili (UAT) <no-reply@jamii-air.uat>}
   MIN_APP_VERSION: ${MIN_APP_VERSION:-}
   # Rate limits count the client, not the portal's nginx (Plan 5.4, docs/09 F2). Only this stack's
   # Docker network is trusted: the API is published by DNAT (checked 2026-10-22), so a client on

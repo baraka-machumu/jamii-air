@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Document** | 04 — Design Brief |
-| **Version** | 2.3 (2026-11-01: K1.4a — §15.4 button kinds as built) · 2.2 (2026-11-01: K1.2 built — §15.2 icons, splash and line as built) · 2.1 (2026-11-01: K1.1 built — §15.3 gains the dark palette as built and a darker `like` for the cream) · 2.0 (2026-10-31: **Kidili** — new brand, colours, navigation and screens, §15; screens approved by the owner 2026-10-31) · 1.3 (designs delivered and approved on a Claude design canvas, §12; §5 motion as built) |
+| **Version** | 2.4 (2026-11-01: K1.6 — §15.2 the portal, share page and messages as built) · 2.3 (2026-11-01: K1.4a — §15.4 button kinds as built) · 2.2 (2026-11-01: K1.2 built — §15.2 icons, splash and line as built) · 2.1 (2026-11-01: K1.1 built — §15.3 gains the dark palette as built and a darker `like` for the cream) · 2.0 (2026-10-31: **Kidili** — new brand, colours, navigation and screens, §15; screens approved by the owner 2026-10-31) · 1.3 (designs delivered and approved on a Claude design canvas, §12; §5 motion as built) |
 | **Status** | **Approved** — 2026-10-11 |
 | **Date** | 2026-10-09 |
 | **For** | Whoever produces the designs (the engineer with Claude Code until a designer joins — D-11), mobile and web engineers |
@@ -251,6 +251,11 @@ and takes its *look* from the second image:
   layer; the monochrome icon, used for Android's themed icons and for notifications, is a white
   bubble with the K cut out. The splash is the mark alone, 120 dp wide, on cream (`#14121A` in dark
   mode). Notification accent: `brand`.
+- **Everywhere else (K1.6):** push titles, the reset-code email (subject, sign-off and sender
+  name), API error texts and the authenticator label for new admin enrolments say **Kidili**. The
+  share-link page is cream with the purple mark and KIDILI. The admin portal is **Kidili Admin**
+  with the mark as its favicon and logo, and leads with the purple (`primary` `#5B2EBF`, white on
+  it 8.1 : 1; dark `#C9B8F5`), as on the canvas's portal page; its neutral greys are unchanged.
 - **Line:** "Chat · Business · Shop" / "Gumzo · Biashara · Duka" (from the user design), to be
   validated like §2.3. Since K1.2 it is the Welcome screen's headline, replacing "Your people, on air".
 

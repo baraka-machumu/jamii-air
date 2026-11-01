@@ -8,7 +8,7 @@ export interface Mail {
   text: string;
   /**
    * A stable label for the logs. The subject cannot be used: a reset email puts the code in it
-   * ("Your Jamii Air code: 123456"), so logging the subject writes a live credential to the log
+   * ("Your Kidili code: 123456"), so logging the subject writes a live credential to the log
    * and undoes SR-05, which hashes the code precisely so it cannot be read back.
    */
   kind: 'password-reset';

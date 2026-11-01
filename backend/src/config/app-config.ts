@@ -157,7 +157,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
   const smtp = {
     host: env.SMTP_HOST ?? 'localhost',
     port: smtpPort,
-    from: env.MAIL_FROM ?? 'Jamii Air <no-reply@jamii-air.local>',
+    from: env.MAIL_FROM ?? 'Kidili <no-reply@jamii-air.local>',
     user: env.SMTP_USER || null,
     password: env.SMTP_PASSWORD || null,
     // 465 is implicit TLS; 587 and 2525 start plain and upgrade with STARTTLS, which nodemailer

@@ -12,7 +12,7 @@ export function newTotpSecret(): string {
 }
 
 /** otpauth:// URI for the enrolment QR code. */
-export function totpUri(secret: string, account: string, issuer = 'Jamii Air Admin'): string {
+export function totpUri(secret: string, account: string, issuer = 'Kidili Admin'): string {
   const label = encodeURIComponent(`${issuer}:${account}`);
   const params = new URLSearchParams({ secret, issuer, algorithm: 'SHA1', digits: String(DIGITS), period: String(STEP_SECONDS) });
   return `otpauth://totp/${label}?${params.toString()}`;

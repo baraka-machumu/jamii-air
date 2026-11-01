@@ -9,7 +9,7 @@ const createTransport = vi.spyOn(nodemailer, 'createTransport');
 
 const config = (smtp: Partial<AppConfig['smtp']> = {}): AppConfig => ({
   smtp: {
-    host: 'localhost', port: 1025, from: 'Jamii Air <no-reply@jamii-air.local>',
+    host: 'localhost', port: 1025, from: 'Kidili <no-reply@jamii-air.local>',
     user: null, password: null, secure: false, ...smtp,
   },
 } as AppConfig);
@@ -35,10 +35,10 @@ describe('MailService', () => {
 
   it('puts the configured sender on the message and does not pass `kind` to the transport', async () => {
     await new MailService(config()).send({
-      to: 'amina@example.com', subject: 'Your Jamii Air code: 273940', text: 'code: 273940', kind: 'password-reset',
+      to: 'amina@example.com', subject: 'Your Kidili code: 273940', text: 'code: 273940', kind: 'password-reset',
     });
     const sent = sendMail.mock.calls[0]![0] as Record<string, unknown>;
-    expect(sent.from).toBe('Jamii Air <no-reply@jamii-air.local>');
+    expect(sent.from).toBe('Kidili <no-reply@jamii-air.local>');
     expect(sent.to).toBe('amina@example.com');
     expect(sent).not.toHaveProperty('kind');
   });
@@ -49,12 +49,12 @@ describe('MailService', () => {
   it('never writes the address, the body or the subject to the log', async () => {
     const log = vi.spyOn(Logger.prototype, 'log').mockImplementation(() => undefined);
     await new MailService(config()).send({
-      to: 'amina@example.com', subject: 'Your Jamii Air code: 273940', text: 'Your code is 273940', kind: 'password-reset',
+      to: 'amina@example.com', subject: 'Your Kidili code: 273940', text: 'Your code is 273940', kind: 'password-reset',
     });
 
     expect(log).toHaveBeenCalledWith({ kind: 'password-reset' }, 'mail sent');
     const written = JSON.stringify(log.mock.calls);
-    for (const secret of ['273940', 'amina@example.com', 'Your Jamii Air code']) {
+    for (const secret of ['273940', 'amina@example.com', 'Your Kidili code']) {
       expect(written).not.toContain(secret);
     }
   });

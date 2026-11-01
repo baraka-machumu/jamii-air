@@ -22,6 +22,7 @@ import {
   DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { KidiliMark } from '@/components/KidiliMark';
 import { cn } from '@/lib/utils';
 import { logout } from '@/auth/session';
 import { useSession } from '@/stores/session';
@@ -105,11 +106,11 @@ export function AppLayout() {
           )}
         >
           <div className={cn('flex h-14 shrink-0 items-center gap-2 border-b', collapsed ? 'justify-center px-2' : 'px-4')}>
-            <Link to="/" className="flex min-w-0 items-center gap-2" aria-label="Jamii Air Admin, go to dashboard">
-              <span aria-hidden className="grid size-7 shrink-0 place-items-center rounded-md bg-primary text-sm font-bold text-primary-foreground">J</span>
+            <Link to="/" className="flex min-w-0 items-center gap-2" aria-label="Kidili Admin, go to dashboard">
+              <KidiliMark className="size-7 shrink-0" />
               {!collapsed && (
-                <span className="truncate font-semibold text-brand-deep dark:text-foreground">
-                  Jamii Air <span className="font-normal text-muted-foreground">Admin</span>
+                <span className="truncate font-black tracking-wide text-brand dark:text-primary">
+                  KIDILI <span className="font-normal tracking-normal text-muted-foreground">Admin</span>
                 </span>
               )}
             </Link>
@@ -236,7 +237,7 @@ function SidebarLink({ item, collapsed, active, onNavigate }: {
         'flex items-center gap-2.5 rounded-md px-2 py-2 transition-colors',
         collapsed && 'justify-center px-0',
         isActive
-          ? 'bg-primary/10 font-medium text-primary'
+          ? 'bg-primary/10 font-semibold text-brand-deep dark:text-primary'
           : 'text-foreground/80 hover:bg-secondary hover:text-foreground',
       )}
     >

@@ -29,7 +29,7 @@ describe('totp', () => {
     expect(base32Decode(base32Encode(bytes))).toEqual(bytes);
     expect(newTotpSecret()).toMatch(/^[A-Z2-7]{32}$/);
     expect(totpUri('ABC', 'neema@jamii.test')).toBe(
-      'otpauth://totp/Jamii%20Air%20Admin%3Aneema%40jamii.test?secret=ABC&issuer=Jamii+Air+Admin&algorithm=SHA1&digits=6&period=30');
+      'otpauth://totp/Kidili%20Admin%3Aneema%40jamii.test?secret=ABC&issuer=Kidili+Admin&algorithm=SHA1&digits=6&period=30');
   });
 });
 

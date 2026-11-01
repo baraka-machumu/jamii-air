@@ -14,7 +14,7 @@ describe('push text', () => {
     for (const lang of ['en', 'sw'] as const) {
       for (const type of ['LIKE', 'COMMENT', 'REPLY', 'FOLLOW', 'FOLLOW_REQUEST', 'FOLLOW_ACCEPTED'] as const) {
         const text = pushText(type, 'amina', lang);
-        expect(text.title).toBe('Jamii Air');
+        expect(text.title).toBe('Kidili');
         expect(text.body).toMatch(/^amina /);
       }
     }

@@ -34,7 +34,7 @@ export class AppVersionGuard implements CanActivate {
     const version = typeof header === 'string' ? header.trim() : undefined;
     if (!version || !VERSION_PATTERN.test(version)) return true;
     if (compareVersions(version, min) < 0) {
-      throw new ApiError(426, 'APP_VERSION_UNSUPPORTED', 'Please update Jamii Air to continue.', { minVersion: min });
+      throw new ApiError(426, 'APP_VERSION_UNSUPPORTED', 'Please update Kidili to continue.', { minVersion: min });
     }
     return true;
   }

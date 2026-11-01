@@ -101,10 +101,10 @@ Startup must not wait for feed, profile or notification requests (Guidelines §2
 | Step | User | System |
 |---|---|---|
 | 1 | Taps **Create account** on Welcome. | Shows Sign-up form. |
-| 2 | Enters invite code *(pilot only)*, email, username, password and **date of birth** (native date picker); ticks "I accept the Terms and Privacy Policy". | Inline validation as they type: username format & length; password ≥ 8; email format; date of birth shows "You must be 18 or older to use Jamii Air" if under 18 and disables **Create account**. The server re-checks age (never trust the client). Username availability is checked on submit only (no per-keystroke API calls). |
+| 2 | Enters invite code *(pilot only)*, email, username, password and **date of birth** (native date picker); ticks "I accept the Terms and Privacy Policy". | Inline validation as they type: username format & length; password ≥ 8; email format; date of birth shows "You must be 18 or older to use Kidili" if under 18 and disables **Create account**. The server re-checks age (never trust the client). Username availability is checked on submit only (no per-keystroke API calls). |
 | 3 | Taps **Create account**. | `POST /auth/register`. Button shows spinner, form disabled. |
 | 4a | — | **Success** → tokens stored → **Onboarding 1**. |
-| 4b | — | `USERNAME_TAKEN` / `EMAIL_TAKEN` → error under the field. `INVITE_INVALID` → error under invite field. `UNDER_MINIMUM_AGE` → "You must be 18 or older to use Jamii Air." `RATE_LIMITED` → "Too many attempts, try again in a few minutes." |
+| 4b | — | `USERNAME_TAKEN` / `EMAIL_TAKEN` → error under the field. `INVITE_INVALID` → error under invite field. `UNDER_MINIMUM_AGE` → "You must be 18 or older to use Kidili." `RATE_LIMITED` → "Too many attempts, try again in a few minutes." |
 
 ### 4.2 Onboarding (first session only)
 

@@ -178,7 +178,7 @@ test.describe.serial('the portal does the job Phase 4 exists for', () => {
     await page.getByRole('button', { name: 'Account: E2E Admin' }).click();
     await page.getByRole('menuitem', { name: 'Log out' }).click();
 
-    await expect(page.getByRole('heading', { name: 'Jamii Air Admin' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Kidili Admin' })).toBeVisible();
     await expect(page.getByLabel('Email')).toBeVisible();
   });
 });

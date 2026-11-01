@@ -79,7 +79,7 @@ describe('admin (e2e)', () => {
     const admin = await arrangeAdmin('MODERATOR');
     const step1 = (await http().post('/api/v1/admin/auth/login').send({ email: admin.email, password: PASSWORD }).expect(200)).body;
     expect(step1).toMatchObject({ enrollmentRequired: true, totpRequired: false, enrollment: { secret: expect.stringMatching(/^[A-Z2-7]{32}$/) } });
-    expect(step1.enrollment.otpauthUrl).toMatch(/^otpauth:\/\/totp\/Jamii%20Air%20Admin%3A/);
+    expect(step1.enrollment.otpauthUrl).toMatch(/^otpauth:\/\/totp\/Kidili%20Admin%3A/);
     admin.secret = step1.enrollment.secret;
 
     expect((await http().post('/api/v1/admin/auth/totp/enroll').send({ challengeToken: step1.challengeToken, code: '000000' }).expect(401)).body.error.code)

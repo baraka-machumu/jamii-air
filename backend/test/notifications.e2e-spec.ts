@@ -124,7 +124,7 @@ describe('notifications (e2e)', () => {
     const batch = expo.sent.at(-1)!;
     expect(batch).toHaveLength(3); // one request for all devices
     const byToken = Object.fromEntries(batch.map((m) => [m.to, m]));
-    expect(byToken[swPhone]).toMatchObject({ title: 'Jamii Air', body: `${neema.username} ameanza kukufuata`, channelId: 'default' });
+    expect(byToken[swPhone]).toMatchObject({ title: 'Kidili', body: `${neema.username} ameanza kukufuata`, channelId: 'default' });
     expect(byToken[enPhone].body).toBe(`${neema.username} started following you`);
     expect(byToken[enPhone].data).toEqual({ notificationId: followId, type: 'FOLLOW', username: neema.username });
 

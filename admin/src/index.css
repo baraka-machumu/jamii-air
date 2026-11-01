@@ -1,4 +1,4 @@
-/* The portal's tokens (Design Brief §13): Tailwind v4 with the Jamii colours mapped onto the
+/* The portal's tokens (Design Brief §13, §15): Tailwind v4 with the Kidili colours mapped onto the
    shadcn/ui variable names, so components added with the shadcn CLI match without edits.
 
    Dark mode is now built. It is *selected*, not an automatic flip: every dark value is its own
@@ -6,7 +6,7 @@
    over the OS either way — `html[data-theme]` is stamped by src/stores/theme.ts.
 
    The chart series colours are a separate, validated set (see --chart-1…4). They are not the UI
-   primary: brand terracotta is chrome (buttons, focus ring), while chart data uses hues that were
+   primary: Kidili purple is chrome (buttons, focus ring, the active page), while chart data uses hues that were
    run through the data-viz checks for lightness band, chroma floor, colourblind separation and
    contrast against each surface. Light slots 3 and 4 came back under 3:1, which obliges visible
    labels or a table view — the dashboard keeps both (direct end labels and Show daily numbers). */
@@ -17,9 +17,11 @@
 @theme {
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 
-  /* Jamii brand (mobile/src/theme/tokens.ts, Design Brief §4.1) */
-  --color-brand: #c2410c;
-  --color-brand-deep: #1e1b4b;
+  /* Kidili brand (mobile/src/theme/tokens.ts, Design Brief §15.3). The portal leads with the purple,
+     as on the design canvas; terracotta stays the app's button colour. White on #5b2ebf is 8.1 : 1. */
+  --color-brand: #5b2ebf;
+  --color-brand-deep: #45229a;
+  --color-brand-soft: #eee8fb;
   --color-accent: #0f766e;
 
   /* shadcn/ui surface + text scale, neutral base */
@@ -29,7 +31,7 @@
   --color-card-foreground: #111827;
   --color-popover: #ffffff;
   --color-popover-foreground: #111827;
-  --color-primary: #c2410c;
+  --color-primary: #5b2ebf;
   --color-primary-foreground: #ffffff;
   --color-secondary: #f3f4f6;
   --color-secondary-foreground: #111827;
@@ -42,7 +44,7 @@
   --color-info: #1d4ed8;
   --color-border: #e5e7eb;
   --color-input: #e5e7eb;
-  --color-ring: #c2410c;
+  --color-ring: #5b2ebf;
 
   /* The app frame sits a step back from the cards it holds. */
   --color-canvas: #f7f7f8;
@@ -75,8 +77,8 @@
     --color-card-foreground: #f3f4f6;
     --color-popover: #1a1a22;
     --color-popover-foreground: #f3f4f6;
-    --color-primary: #f97316;
-    --color-primary-foreground: #1b1206;
+    --color-primary: #c9b8f5;
+    --color-primary-foreground: #14121a;
     --color-secondary: #22222c;
     --color-secondary-foreground: #f3f4f6;
     --color-muted: #22222c;
@@ -88,7 +90,7 @@
     --color-info: #60a5fa;
     --color-border: #2a2a33;
     --color-input: #2a2a33;
-    --color-ring: #f97316;
+    --color-ring: #c9b8f5;
 
     --color-canvas: #0a0a0d;
     --color-sidebar: #111118;

@@ -5,13 +5,13 @@ import { Injectable } from '@nestjs/common';
 import { idempotency } from '../../common/idempotency/idempotency-key.js';
 import { clampLimit, decodeCursor, type Page, toPage } from '../../common/pagination/cursor.js';
 import {
-  type FeedRow, type GridRow, type PostRow, PostsProcedures, type SavedRow, type TagRow,
+  type FeedRow, type GridRow, type OceanRow, type PostRow, PostsProcedures, type SavedRow, type TagRow,
 } from '../../infrastructure/db-procedures/posts.procedures.js';
 import { MediaJobs } from '../../infrastructure/queue/queue.module.js';
 import { MediaUrls } from '../../infrastructure/storage/media-urls.js';
 import { ShareLinks } from '../links/share-links.js';
 import { MediaService } from '../media/media.service.js';
-import type { CreatePostDto, GridItem, Post, PostMedia, TagPage } from './posts.dto.js';
+import type { CreatePostDto, GridItem, OceanPost, Post, PostMedia, TagPage } from './posts.dto.js';
 
 /** One element of the `media` jsonb array the post and feed procedures build. */
 interface MediaJson {
@@ -69,6 +69,13 @@ export class PostsService {
     return toPage(rows, size, (r) => ({ time: r.created_at!, id: r.post_id! }), (r) => this.toPost(viewerId, r));
   }
 
+  /** The Ocean (BR-OC-01): every video the viewer may see, newest first. */
+  async ocean(viewerId: string, cursor?: string, limit?: number): Promise<Page<OceanPost>> {
+    const size = clampLimit(limit);
+    const rows = await this.procedures.getOceanFeed(viewerId, decodeCursor(cursor), size);
+    return toPage(rows, size, (r) => ({ time: r.created_at!, id: r.post_id! }), (r) => this.toOceanPost(viewerId, r));
+  }
+
   async profileGrid(viewerId: string, username: string, cursor?: string, limit?: number): Promise<Page<GridItem>> {
     const size = clampLimit(limit);
     const rows = await this.procedures.getProfilePosts(viewerId, username, decodeCursor(cursor), size);
@@ -101,6 +108,15 @@ export class PostsService {
     return {
       id: r.post_id!, status: r.status!, type: r.type!, thumbUrl: this.urls.of(r.thumb_key),
       blurhash: r.blurhash, mediaCount: r.media_count ?? 0, createdAt: r.created_at!.toISOString(),
+    };
+  }
+
+  /** The Ocean holds PUBLISHED videos only, so its rows carry neither status nor type. */
+  private toOceanPost(viewerId: string, r: OceanRow): OceanPost {
+    return {
+      ...this.toPost(viewerId, { ...r, status: 'PUBLISHED', type: 'VIDEO' }),
+      viewCount: r.view_count ?? 0,
+      followingAuthor: r.following_author ?? false,
     };
   }
 

@@ -1,10 +1,10 @@
-// /api/v1/posts, /api/v1/feed, the profile grid and Saved (TRD §5.1). All routes need a user access token.
+// /api/v1/posts, /api/v1/feed, /api/v1/ocean, the profile grid and Saved (TRD §5.1). All routes need a user access token.
 import { Body, Controller, Delete, Get, HttpCode, Param, ParseUUIDPipe, Patch, Post as HttpPost, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiHeader, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { type AuthUser, CurrentUser } from '../../common/auth/auth.decorators.js';
 import { PageQuery } from '../users/users.dto.js';
-import { CreatePostDto, FeedPage, GridPage, Post, TagPage, UpdatePostDto } from './posts.dto.js';
+import { CreatePostDto, FeedPage, GridPage, OceanPage, Post, TagPage, UpdatePostDto } from './posts.dto.js';
 import { PostsService } from './posts.service.js';
 import { IdempotencyKey } from '../../common/http/request-headers.js';
 
@@ -55,6 +55,14 @@ export class PostsController {
   @ApiResponse({ status: 200, type: FeedPage })
   feed(@CurrentUser() user: AuthUser, @Query() page: PageQuery) {
     return this.posts.feed(user.id, page.cursor, page.limit);
+  }
+
+  @Get('ocean')
+  @Throttle({ default: { limit: 120, ttl: 60_000 } })
+  @ApiOperation({ summary: 'The Ocean: videos from public accounts and the people you follow, newest first (BR-OC-01)' })
+  @ApiResponse({ status: 200, type: OceanPage })
+  ocean(@CurrentUser() user: AuthUser, @Query() page: PageQuery) {
+    return this.posts.ocean(user.id, page.cursor, page.limit);
   }
 
   @Get('tags/:tag/posts')

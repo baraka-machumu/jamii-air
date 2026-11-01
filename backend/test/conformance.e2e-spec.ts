@@ -8,7 +8,7 @@ import pg from 'pg';
 import request from 'supertest';
 import type { App } from 'supertest/types.js';
 import { totpAt, totpStep } from '../src/infrastructure/crypto/totp.js';
-import { as, createApp, expectConforms, openApiDocument, publishPost, registerUser, uploadPhoto } from './support.js';
+import { as, createApp, expectConforms, openApiDocument, publishPost, publishVideo, registerUser, uploadPhoto } from './support.js';
 
 describe('API responses match the OpenAPI spec (e2e)', () => {
   let app: INestApplication<App>;
@@ -72,6 +72,9 @@ describe('API responses match the OpenAPI spec (e2e)', () => {
     ok('SaveState', (await as(app, fan).put(`/api/v1/posts/${postId}/save`).expect(200)).body);
     ok('GridPage', (await as(app, fan).get('/api/v1/me/saved').expect(200)).body);
     ok('SaveState', (await as(app, fan).delete(`/api/v1/posts/${postId}/save`).expect(200)).body);
+    const videoId = await publishVideo(app, me);
+    ok('OceanPage', (await as(app, fan).get('/api/v1/ocean?limit=5').expect(200)).body);
+    ok('ViewState', (await as(app, fan).post(`/api/v1/posts/${videoId}/view`).expect(200)).body);
 
     ok('NotificationPage', (await as(app, me).get('/api/v1/notifications').expect(200)).body);
     ok('UnreadCount', (await as(app, me).get('/api/v1/notifications/unread-count').expect(200)).body);

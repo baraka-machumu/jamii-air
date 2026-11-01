@@ -25,6 +25,12 @@ export class LikeState {
   @ApiProperty() likeCount!: number;
 }
 
+/** A video view (BR-OC-04). counted: this call was the viewer's first view; never for the author. */
+export class ViewState {
+  @ApiProperty() viewCount!: number;
+  @ApiProperty({ description: 'False on a repeat, on your own video and on a photo post' }) counted!: boolean;
+}
+
 /** Saving is private (BR-FD-13): no count, so nothing but the viewer's own state. */
 export class SaveState {
   @ApiProperty() saved!: boolean;

@@ -417,6 +417,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/ocean": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The Ocean: videos from public accounts and the people you follow, newest first (BR-OC-01) */
+        get: operations["PostsController_ocean"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/tags/{tag}/posts": {
         parameters: {
             query?: never;
@@ -481,6 +498,23 @@ export interface paths {
         post?: never;
         /** Unlike (idempotent) */
         delete: operations["EngagementController_unlike"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/posts/{id}/view": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** You watched this video (The Ocean): counts once per person, never for the author */
+        post: operations["EngagementController_view"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -1401,6 +1435,40 @@ export interface components {
             items: components["schemas"]["Post"][];
             nextCursor: string | null;
         };
+        OceanPost: {
+            id: string;
+            /**
+             * @description Only the author ever sees PROCESSING or FAILED
+             * @enum {string}
+             */
+            status: "PROCESSING" | "PUBLISHED" | "FAILED";
+            /**
+             * @description PHOTO covers one photo and a carousel; media.length says which
+             * @enum {string}
+             */
+            type: "PHOTO" | "VIDEO";
+            caption: string | null;
+            likeCount: number;
+            commentCount: number;
+            likedByMe: boolean;
+            /** @description In your Saved posts (BR-FD-13). Only you ever see this */
+            savedByMe: boolean;
+            isMine: boolean;
+            author: components["schemas"]["PostAuthor"];
+            /** @description In carousel order */
+            media: components["schemas"]["PostMedia"][];
+            /** @description Opens the post in the app, else a landing page with store links */
+            shareUrl: string;
+            createdAt: string;
+            /** @description People who have watched it, each once; never the author (BR-OC-04) */
+            viewCount: number;
+            /** @description You follow the author: hide the Follow button. False on your own videos */
+            followingAuthor: boolean;
+        };
+        OceanPage: {
+            items: components["schemas"]["OceanPost"][];
+            nextCursor: string | null;
+        };
         GridItem: {
             id: string;
             /**
@@ -1434,6 +1502,11 @@ export interface components {
         LikeState: {
             liked: boolean;
             likeCount: number;
+        };
+        ViewState: {
+            viewCount: number;
+            /** @description False on a repeat, on your own video and on a photo post */
+            counted: boolean;
         };
         SaveState: {
             saved: boolean;
@@ -2637,6 +2710,29 @@ export interface operations {
             };
         };
     };
+    PostsController_ocean: {
+        parameters: {
+            query?: {
+                /** @description nextCursor of the previous page */
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OceanPage"];
+                };
+            };
+        };
+    };
     PostsController_tagPosts: {
         parameters: {
             query?: {
@@ -2748,6 +2844,27 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LikeState"];
+                };
+            };
+        };
+    };
+    EngagementController_view: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ViewState"];
                 };
             };
         };

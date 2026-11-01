@@ -79,6 +79,30 @@ export async function publishPost(app: INestApplication<App>, user: TestUser, ca
   return post.id as string;
 }
 
+/**
+ * A PUBLISHED video post (BR-CT-07) without ffmpeg: the upload is placeholder bytes (the API only
+ * checks the object exists), and processing is completed the way the worker reports it, with
+ * the variants a real transcode makes. Transcoding itself is covered by the worker's own tests.
+ */
+export async function publishVideo(app: INestApplication<App>, user: TestUser, caption?: string): Promise<string> {
+  const bytes = randomBytes(1024);
+  const intent = (await as(app, user).post('/api/v1/media/uploads')
+    .send({ kind: 'VIDEO', purpose: 'POST', mimeType: 'video/mp4', byteSize: bytes.length }).expect(201)).body;
+  const put = await fetch(intent.uploadUrl, { method: 'PUT', headers: intent.headers, body: new Uint8Array(bytes) });
+  if (put.status !== 200) throw new Error(`upload PUT failed: ${put.status}`);
+  const mediaId = intent.mediaId as string;
+  const post = (await as(app, user).post('/api/v1/posts').send({ mediaIds: [mediaId], caption }).expect(201)).body;
+
+  const { MediaProcedures } = await import('../src/infrastructure/db-procedures/media.procedures.js');
+  const key = (name: string) => `users/${user.id}/media/${mediaId}/${name}`;
+  await app.get(MediaProcedures).complete(mediaId, 720, 1280, 'LEHV6nWB2yk8pyo0adR*.7kCMdnj', [
+    { variant: 'VIDEO_720', objectKey: key('video_720.mp4'), width: 720, height: 1280, mimeType: 'video/mp4', byteSize: 900000 },
+    { variant: 'POSTER', objectKey: key('poster.webp'), width: 720, height: 1280, mimeType: 'image/webp', byteSize: 20000 },
+    { variant: 'THUMB', objectKey: key('thumb.webp'), width: 320, height: 320, mimeType: 'image/webp', byteSize: 8000 },
+  ], 12000);
+  return post.id as string;
+}
+
 export async function block(app: INestApplication<App>, blocker: TestUser, target: TestUser): Promise<void> {
   await as(app, blocker).put(`/api/v1/users/${target.id}/block`).expect(200);
 }

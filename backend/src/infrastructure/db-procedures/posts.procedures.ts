@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { createPost } from '../../generated/prisma/sql/createPost.js';
 import { deletePost } from '../../generated/prisma/sql/deletePost.js';
 import { getHomeFeed } from '../../generated/prisma/sql/getHomeFeed.js';
+import { getOceanFeed } from '../../generated/prisma/sql/getOceanFeed.js';
 import { getPost } from '../../generated/prisma/sql/getPost.js';
 import { getHashtagPosts } from '../../generated/prisma/sql/getHashtagPosts.js';
 import { getProfilePosts } from '../../generated/prisma/sql/getProfilePosts.js';
@@ -12,6 +13,7 @@ import { ProcedureRunner } from './procedure-runner.js';
 
 export type PostRow = getPost.Result;
 export type FeedRow = getHomeFeed.Result;
+export type OceanRow = getOceanFeed.Result;
 export type GridRow = getProfilePosts.Result;
 export type TagRow = getHashtagPosts.Result;
 export type SavedRow = getSavedPosts.Result;
@@ -44,6 +46,11 @@ export class PostsProcedures {
 
   getHomeFeed(viewerId: string, cursor: Cursor | undefined, limit: number): Promise<FeedRow[]> {
     return this.db.rows('fn_get_home_feed', getHomeFeed(viewerId, cursor?.time ?? null, cursor?.id ?? null, limit));
+  }
+
+  /** The Ocean (BR-OC-01): every video the viewer may see, not only followed accounts'. */
+  getOceanFeed(viewerId: string, cursor: Cursor | undefined, limit: number): Promise<OceanRow[]> {
+    return this.db.rows('fn_get_ocean_feed', getOceanFeed(viewerId, cursor?.time ?? null, cursor?.id ?? null, limit));
   }
 
   getProfilePosts(viewerId: string, username: string, cursor: Cursor | undefined, limit: number): Promise<GridRow[]> {

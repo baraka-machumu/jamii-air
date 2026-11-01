@@ -1,4 +1,4 @@
-// Request / response shapes for /posts, /feed and the profile grid (TRD §5.1, §10, BR-CT, BR-FD).
+// Request / response shapes for /posts, /feed, /ocean and the profile grid (TRD §5.1, §10, BR-CT, BR-FD).
 // One Post shape everywhere (feed card, post detail, create / edit result); full media URLs.
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ArrayMaxSize, ArrayMinSize, ArrayUnique, IsArray, IsOptional, IsString, IsUUID, MaxLength, ValidateIf } from 'class-validator';
@@ -77,6 +77,17 @@ export class Post {
 
 export class FeedPage {
   @ApiProperty({ type: [Post] }) items!: Post[];
+  @ApiProperty({ nullable: true, type: String }) nextCursor!: string | null;
+}
+
+/** A video in The Ocean (BR-OC-01): always PUBLISHED and VIDEO, with one media item. */
+export class OceanPost extends Post {
+  @ApiProperty({ description: 'People who have watched it, each once; never the author (BR-OC-04)' }) viewCount!: number;
+  @ApiProperty({ description: 'You follow the author: hide the Follow button. False on your own videos' }) followingAuthor!: boolean;
+}
+
+export class OceanPage {
+  @ApiProperty({ type: [OceanPost] }) items!: OceanPost[];
   @ApiProperty({ nullable: true, type: String }) nextCursor!: string | null;
 }
 

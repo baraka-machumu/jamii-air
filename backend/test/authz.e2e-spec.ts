@@ -109,6 +109,8 @@ describe('authorization sweep (e2e)', () => {
       ['put', `/api/v1/posts/${post}/save`, {}, 200, 200, 404],
       // Unsave only removes the caller's own row and always answers saved: false (fn_unsave_post).
       ['delete', `/api/v1/posts/${post}/save`, {}, 200, 200, 200],
+      // A photo post is never counted, but the visibility check still runs first (fn_record_post_view).
+      ['post', `/api/v1/posts/${post}/view`, {}, 200, 200, 404],
       ['get', `/api/v1/posts/${post}/comments`, {}, 200, 200, 404],
       ['post', `/api/v1/posts/${post}/comments`, { body: 'hi' }, 201, 201, 404],
       ['delete', `/api/v1/comments/${comments[0]}`, {}, 200, 403, 404],

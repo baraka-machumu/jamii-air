@@ -1,11 +1,11 @@
-// /api/v1/posts/:id/like, /posts/:id/save, /posts/:id/comments and /comments/:id (TRD §5.1). User token required.
-import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Post, Put, Query } from '@nestjs/common';
+// /api/v1/posts/:id/like, /posts/:id/save, /posts/:id/view, /posts/:id/comments and /comments/:id (TRD §5.1). User token required.
+import { Body, Controller, Delete, Get, HttpCode, Param, ParseUUIDPipe, Post, Put, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiHeader, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { type AuthUser, CurrentUser } from '../../common/auth/auth.decorators.js';
 import { PageQuery } from '../users/users.dto.js';
 import {
-  CommentPage, CreateCommentDto, CreatedComment, DeletedComment, LikeState, ReplyPage, SaveState,
+  CommentPage, CreateCommentDto, CreatedComment, DeletedComment, LikeState, ReplyPage, SaveState, ViewState,
 } from './engagement.dto.js';
 import { EngagementService } from './engagement.service.js';
 import { IdempotencyKey } from '../../common/http/request-headers.js';
@@ -32,6 +32,16 @@ export class EngagementController {
   @ApiResponse({ status: 200, type: LikeState })
   unlike(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string): Promise<LikeState> {
     return this.engagement.unlike(user.id, id);
+  }
+
+  @Post('posts/:id/view')
+  @HttpCode(200)
+  // Scrolling the Ocean records one view per video watched, so this is looser than a like.
+  @Throttle({ default: { limit: 1200, ttl: HOUR } })
+  @ApiOperation({ summary: 'You watched this video (The Ocean): counts once per person, never for the author' })
+  @ApiResponse({ status: 200, type: ViewState })
+  view(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string): Promise<ViewState> {
+    return this.engagement.view(user.id, id);
   }
 
   @Put('posts/:id/save')

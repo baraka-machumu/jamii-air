@@ -1044,6 +1044,54 @@
         ]
       }
     },
+    "/api/v1/ocean": {
+      "get": {
+        "operationId": "PostsController_ocean",
+        "parameters": [
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "description": "nextCursor of the previous page",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OceanPage"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "The Ocean: videos from public accounts and the people you follow, newest first (BR-OC-01)",
+        "tags": [
+          "posts"
+        ]
+      }
+    },
     "/api/v1/tags/{tag}/posts": {
       "get": {
         "operationId": "PostsController_tagPosts",
@@ -1269,6 +1317,42 @@
           }
         ],
         "summary": "Unlike (idempotent)",
+        "tags": [
+          "engagement"
+        ]
+      }
+    },
+    "/api/v1/posts/{id}/view": {
+      "post": {
+        "operationId": "EngagementController_view",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ViewState"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "You watched this video (The Ocean): counts once per person, never for the author",
         "tags": [
           "engagement"
         ]
@@ -4076,6 +4160,112 @@
           "nextCursor"
         ]
       },
+      "OceanPost": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PROCESSING",
+              "PUBLISHED",
+              "FAILED"
+            ],
+            "description": "Only the author ever sees PROCESSING or FAILED"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "PHOTO",
+              "VIDEO"
+            ],
+            "description": "PHOTO covers one photo and a carousel; media.length says which"
+          },
+          "caption": {
+            "type": "string",
+            "nullable": true
+          },
+          "likeCount": {
+            "type": "number"
+          },
+          "commentCount": {
+            "type": "number"
+          },
+          "likedByMe": {
+            "type": "boolean"
+          },
+          "savedByMe": {
+            "type": "boolean",
+            "description": "In your Saved posts (BR-FD-13). Only you ever see this"
+          },
+          "isMine": {
+            "type": "boolean"
+          },
+          "author": {
+            "$ref": "#/components/schemas/PostAuthor"
+          },
+          "media": {
+            "description": "In carousel order",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PostMedia"
+            }
+          },
+          "shareUrl": {
+            "type": "string",
+            "description": "Opens the post in the app, else a landing page with store links"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "viewCount": {
+            "type": "number",
+            "description": "People who have watched it, each once; never the author (BR-OC-04)"
+          },
+          "followingAuthor": {
+            "type": "boolean",
+            "description": "You follow the author: hide the Follow button. False on your own videos"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "type",
+          "caption",
+          "likeCount",
+          "commentCount",
+          "likedByMe",
+          "savedByMe",
+          "isMine",
+          "author",
+          "media",
+          "shareUrl",
+          "createdAt",
+          "viewCount",
+          "followingAuthor"
+        ]
+      },
+      "OceanPage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OceanPost"
+            }
+          },
+          "nextCursor": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor"
+        ]
+      },
       "GridItem": {
         "type": "object",
         "properties": {
@@ -4187,6 +4377,22 @@
         "required": [
           "liked",
           "likeCount"
+        ]
+      },
+      "ViewState": {
+        "type": "object",
+        "properties": {
+          "viewCount": {
+            "type": "number"
+          },
+          "counted": {
+            "type": "boolean",
+            "description": "False on a repeat, on your own video and on a photo post"
+          }
+        },
+        "required": [
+          "viewCount",
+          "counted"
         ]
       },
       "SaveState": {

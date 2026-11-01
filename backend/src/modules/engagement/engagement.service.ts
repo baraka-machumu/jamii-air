@@ -1,4 +1,4 @@
-// Likes, saves (BR-FD-13) and comments (Plan task 2.9). Rules (visibility, blocks, counters, notifications) live in
+// Likes, saves (BR-FD-13), video views (BR-OC-04) and comments (Plan task 2.9). Rules (visibility, blocks, counters, notifications) live in
 // the procedures; this layer shapes responses and enqueues pushes after commit (SP-09, NT-01).
 import { Injectable } from '@nestjs/common';
 import { idempotency } from '../../common/idempotency/idempotency-key.js';
@@ -8,7 +8,7 @@ import {
 } from '../../infrastructure/db-procedures/engagement.procedures.js';
 import { NotificationJobs } from '../../infrastructure/queue/queue.module.js';
 import { MediaUrls } from '../../infrastructure/storage/media-urls.js';
-import type { Comment, CreatedComment, DeletedComment, LikeState, Reply, SaveState } from './engagement.dto.js';
+import type { Comment, CreatedComment, DeletedComment, LikeState, Reply, SaveState, ViewState } from './engagement.dto.js';
 
 @Injectable()
 export class EngagementService {
@@ -27,6 +27,11 @@ export class EngagementService {
   async unlike(viewerId: string, postId: string): Promise<LikeState> {
     const row = await this.procedures.unlikePost(viewerId, postId);
     return { liked: false, likeCount: row.likeCount };
+  }
+
+  /** No notification: a view is not engagement the author is told about. */
+  view(viewerId: string, postId: string): Promise<ViewState> {
+    return this.procedures.recordView(viewerId, postId);
   }
 
   async save(viewerId: string, postId: string): Promise<SaveState> {

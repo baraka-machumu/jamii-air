@@ -187,6 +187,7 @@ model User {
   comments       Comment[]
   likes          Like[]
   savedPosts     SavedPost[]
+  postViews      PostView[]
   refreshTokens  RefreshToken[]
   resetCodes     PasswordResetCode[]
   devices        DevicePushToken[]
@@ -379,6 +380,8 @@ model Post {
   status       PostStatus @default(PROCESSING)
   likeCount    Int        @default(0) @map("like_count")
   commentCount Int        @default(0) @map("comment_count")
+  /// People who have watched this video post, each once (BR-OC-04). Kept by fn_record_post_view.
+  viewCount    Int        @default(0) @map("view_count")
   publishedAt  DateTime?  @map("published_at") @db.Timestamptz
   hiddenAt     DateTime?  @map("hidden_at") @db.Timestamptz
   deletedAt    DateTime?  @map("deleted_at") @db.Timestamptz
@@ -391,6 +394,7 @@ model Post {
   comments      Comment[]
   likes         Like[]
   savedBy       SavedPost[]
+  views         PostView[]
   notifications Notification[]
   reports       Report[]
   modActions    ModerationAction[]
@@ -471,10 +475,25 @@ model SavedPost {
   @@map("saved_posts")
 }
 
+/// One row per person who has watched a video post (BR-OC-04, Kidili K2.1): a view counts once.
+model PostView {
+  postId   String   @map("post_id") @db.Uuid
+  viewerId String   @map("viewer_id") @db.Uuid
+  viewedAt DateTime @default(now()) @map("viewed_at") @db.Timestamptz
+
+  post   Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  viewer User @relation(fields: [viewerId], references: [id], onDelete: Cascade)
+
+  @@id([postId, viewerId])
+  @@index([viewerId]) // cascade on account purge
+  @@index([viewedAt]) // fn_maint_reconcile_counters: views since the last run
+  @@map("post_views")
+}
+
 model Comment {
-  id        String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
-  postId    String    @map("post_id") @db.Uuid
-  authorId  String    @map("author_id") @db.Uuid
+  id         String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  postId     String    @map("post_id") @db.Uuid
+  authorId   String    @map("author_id") @db.Uuid
   /// The comment this one answers. NULL = a top-level comment. Replies are ONE level deep
   /// (BR-FD-09): fn_add_comment re-points a reply-to-a-reply at its parent, so a row with
   /// parent_id IS NOT NULL always points at a row with parent_id IS NULL.

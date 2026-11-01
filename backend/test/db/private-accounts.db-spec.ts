@@ -112,8 +112,10 @@ describe('what a non-follower sees (BR-PR-08)', () => {
   it('still finds a private account in search, with its button state', async () => {
     const { owner: account, stranger } = await privateAccount();
     await follow(stranger.id, account.id);
-    expect(await one('SELECT is_following, follow_requested FROM fn_search_users($1, $2, 5)', [stranger.id, account.username]))
-      .toEqual({ is_following: false, follow_requested: true });
+    // The search is fuzzy (pg_trgm), so another test's random username can match too: pick ours.
+    expect(await q('SELECT is_following, follow_requested FROM fn_search_users($1, $2, 5) WHERE user_id = $3',
+      [stranger.id, account.username, account.id]))
+      .toEqual([{ is_following: false, follow_requested: true }]);
   });
 });
 

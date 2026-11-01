@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Document** | 05 — Backend Schema |
-| **Version** | 1.8 (2026-11-01: Kidili K1.5 saved posts built — `saved_posts`, three new procedures, `saved_by_me` on the feed and post detail; see §21) · 1.7 (2026-11-01: §20 draft follows the answers to Q-K1…Q-K8 — reactions enum, verified flags, delivery fee per shop, no commission) · 1.6 (2026-10-31, BRS §6.3 Kidili: **planned** tables for the Ocean, Stories, Udaku rooms, Chat and Shops in §20, not built yet) · 1.5 (increment A 2026-10-27, BRS §6.2: private accounts — `users.is_private`, `follow_requests`, the visibility rule; see §19) · 1.4 (R1 scope change 2026-10-16: video, carousels, replies, hashtags, own processing posts in the feed; see §18) · 1.3 (Phase 2 API review: `fn_change_password` and five changed procedures; see §17) |
+| **Version** | 1.9 (2026-11-01: Kidili K2.1 The Ocean in the database — `post_views`, `posts.view_count`, `fn_get_ocean_feed`, `fn_record_post_view`; see §22) · 1.8 (2026-11-01: Kidili K1.5 saved posts built — `saved_posts`, three new procedures, `saved_by_me` on the feed and post detail; see §21) · 1.7 (2026-11-01: §20 draft follows the answers to Q-K1…Q-K8 — reactions enum, verified flags, delivery fee per shop, no commission) · 1.6 (2026-10-31, BRS §6.3 Kidili: **planned** tables for the Ocean, Stories, Udaku rooms, Chat and Shops in §20, not built yet) · 1.5 (increment A 2026-10-27, BRS §6.2: private accounts — `users.is_private`, `follow_requests`, the visibility rule; see §19) · 1.4 (R1 scope change 2026-10-16: video, carousels, replies, hashtags, own processing posts in the feed; see §18) · 1.3 (Phase 2 API review: `fn_change_password` and five changed procedures; see §17) |
 | **Status** | **Approved** — 2026-10-11 |
 | **Date** | 2026-10-09 |
 | **Scope** | PostgreSQL schema (Prisma), stored procedures, grants, object storage layout, Redis, retention |
@@ -1244,7 +1244,6 @@ keys, `timestamptz`, `citext` where case-insensitive, writes only through `fn_*`
 
 | Stage | Table | Key columns (draft) | Notes |
 |---|---|---|---|
-| K2 Ocean | `post_views` | `post_id`, `viewer_id`, `viewed_at`; PK (post, viewer) | One view per person; `posts.view_count` kept by the procedure |
 | K3 Stories | `stories` | `id`, `author_id`, `media_asset_id`, `text_overlay` (jsonb), `product_id` null, `created_at`, `expires_at`, `hidden_at` | Index (author, expires_at); every read filters `expires_at > now()` |
 | | `story_views` | `story_id`, `viewer_id`, `viewed_at`, `liked` | PK (story, viewer) |
 | K4 Udaku | `rooms` | `id`, `host_id`, `name`, `about`, `topic` (enum), `avatar_asset_id`, `is_listed`, `is_verified`, `member_count`, `closed_at`, `closed_reason` | Unique name per host; `is_verified` set only by an admin procedure (BR-UD-11), as is a new `users.is_verified` |
@@ -1295,3 +1294,28 @@ removes the caller's own row and always answers `saved = false`, so it says noth
 
 **Paging** is on `(saved_at, post_id)`, most recently saved first, with the usual `fn__cursor`.
 
+## 22. Changes in version 1.9 (Kidili K2.1 of 2026-11-01, BRS §6.3)
+
+The Ocean (BR-OC-01) and video views (BR-OC-04), built from the §20 draft row, which is removed.
+ADR-016: the Ocean is a read over the video posts R1 already makes, not a new content type. One
+migration, `k_ocean`; the procedure tests are in `test/db/ocean.db-spec.ts`.
+
+| Migration | What it does |
+|---|---|
+| `k_ocean` | `posts.view_count` (int, default 0). `post_views` (PK post + viewer, `viewed_at`; cascades with the post and the viewer; indexes by viewer for the account purge and by `viewed_at` for the counter check; no grant: procedures only). Partial index `posts_published_video_created_idx` on `posts (created_at DESC, id DESC) WHERE status = 'PUBLISHED' AND type = 'VIDEO'`. New `fn_get_ocean_feed`, `fn_record_post_view`. `fn_maint_reconcile_counters` and `fn_maint_purge_deleted_accounts` learn `view_count`. |
+
+**The feed.** `fn_get_ocean_feed(viewer, cursor_time, cursor_id, limit)`: every PUBLISHED video
+post the viewer may see, newest first, keyset on `(created_at, id)`, no ranking (D-4, Q-K1). The
+rule is the hashtag grid's — author ACTIVE, nothing across a block either way, private accounts
+only once followed (`fn__can_see_content`) — so it holds the viewer's own videos as well as
+strangers' public ones. The row is the home feed's item (one `VIDEO` entry in `media`, with
+`videoKey`, `posterKey`, `durationMs`) plus `view_count` and `following_author` for the rail's
+Follow button. It walks the partial index and skips rows the viewer may not see; that is fine at
+pilot scale, and the place to change if private accounts ever dominate the videos.
+
+**Views.** `fn_record_post_view(viewer, post)` returns `(view_count, counted)`. Visibility as a
+like (`fn__assert_post_visible`, else JA404). The first call per person inserts a `post_views`
+row with `ON CONFLICT DO NOTHING` and adds 1 to `posts.view_count` in the same transaction
+(TRD §19.3); repeats return `counted = false`. **Not counted:** the author watching their own
+video, and photo posts (a no-op rather than an error, so a client calling it on any post does no
+harm). No notification. An erased account's views come off other people's videos, like its likes.

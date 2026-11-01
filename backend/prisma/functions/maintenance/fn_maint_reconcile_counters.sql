@@ -5,6 +5,7 @@
 --   users.follower_count / following_count  rows in follows
 --   users.post_count                        PUBLISHED posts
 --   posts.like_count                        rows in likes
+--   posts.view_count                        rows in post_views (BR-OC-04)
 --   posts.comment_count                     visible comments: neither deleted nor hidden, and
 --                                           not sitting under a parent that is (a reply is only
 --                                           ever read through its parent, BR-FD-08)
@@ -27,21 +28,24 @@ BEGIN
   SELECT array_agg(c.id ORDER BY c.id) INTO v_posts FROM (
     SELECT p.id FROM posts p WHERE p.updated_at >= v_since OR p.created_at >= v_since
     UNION SELECT l.post_id FROM likes l WHERE l.created_at >= v_since
+    UNION SELECT v.post_id FROM post_views v WHERE v.viewed_at >= v_since
     UNION SELECT k.post_id FROM comments k WHERE k.created_at >= v_since
   ) c;
   PERFORM 1 FROM posts p WHERE p.id = ANY (COALESCE(v_posts, '{}')) ORDER BY p.id FOR UPDATE;
 
-  UPDATE posts p SET like_count = a.likes, comment_count = a.comments
+  UPDATE posts p SET like_count = a.likes, comment_count = a.comments, view_count = a.views
   FROM (
     SELECT x.id,
            (SELECT count(*)::int FROM likes l WHERE l.post_id = x.id) AS likes,
            (SELECT count(*)::int FROM comments k
             LEFT JOIN comments pk ON pk.id = k.parent_id
             WHERE k.post_id = x.id AND k.deleted_at IS NULL AND k.hidden_at IS NULL
-              AND (k.parent_id IS NULL OR (pk.deleted_at IS NULL AND pk.hidden_at IS NULL))) AS comments
+              AND (k.parent_id IS NULL OR (pk.deleted_at IS NULL AND pk.hidden_at IS NULL))) AS comments,
+           (SELECT count(*)::int FROM post_views v WHERE v.post_id = x.id) AS views
     FROM posts x WHERE x.id = ANY (COALESCE(v_posts, '{}'))
   ) a
-  WHERE p.id = a.id AND (p.like_count, p.comment_count) IS DISTINCT FROM (a.likes, a.comments);
+  WHERE p.id = a.id
+    AND (p.like_count, p.comment_count, p.view_count) IS DISTINCT FROM (a.likes, a.comments, a.views);
   GET DIAGNOSTICS v_rows = ROW_COUNT;
   v_drift := v_drift + v_rows;
 

@@ -1,6 +1,6 @@
 -- Daily 03:30 (BR-AC-08, Schema §11): erases accounts that have been PENDING_DELETION for over
 -- 30 days. First fixes the counters the account still contributes to other users and posts
--- (follows, likes, visible comments), queues every object under users/{id}/ for deletion, then
+-- (follows, likes, visible comments, video views), queues every object under users/{id}/ for deletion, then
 -- deletes the user row; everything that belongs to the user goes with it (foreign keys).
 CREATE OR REPLACE FUNCTION fn_maint_purge_deleted_accounts(p_batch int DEFAULT 50)
 RETURNS TABLE (processed int)
@@ -24,7 +24,7 @@ BEGIN
   END IF;
 
   -- Posts first, then users: the lock order every procedure uses (no deadlocks).
-  -- Other people's posts lose the deleted users' likes and visible comments.
+  -- Other people's posts lose the deleted users' likes, visible comments and views.
   UPDATE posts p SET like_count = p.like_count - d.n
   FROM (SELECT l.post_id AS id, count(*)::int AS n FROM likes l JOIN posts x ON x.id = l.post_id
         WHERE l.user_id = ANY (v_ids) AND NOT (x.author_id = ANY (v_ids))
@@ -35,6 +35,11 @@ BEGIN
         WHERE k.author_id = ANY (v_ids) AND NOT (x.author_id = ANY (v_ids))
           AND k.deleted_at IS NULL AND k.hidden_at IS NULL
         GROUP BY k.post_id) d
+  WHERE p.id = d.id;
+  UPDATE posts p SET view_count = p.view_count - d.n
+  FROM (SELECT v.post_id AS id, count(*)::int AS n FROM post_views v JOIN posts x ON x.id = v.post_id
+        WHERE v.viewer_id = ANY (v_ids) AND NOT (x.author_id = ANY (v_ids))
+        GROUP BY v.post_id) d
   WHERE p.id = d.id;
 
   -- People the deleted users followed lose a follower; their followers follow one fewer.
